@@ -7,7 +7,7 @@ import type { Photo as PhotoType } from "@/lib/content";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 
 /**
- * The About page portrait, drifting slowly as the page scrolls — the one
+ * The About page portrait, drifting slowly as the page scrolls. The one
  * deliberately slow, understated parallax on the site (everything else on
  * this page is static text), which is what makes it read as a portrait
  * rather than a gallery shot.
@@ -24,7 +24,9 @@ export function AboutPortrait({ photo }: { photo: PhotoType }) {
 
   return (
     <div ref={ref} style={{ overflow: "hidden" }}>
-      <motion.div style={{ y }}>
+      {/* Promoted for the same reason as the homepage tiles: a scroll-driven
+          transform on a full-size photo should composite, not repaint. */}
+      <motion.div style={{ y, willChange: reducedMotion ? undefined : "transform" }}>
         <Photo
           photo={photo}
           sizes="(max-width: 767px) 100vw, 40vw"

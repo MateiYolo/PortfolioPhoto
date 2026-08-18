@@ -3,7 +3,7 @@ import { MagneticLink } from "@/components/MagneticLink";
 
 /**
  * Fixed, minimal nav. mix-blend-mode: difference keeps it legible over any
- * photo — black on light backgrounds, inverts to white over dark ones —
+ * photo (black on light backgrounds, inverting to white over dark ones)
  * without ever introducing a second colour to pick.
  */
 export function NavHeader() {

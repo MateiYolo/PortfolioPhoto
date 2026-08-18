@@ -3,12 +3,7 @@
 import { useState } from "react";
 import { CategoryTile } from "@/components/CategoryTile";
 import type { Category } from "@/lib/content";
-
-const WIDTHS: Record<Category["cover"]["orientation"], string> = {
-  landscape: "clamp(20rem, 62vw, 52rem)",
-  portrait: "clamp(16rem, 36vw, 30rem)",
-  square: "clamp(18rem, 48vw, 38rem)",
-};
+import { GRID_TILE, tileWidth } from "@/lib/imageSizes";
 
 const ALIGN_PATTERN: Array<"flex-start" | "flex-end" | "center"> = [
   "flex-start",
@@ -30,7 +25,7 @@ const PARALLAX_PATTERN: Array<[number, number]> = [
  * Homepage grid: a vertical stack of full-bleed rows whose individual tile
  * gets a width (by cover orientation) and an alignment/offset (by a fixed
  * cycling pattern) so the composition reads as hand-arranged rather than a
- * uniform gallery grid — the "editorial asymmetric" layout from the brief.
+ * uniform gallery grid: the "editorial asymmetric" layout from the brief.
  *
  * Hover state lives here so hovering one tile can dim every sibling.
  */
@@ -55,7 +50,11 @@ export function CategoryGrid({ categories }: { categories: Category[] }) {
         >
           <div
             className="category-tile-frame"
-            style={{ "--tile-width": WIDTHS[category.cover.orientation] } as React.CSSProperties}
+            style={
+              {
+                "--tile-width": tileWidth(GRID_TILE[category.cover.orientation]),
+              } as React.CSSProperties
+            }
           >
             <CategoryTile
               category={category}

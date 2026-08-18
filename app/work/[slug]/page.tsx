@@ -2,10 +2,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ViewTransition } from "react";
 import type { Metadata } from "next";
+import { Arrive } from "@/components/Arrive";
 import { CategoryPhotoSequence } from "@/components/CategoryPhotoSequence";
 import { MagneticLink } from "@/components/MagneticLink";
-import { Photo } from "@/components/Photo";
-import { Reveal } from "@/components/Reveal";
 import { getAdjacentCategory, getCategories, getCategory } from "@/lib/content";
 
 export function generateStaticParams() {
@@ -21,7 +20,7 @@ export async function generateMetadata({
   const category = getCategory(slug);
   if (!category) return {};
   return {
-    title: `${category.title} — Matei Convard`,
+    title: `${category.title} / Matei Convard`,
     description: category.blurb,
   };
 }
@@ -44,67 +43,66 @@ export default async function CategoryPage({
 
   const next = getAdjacentCategory(category.slug);
 
+  // There is no cropped hero on this page. The cover simply opens the
+  // sequence at its own aspect ratio, which is also what the homepage
+  // thumbnail morphs into, so no photo is ever reframed to fit a band of
+  // screen height it was never shot for.
+  const photos = [
+    category.cover,
+    ...category.photos.filter((p) => p.id !== category.cover.id),
+  ];
+
   return (
     <main>
-      <section style={{ paddingTop: "clamp(5rem, 10vw, 7rem)" }}>
-        <ViewTransition name={`photo-${category.slug}`} share="morph" default="none">
-          <div style={{ padding: "0 var(--gutter)" }}>
-            <Photo
-              photo={category.cover}
-              sizes="100vw"
-              priority
-              style={{
-                aspectRatio: "auto",
-                height: "70svh",
-                borderRadius: 2,
-              }}
-            />
-          </div>
+      <section
+        style={{
+          paddingTop: "clamp(6rem, 12vw, 9rem)",
+          paddingLeft: "var(--gutter)",
+          paddingRight: "var(--gutter)",
+          paddingBottom: "clamp(2.5rem, 6vw, 4rem)",
+        }}
+      >
+        <ViewTransition name={`title-${category.slug}`} share="title-morph" default="none">
+          <h1
+            className="font-display"
+            style={{ fontSize: "var(--step-3)", lineHeight: 1 }}
+          >
+            {category.title}
+          </h1>
         </ViewTransition>
 
-        <div
-          style={{
-            padding: "var(--gutter)",
-            display: "flex",
-            flexWrap: "wrap",
-            alignItems: "baseline",
-            justifyContent: "space-between",
-            gap: "1rem",
-          }}
-        >
-          <ViewTransition name={`title-${category.slug}`} share="title-morph" default="none">
-            <h1
-              className="font-display"
-              style={{ fontSize: "var(--step-3)", lineHeight: 1 }}
-            >
-              {category.title}
-            </h1>
-          </ViewTransition>
-          {category.date && (
-            <span className="font-sans text-grey-500 text-[var(--step--1)] uppercase tracking-[0.15em]">
-              {formatDate(category.date)}
-            </span>
-          )}
-        </div>
-
-        {category.blurb && (
-          <Reveal>
-            <p
-              className="font-sans text-grey-700"
-              style={{
-                padding: "0 var(--gutter)",
-                maxWidth: "48ch",
-                marginBottom: "clamp(3rem, 8vw, 6rem)",
-                fontSize: "var(--step-1)",
-              }}
-            >
-              {category.blurb}
-            </p>
-          </Reveal>
+        {(category.date || category.blurb) && (
+          <div
+            style={{
+              marginTop: "1.5rem",
+              display: "flex",
+              flexWrap: "wrap",
+              alignItems: "baseline",
+              gap: "clamp(0.75rem, 3vw, 2.5rem)",
+            }}
+          >
+            {category.date && (
+              <Arrive>
+                <span className="font-sans text-grey-500 text-[var(--step--1)] uppercase tracking-[0.15em]">
+                  {formatDate(category.date)}
+                </span>
+              </Arrive>
+            )}
+            {category.blurb && (
+              <Arrive delay={0.08}>
+                <p
+                  className="font-sans text-grey-700"
+                  style={{ maxWidth: "46ch", fontSize: "var(--step-0)", lineHeight: 1.6 }}
+                >
+                  {category.blurb}
+                </p>
+              </Arrive>
+            )}
+          </div>
         )}
       </section>
 
-      <CategoryPhotoSequence photos={category.photos} />
+      <CategoryPhotoSequence photos={photos} morphName={`photo-${category.slug}`} />
 
       <footer
         style={{

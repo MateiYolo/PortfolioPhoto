@@ -8,7 +8,7 @@ import { useReducedMotion } from "@/lib/useReducedMotion";
 /**
  * Custom cursor: a small dot that tracks the pointer exactly, plus a ring
  * that lags behind on a spring. Any element with [data-cursor="view"] in
- * range expands the ring and shows a label — used on photo tiles.
+ * range expands the ring and shows a label, used on photo tiles.
  *
  * Desktop-only (hover:hover + pointer:fine); on touch devices this renders
  * nothing and the OS cursor/tap behaviour is untouched.
@@ -47,7 +47,9 @@ export function Cursor() {
       const target = (e.target as HTMLElement)?.closest("[data-cursor]");
       setLabel(target?.getAttribute("data-cursor") || null);
     };
-    window.addEventListener("pointermove", move);
+    // Passive: this handler never calls preventDefault, and saying so keeps
+    // it off the critical path of scroll/pointer input handling.
+    window.addEventListener("pointermove", move, { passive: true });
     return () => window.removeEventListener("pointermove", move);
   }, [enabled, reducedMotion, x, y]);
 

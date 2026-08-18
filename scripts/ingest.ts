@@ -41,7 +41,34 @@ const MEDIA_DIR = path.join(ROOT, "public", "media");
 const MANIFEST_PATH = path.join(ROOT, "data", "manifest.json");
 const CACHE_PATH = path.join(ROOT, "data", ".ingest-cache.json");
 
-const WIDTHS = [720, 1440, 2560] as const;
+/**
+ * Derivative widths. The gaps matter as much as the endpoints: a browser
+ * rounds *up* to the next candidate, so a 1440 -> 2560 jump means a laptop
+ * asking for ~1850px of image is handed 4.3 megapixels and pays ~85ms of
+ * AVIF decode for it, where 1920 would have cost ~45ms. The intermediate
+ * steps exist to keep decoded pixels close to painted pixels.
+ */
+const WIDTHS = [720, 1080, 1440, 1920, 2560] as const;
+
+/**
+ * 4:2:0 chroma subsampling. Sharp defaults AVIF to 4:4:4, which keeps full
+ * chroma resolution — worth it for text and screenshots, not for
+ * photographs, where it costs a third of the file size (and a proportional
+ * share of the decode) for a difference nobody can see.
+ */
+const AVIF_OPTIONS = {
+  quality: 65,
+  effort: 4,
+  chromaSubsampling: "4:2:0",
+} as const;
+
+/**
+ * Bumped whenever the encode settings or the width list change, so a
+ * re-run regenerates derivatives instead of trusting a cache keyed only on
+ * the source file's contents (which haven't changed — the pipeline has).
+ */
+const PIPELINE_VERSION = "2";
+
 const LQIP_WIDTH = 24;
 const IMAGE_EXT = /\.(jpe?g|png|tiff?|webp|avif)$/i;
 
@@ -140,7 +167,12 @@ function orientationOf(width: number, height: number): Photo["orientation"] {
 
 async function hashFile(filePath: string): Promise<string> {
   const buf = await readFile(filePath);
-  return createHash("sha1").update(buf).digest("hex");
+  return createHash("sha1")
+    .update(PIPELINE_VERSION)
+    .update(WIDTHS.join(","))
+    .update(JSON.stringify(AVIF_OPTIONS))
+    .update(buf)
+    .digest("hex");
 }
 
 async function loadCache(): Promise<Cache> {
@@ -177,11 +209,18 @@ async function processImage(opts: {
 
   const hash = await hashFile(sourcePath);
   const cached = cache[cacheKey];
+
+  // Check the paths the cached entry actually recorded, not the nominal
+  // widths. Derivatives are named for their *clamped* width, so a 1358px
+  // original never produces an `id-2560.avif` — probing for one would
+  // declare the cache stale on every run and re-encode the whole archive.
   const derivativesExist =
     cached?.hash === hash &&
     (await Promise.all(
-      WIDTHS.map((w) => pathExists(path.join(outDir, `${id}-${w}.avif`)))
-    ).then((r) => r.every(Boolean)));
+      [...new Set(Object.values(cached.photo.src))].map((publicPath) =>
+        pathExists(path.join(ROOT, "public", publicPath))
+      )
+    ).then((results) => results.every(Boolean)));
 
   if (cached?.hash === hash && derivativesExist) {
     return cached.photo;
@@ -209,7 +248,7 @@ async function processImage(opts: {
       await base
         .clone()
         .resize({ width: clamped, withoutEnlargement: true })
-        .avif({ quality: 65, effort: 4 })
+        .avif(AVIF_OPTIONS)
         .toFile(outPath);
       generatedAtWidth.set(clamped, publicPath);
     }
@@ -258,7 +297,7 @@ async function processCategory(
   const entries = await readdir(dir, { withFileTypes: true });
   const metaFile = entries.find((e) => e.isFile() && e.name === "meta.md");
   if (!metaFile) {
-    console.warn(`  ! skipping "${folderName}" — no meta.md found`);
+    console.warn(`  ! skipping "${folderName}": no meta.md found`);
     return null;
   }
 
@@ -272,12 +311,12 @@ async function processCategory(
     .sort(naturalSort);
 
   if (imageFiles.length === 0) {
-    console.warn(`  ! skipping "${folderName}" — no images found`);
+    console.warn(`  ! skipping "${folderName}": no images found`);
     return null;
   }
   if (imageFiles.length > 15) {
     console.warn(
-      `  ! "${folderName}" has ${imageFiles.length} photos — plan calls for 5-15, trimming to first 15`
+      `  ! "${folderName}" has ${imageFiles.length} photos, plan calls for 5-15, trimming to first 15`
     );
   }
   const selected = imageFiles.slice(0, 15);

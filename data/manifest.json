@@ -5,13 +5,15 @@
       "slug": "pete-the-monkey",
       "title": "Pete The Monkey",
       "date": "2026-08-10",
-      "blurb": "Three days at Pete The Monkey festival, shot entirely on film — a\nPentax K1000 with a 40mm f/2.8 lens, loaded with Kodak Ultramax 400\nand Gold 200.\n",
+      "blurb": "Three days at Pete The Monkey festival, shot entirely on film: a\nPentax K1000 with a 40mm f/2.8 lens, loaded with Kodak Ultramax 400\nand Gold 200.\n",
       "order": 1,
       "cover": {
         "id": "cover",
         "src": {
           "w720": "/media/pete-the-monkey/cover-720.avif",
+          "w1080": "/media/pete-the-monkey/cover-1080.avif",
           "w1440": "/media/pete-the-monkey/cover-1440.avif",
+          "w1920": "/media/pete-the-monkey/cover-1920.avif",
           "w2560": "/media/pete-the-monkey/cover-2560.avif"
         },
         "width": 2965,
@@ -26,7 +28,9 @@
           "id": "2026-activite-cache-tetons-1-matei",
           "src": {
             "w720": "/media/pete-the-monkey/2026-activite-cache-tetons-1-matei-720.avif",
+            "w1080": "/media/pete-the-monkey/2026-activite-cache-tetons-1-matei-1080.avif",
             "w1440": "/media/pete-the-monkey/2026-activite-cache-tetons-1-matei-1440.avif",
+            "w1920": "/media/pete-the-monkey/2026-activite-cache-tetons-1-matei-1920.avif",
             "w2560": "/media/pete-the-monkey/2026-activite-cache-tetons-1-matei-2560.avif"
           },
           "width": 3089,
@@ -40,7 +44,9 @@
           "id": "2026-ambiance-3-matei",
           "src": {
             "w720": "/media/pete-the-monkey/2026-ambiance-3-matei-720.avif",
+            "w1080": "/media/pete-the-monkey/2026-ambiance-3-matei-1080.avif",
             "w1440": "/media/pete-the-monkey/2026-ambiance-3-matei-1440.avif",
+            "w1920": "/media/pete-the-monkey/2026-ambiance-3-matei-1920.avif",
             "w2560": "/media/pete-the-monkey/2026-ambiance-3-matei-2560.avif"
           },
           "width": 2986,
@@ -54,7 +60,9 @@
           "id": "2026-ambiance-6-plage-matei",
           "src": {
             "w720": "/media/pete-the-monkey/2026-ambiance-6-plage-matei-720.avif",
+            "w1080": "/media/pete-the-monkey/2026-ambiance-6-plage-matei-1080.avif",
             "w1440": "/media/pete-the-monkey/2026-ambiance-6-plage-matei-1440.avif",
+            "w1920": "/media/pete-the-monkey/2026-ambiance-6-plage-matei-1920.avif",
             "w2560": "/media/pete-the-monkey/2026-ambiance-6-plage-matei-2048.avif"
           },
           "width": 2048,
@@ -68,7 +76,9 @@
           "id": "2026-ambiance-obsimo-vintage-clothes-matei",
           "src": {
             "w720": "/media/pete-the-monkey/2026-ambiance-obsimo-vintage-clothes-matei-720.avif",
+            "w1080": "/media/pete-the-monkey/2026-ambiance-obsimo-vintage-clothes-matei-1080.avif",
             "w1440": "/media/pete-the-monkey/2026-ambiance-obsimo-vintage-clothes-matei-1440.avif",
+            "w1920": "/media/pete-the-monkey/2026-ambiance-obsimo-vintage-clothes-matei-1920.avif",
             "w2560": "/media/pete-the-monkey/2026-ambiance-obsimo-vintage-clothes-matei-2560.avif"
           },
           "width": 3089,
@@ -82,7 +92,9 @@
           "id": "2026-bingo-disco-2-matei",
           "src": {
             "w720": "/media/pete-the-monkey/2026-bingo-disco-2-matei-720.avif",
+            "w1080": "/media/pete-the-monkey/2026-bingo-disco-2-matei-1080.avif",
             "w1440": "/media/pete-the-monkey/2026-bingo-disco-2-matei-1440.avif",
+            "w1920": "/media/pete-the-monkey/2026-bingo-disco-2-matei-1920.avif",
             "w2560": "/media/pete-the-monkey/2026-bingo-disco-2-matei-2560.avif"
           },
           "width": 3089,
@@ -96,7 +108,9 @@
           "id": "2026-camping-3-matei",
           "src": {
             "w720": "/media/pete-the-monkey/2026-camping-3-matei-720.avif",
+            "w1080": "/media/pete-the-monkey/2026-camping-3-matei-1080.avif",
             "w1440": "/media/pete-the-monkey/2026-camping-3-matei-1440.avif",
+            "w1920": "/media/pete-the-monkey/2026-camping-3-matei-1920.avif",
             "w2560": "/media/pete-the-monkey/2026-camping-3-matei-2048.avif"
           },
           "width": 2048,
@@ -110,7 +124,9 @@
           "id": "2026-dj-2-matei",
           "src": {
             "w720": "/media/pete-the-monkey/2026-dj-2-matei-720.avif",
+            "w1080": "/media/pete-the-monkey/2026-dj-2-matei-1080.avif",
             "w1440": "/media/pete-the-monkey/2026-dj-2-matei-1440.avif",
+            "w1920": "/media/pete-the-monkey/2026-dj-2-matei-1920.avif",
             "w2560": "/media/pete-the-monkey/2026-dj-2-matei-2560.avif"
           },
           "width": 2742,
@@ -124,7 +140,9 @@
           "id": "2026-nightscapes-secrect-marriagese-5-matei",
           "src": {
             "w720": "/media/pete-the-monkey/2026-nightscapes-secrect-marriagese-5-matei-720.avif",
+            "w1080": "/media/pete-the-monkey/2026-nightscapes-secrect-marriagese-5-matei-1080.avif",
             "w1440": "/media/pete-the-monkey/2026-nightscapes-secrect-marriagese-5-matei-1358.avif",
+            "w1920": "/media/pete-the-monkey/2026-nightscapes-secrect-marriagese-5-matei-1358.avif",
             "w2560": "/media/pete-the-monkey/2026-nightscapes-secrect-marriagese-5-matei-1358.avif"
           },
           "width": 1358,
@@ -138,7 +156,9 @@
           "id": "2026-nightscapes-secrect-marriagese-11-matei",
           "src": {
             "w720": "/media/pete-the-monkey/2026-nightscapes-secrect-marriagese-11-matei-720.avif",
+            "w1080": "/media/pete-the-monkey/2026-nightscapes-secrect-marriagese-11-matei-1080.avif",
             "w1440": "/media/pete-the-monkey/2026-nightscapes-secrect-marriagese-11-matei-1440.avif",
+            "w1920": "/media/pete-the-monkey/2026-nightscapes-secrect-marriagese-11-matei-1920.avif",
             "w2560": "/media/pete-the-monkey/2026-nightscapes-secrect-marriagese-11-matei-2560.avif"
           },
           "width": 3089,
@@ -152,7 +172,9 @@
           "id": "2026-pete-cirque-2-matei",
           "src": {
             "w720": "/media/pete-the-monkey/2026-pete-cirque-2-matei-720.avif",
+            "w1080": "/media/pete-the-monkey/2026-pete-cirque-2-matei-1080.avif",
             "w1440": "/media/pete-the-monkey/2026-pete-cirque-2-matei-1440.avif",
+            "w1920": "/media/pete-the-monkey/2026-pete-cirque-2-matei-1920.avif",
             "w2560": "/media/pete-the-monkey/2026-pete-cirque-2-matei-2560.avif"
           },
           "width": 3089,
@@ -166,7 +188,9 @@
           "id": "2026-pete-radiofreealice-1-matei",
           "src": {
             "w720": "/media/pete-the-monkey/2026-pete-radiofreealice-1-matei-720.avif",
+            "w1080": "/media/pete-the-monkey/2026-pete-radiofreealice-1-matei-1080.avif",
             "w1440": "/media/pete-the-monkey/2026-pete-radiofreealice-1-matei-1440.avif",
+            "w1920": "/media/pete-the-monkey/2026-pete-radiofreealice-1-matei-1920.avif",
             "w2560": "/media/pete-the-monkey/2026-pete-radiofreealice-1-matei-2560.avif"
           },
           "width": 3089,
@@ -180,7 +204,9 @@
           "id": "2026-runners-matei",
           "src": {
             "w720": "/media/pete-the-monkey/2026-runners-matei-720.avif",
+            "w1080": "/media/pete-the-monkey/2026-runners-matei-1080.avif",
             "w1440": "/media/pete-the-monkey/2026-runners-matei-1440.avif",
+            "w1920": "/media/pete-the-monkey/2026-runners-matei-1901.avif",
             "w2560": "/media/pete-the-monkey/2026-runners-matei-1901.avif"
           },
           "width": 1901,
@@ -194,7 +220,9 @@
           "id": "2026-team-bad-body-chaos-code-matei",
           "src": {
             "w720": "/media/pete-the-monkey/2026-team-bad-body-chaos-code-matei-720.avif",
+            "w1080": "/media/pete-the-monkey/2026-team-bad-body-chaos-code-matei-1080.avif",
             "w1440": "/media/pete-the-monkey/2026-team-bad-body-chaos-code-matei-1440.avif",
+            "w1920": "/media/pete-the-monkey/2026-team-bad-body-chaos-code-matei-1920.avif",
             "w2560": "/media/pete-the-monkey/2026-team-bad-body-chaos-code-matei-2560.avif"
           },
           "width": 3089,
@@ -208,7 +236,9 @@
           "id": "cover",
           "src": {
             "w720": "/media/pete-the-monkey/cover-720.avif",
+            "w1080": "/media/pete-the-monkey/cover-1080.avif",
             "w1440": "/media/pete-the-monkey/cover-1440.avif",
+            "w1920": "/media/pete-the-monkey/cover-1920.avif",
             "w2560": "/media/pete-the-monkey/cover-2560.avif"
           },
           "width": 2965,
@@ -223,7 +253,7 @@
   ],
   "about": {
     "title": "About",
-    "bio": "I'm Matei — I make photographs of places and people that hold still just long enough to be looked at twice.\n\nThis is a slow, ongoing archive of that work.\n",
+    "bio": "I'm Matei. I make photographs of places and people that hold still just long enough to be looked at twice.\n\nThis is a slow, ongoing archive of that work.\n",
     "contactEmail": "matei.convard@gmail.com",
     "contactLinks": [
       {
