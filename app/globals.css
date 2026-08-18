@@ -23,6 +23,14 @@
   --duration-base: 600ms;
 }
 
+/* Space Grotesk is loaded as a variable font (see app/layout.tsx), so every
+   weight in its range is available via plain CSS — SemiBold here, applied
+   once so every .font-display usage picks it up without touching each
+   call site. */
+.font-display {
+  font-weight: 600;
+}
+
 /* Fluid type scale */
 :root {
   --step--1: clamp(0.75rem, 0.72rem + 0.15vw, 0.82rem);
