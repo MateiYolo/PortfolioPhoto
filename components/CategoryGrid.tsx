@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { CategoryTile } from "@/components/CategoryTile";
 import type { Category } from "@/lib/content";
 import { GRID_TILE, tileWidth } from "@/lib/imageSizes";
@@ -26,12 +25,8 @@ const PARALLAX_PATTERN: Array<[number, number]> = [
  * gets a width (by cover orientation) and an alignment/offset (by a fixed
  * cycling pattern) so the composition reads as hand-arranged rather than a
  * uniform gallery grid: the "editorial asymmetric" layout from the brief.
- *
- * Hover state lives here so hovering one tile can dim every sibling.
  */
 export function CategoryGrid({ categories }: { categories: Category[] }) {
-  const [hoveredSlug, setHoveredSlug] = useState<string | null>(null);
-
   return (
     <div style={{ display: "flex", flexDirection: "column" }}>
       {categories.map((category, i) => (
@@ -59,8 +54,6 @@ export function CategoryGrid({ categories }: { categories: Category[] }) {
             <CategoryTile
               category={category}
               parallaxRange={PARALLAX_PATTERN[i % PARALLAX_PATTERN.length]}
-              dimmed={hoveredSlug !== null && hoveredSlug !== category.slug}
-              onHoverChange={setHoveredSlug}
             />
           </div>
         </div>

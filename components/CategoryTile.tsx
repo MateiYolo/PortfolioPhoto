@@ -12,9 +12,7 @@ import { useReducedMotion } from "@/lib/useReducedMotion";
 
 /**
  * One cover on the homepage grid. Hover brings colour into the (otherwise
- * grayscale) photo, scales it slightly within its frame, and, driven by
- * the parent's hoveredSlug, dims every sibling tile to push focus onto
- * whichever one the cursor is over.
+ * grayscale) photo and scales it slightly within its frame.
  *
  * Only the title is set under the photo. No counts, no metadata: the grid
  * is a list of places to go, not a table of contents.
@@ -22,13 +20,9 @@ import { useReducedMotion } from "@/lib/useReducedMotion";
 export function CategoryTile({
   category,
   parallaxRange,
-  dimmed,
-  onHoverChange,
 }: {
   category: Category;
   parallaxRange: [number, number];
-  dimmed: boolean;
-  onHoverChange: (slug: string | null) => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const [hovered, setHovered] = useState(false);
@@ -51,16 +45,8 @@ export function CategoryTile({
           // will-change would pin a full-size photo texture in memory for
           // every tile on the page, on top of the one already held.
           style={{ y }}
-          onPointerEnter={() => {
-            setHovered(true);
-            onHoverChange(category.slug);
-          }}
-          onPointerLeave={() => {
-            setHovered(false);
-            onHoverChange(null);
-          }}
-          animate={{ opacity: dimmed ? 0.35 : 1 }}
-          transition={{ duration: 0.5, ease: ease.inOutQuart }}
+          onPointerEnter={() => setHovered(true)}
+          onPointerLeave={() => setHovered(false)}
         >
           <Link
             href={`/work/${category.slug}`}
@@ -88,17 +74,6 @@ export function CategoryTile({
                 {category.title}
               </span>
             </ViewTransition>
-            <span
-              aria-hidden
-              className="block bg-ink"
-              style={{
-                height: 1,
-                marginTop: "0.4rem",
-                transformOrigin: "left",
-                transform: `scaleX(${hovered ? 1 : 0})`,
-                transition: "transform 500ms cubic-bezier(0.65,0,0.35,1)",
-              }}
-            />
           </Link>
         </motion.div>
       </ScrollTilt>

@@ -58,17 +58,11 @@ export function Cursor() {
   return (
     <div className="pointer-events-none fixed inset-0 z-[100]" aria-hidden>
       <motion.div
-        className="fixed left-0 top-0 h-1.5 w-1.5 rounded-full bg-white"
-        style={{
-          x,
-          y,
-          translateX: "-50%",
-          translateY: "-50%",
-          mixBlendMode: "difference",
-        }}
+        className="cursor-dot fixed left-0 top-0 h-1.5 w-1.5 rounded-full bg-ink"
+        style={{ x, y, translateX: "-50%", translateY: "-50%" }}
       />
       <motion.div
-        className="fixed left-0 top-0 flex items-center justify-center rounded-full bg-white"
+        className="cursor-ring fixed left-0 top-0 flex items-center justify-center rounded-full bg-ink"
         style={{
           x: ringX,
           y: ringY,
