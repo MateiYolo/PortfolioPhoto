@@ -68,7 +68,7 @@ export function Photo({
   style?: CSSProperties;
   /**
    * Leave undefined to render with no filter at all. `filter` forces an
-   * extra raster pass over the full image, so only the homepage tiles —
+   * extra raster pass over the whole frame, so only the homepage tiles —
    * which actually animate between grey and colour — should pay for it.
    */
   grayscale?: boolean;
@@ -183,6 +183,21 @@ export function Photo({
         backgroundImage: settled ? undefined : `url(${photo.lqip})`,
         backgroundSize: "cover",
         backgroundPosition: "center",
+        // Grayscale belongs on the frame, not on the <img>. The LQIP is
+        // painted as this element's own background, so filtering only the
+        // image leaves a full-colour placeholder showing underneath it
+        // until the photo has finished fading in — which on a cold load
+        // is a visible second of colour on a monochrome grid.
+        filter:
+          grayscale === undefined
+            ? undefined
+            : grayscale
+              ? "grayscale(1)"
+              : "grayscale(0)",
+        transition:
+          grayscale === undefined
+            ? undefined
+            : `filter ${FADE_MS}ms cubic-bezier(0.65,0,0.35,1)`,
         ...style,
       }}
     >
@@ -206,17 +221,8 @@ export function Photo({
           width: "100%",
           height: "100%",
           objectFit: "cover",
-          filter:
-            grayscale === undefined
-              ? undefined
-              : grayscale
-                ? "grayscale(1)"
-                : "grayscale(0)",
           opacity: ready ? 1 : 0,
-          transition:
-            grayscale === undefined
-              ? `opacity ${FADE_MS}ms cubic-bezier(0.65,0,0.35,1)`
-              : `opacity ${FADE_MS}ms cubic-bezier(0.65,0,0.35,1), filter ${FADE_MS}ms cubic-bezier(0.65,0,0.35,1)`,
+          transition: `opacity ${FADE_MS}ms cubic-bezier(0.65,0,0.35,1)`,
         }}
       />
     </div>
