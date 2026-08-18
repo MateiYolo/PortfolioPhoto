@@ -3,6 +3,7 @@ import { AboutPortrait } from "@/components/AboutPortrait";
 import { ContactEmail } from "@/components/ContactEmail";
 import { MagneticLink } from "@/components/MagneticLink";
 import { Reveal } from "@/components/Reveal";
+import { SplitText } from "@/components/SplitText";
 import { getAbout } from "@/lib/content";
 
 export const metadata: Metadata = {
@@ -49,11 +50,9 @@ export default function AboutPage() {
       )}
 
       <div style={{ maxWidth: "56ch" }}>
-        <Reveal>
-          <h1 className="font-display" style={{ fontSize: "var(--step-3)" }}>
-            {about.title}
-          </h1>
-        </Reveal>
+        <h1 className="font-display" style={{ fontSize: "var(--step-3)" }}>
+          <SplitText text={about.title} />
+        </h1>
 
         <div style={{ marginTop: "1.75rem", display: "flex", flexDirection: "column", gap: "1.1rem" }}>
           {paragraphs.map((p, i) => (

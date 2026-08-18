@@ -173,6 +173,16 @@ html.lenis body {
   }
 }
 
+/* The Lightbox overlay (components/Lightbox.tsx) is solid ink. The cursor's
+   dot and ring are ink too, so over that backdrop they'd paint the same
+   colour as what's behind them. Force a paper fill only while the overlay
+   is up; everywhere else the ink cursor reads fine against the paper page
+   and against photos. */
+html.lightbox-open .cursor-dot,
+html.lightbox-open .cursor-ring {
+  background-color: var(--color-paper);
+}
+
 /* ---------------------------------------------------------------------------
    Homepage editorial grid, see components/CategoryGrid.tsx.
    Width/alignment are set per-tile via CSS custom properties so the
