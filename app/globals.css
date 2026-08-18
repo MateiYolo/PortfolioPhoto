@@ -1,0 +1,152 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------------------
+   Design tokens.
+   Monochrome only. The single source of colour on this site is the
+   photographs themselves, revealed on hover. Do not add an accent hue.
+--------------------------------------------------------------------------- */
+@theme {
+  --color-ink: #0a0a0a;
+  --color-ink-soft: #1c1c1c;
+  --color-grey-700: #4a4a4a;
+  --color-grey-500: #7a7a7a;
+  --color-grey-300: #b4b4b4;
+  --color-grey-100: #e4e4e4;
+  --color-paper: #fafafa;
+
+  --font-display: var(--font-instrument-serif), "Times New Roman", serif;
+  --font-sans: var(--font-inter-tight), ui-sans-serif, system-ui, sans-serif;
+
+  /* Motion constants — mirrored in lib/motion.ts. Change both together. */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out-quart: cubic-bezier(0.65, 0, 0.35, 1);
+  --duration-base: 600ms;
+}
+
+/* Fluid type scale */
+:root {
+  --step--1: clamp(0.75rem, 0.72rem + 0.15vw, 0.82rem);
+  --step-0: clamp(0.9rem, 0.86rem + 0.2vw, 1rem);
+  --step-1: clamp(1.1rem, 1rem + 0.5vw, 1.4rem);
+  --step-2: clamp(1.6rem, 1.3rem + 1.5vw, 2.6rem);
+  --step-3: clamp(2.4rem, 1.6rem + 4vw, 5rem);
+  --step-4: clamp(3rem, 1.5rem + 8vw, 9rem);
+
+  --gutter: clamp(1.25rem, 0.9rem + 1.8vw, 3rem);
+}
+
+* {
+  min-width: 0;
+}
+
+html {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  font-family: var(--font-sans);
+  font-size: var(--step-0);
+  overflow-x: hidden;
+}
+
+/* Lenis owns the scroll; these are its required base styles. */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+::selection {
+  background: var(--color-ink);
+  color: var(--color-paper);
+}
+
+/* Focus rings: invisible for mouse users, unmistakable for keyboard users. */
+:focus-visible {
+  outline: 2px solid var(--color-ink);
+  outline-offset: 4px;
+}
+
+/* --------------------------------------------------------------------------
+   View Transitions — the shared-element morph from thumbnail to hero.
+   Driven by React's <ViewTransition name="photo-<slug>" share="morph"
+   default="none"> (see CategoryTile.tsx and work/[slug]/page.tsx), which
+   assigns the "morph" class to the transition pseudo-elements below.
+-------------------------------------------------------------------------- */
+::view-transition-group(.morph) {
+  animation-duration: 700ms;
+  animation-timing-function: var(--ease-in-out-quart);
+}
+
+/* A soft blur mid-flight hides pixel-interpolation artifacts as the image
+   resizes from thumbnail to hero — same technique as the title pairing. */
+::view-transition-image-pair(.morph) {
+  animation-name: morph-blur;
+  animation-duration: 700ms;
+  animation-timing-function: var(--ease-in-out-quart);
+}
+::view-transition-group(.title-morph) {
+  animation-duration: 500ms;
+  animation-timing-function: var(--ease-in-out-quart);
+}
+
+@keyframes morph-blur {
+  30% { filter: blur(4px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation-duration: 1ms !important;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Hide the custom cursor's native counterpart only where we draw our own. */
+@media (hover: hover) and (pointer: fine) {
+  html.has-custom-cursor,
+  html.has-custom-cursor a,
+  html.has-custom-cursor button {
+    cursor: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Homepage editorial grid — see components/CategoryGrid.tsx.
+   Width/alignment are set per-tile via CSS custom properties so the
+   component logic stays in TS while the responsive collapse stays in CSS.
+--------------------------------------------------------------------------- */
+.category-row {
+  display: flex;
+  justify-content: var(--tile-align, flex-start);
+  width: 100%;
+}
+
+.category-tile-frame {
+  width: var(--tile-width, 100%);
+}
+
+@media (max-width: 767px) {
+  .category-row {
+    justify-content: stretch !important;
+  }
+  .category-tile-frame {
+    width: 100% !important;
+  }
+}

@@ -1,0 +1,28 @@
+node_modules/
+.next/
+out/
+.vercel/
+*.tsbuildinfo
+next-env.d.ts
+.DS_Store
+.env*.local
+
+# HD originals live on your disk and in your own photo backup — never in git.
+# `npm run ingest` reads them and commits only the optimised derivatives.
+content/categories/**/*.jpg
+content/categories/**/*.jpeg
+content/categories/**/*.JPG
+content/categories/**/*.JPEG
+content/categories/**/*.png
+content/categories/**/*.PNG
+content/categories/**/*.tif
+content/categories/**/*.tiff
+content/categories/**/*.webp
+content/originals/
+content/about/*.jpg
+content/about/*.jpeg
+content/about/*.png
+
+# Local build-speed cache for scripts/ingest.ts — safe to delete anytime;
+# it just gets rebuilt (slower) on the next `npm run ingest`.
+data/.ingest-cache.json

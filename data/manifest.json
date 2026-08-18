@@ -1,0 +1,20 @@
+{
+  "generatedAt": "2026-08-18T08:44:50.481Z",
+  "categories": [],
+  "about": {
+    "title": "About",
+    "bio": "I'm Matei — I make photographs of places and people that hold still just long enough to be looked at twice.\n\nThis is a slow, ongoing archive of that work.\n",
+    "contactEmail": "matei.convard@gmail.com",
+    "contactLinks": [
+      {
+        "label": "Instagram",
+        "href": "https://instagram.com/"
+      },
+      {
+        "label": "Email",
+        "href": "mailto:matei.convard@gmail.com"
+      }
+    ],
+    "photo": null
+  }
+}
