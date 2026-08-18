@@ -14,7 +14,7 @@
   --color-grey-100: #e4e4e4;
   --color-paper: #fafafa;
 
-  --font-display: var(--font-instrument-serif), "Times New Roman", serif;
+  --font-display: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
   --font-sans: var(--font-inter-tight), ui-sans-serif, system-ui, sans-serif;
 
   /* Motion constants — mirrored in lib/motion.ts. Change both together. */

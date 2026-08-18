@@ -74,7 +74,7 @@ export default async function CategoryPage({
         >
           <ViewTransition name={`title-${category.slug}`} share="title-morph" default="none">
             <h1
-              className="font-display italic"
+              className="font-display"
               style={{ fontSize: "var(--step-3)", lineHeight: 1 }}
             >
               {category.title}
@@ -120,7 +120,7 @@ export default async function CategoryPage({
                 Next category
               </span>
               <span
-                className="font-display italic block"
+                className="font-display block"
                 style={{ fontSize: "var(--step-3)", marginTop: "0.5rem" }}
               >
                 {next.title}

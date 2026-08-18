@@ -50,7 +50,7 @@ export default function AboutPage() {
 
       <div style={{ maxWidth: "56ch" }}>
         <Reveal>
-          <h1 className="font-display italic" style={{ fontSize: "var(--step-3)" }}>
+          <h1 className="font-display" style={{ fontSize: "var(--step-3)" }}>
             {about.title}
           </h1>
         </Reveal>

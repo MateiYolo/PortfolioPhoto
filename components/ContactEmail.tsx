@@ -30,11 +30,18 @@ export function ContactEmail({ email }: { email: string }) {
       onPointerEnter={() => setHovered(true)}
       onPointerLeave={() => setHovered(false)}
       data-cursor="copy"
-      className="font-display italic"
+      className="font-display"
       style={{
-        fontSize: "var(--step-2)",
+        // Deliberately smaller than --step-2: Space Grotesk runs noticeably
+        // wider than the serif it replaced, and this button clips overflow
+        // (for the roll-up effect) rather than wrapping, so an address
+        // sized too large would silently truncate instead of visibly
+        // breaking.
+        fontSize: "clamp(1.15rem, 0.85rem + 1.3vw, 1.9rem)",
         display: "block",
+        maxWidth: "100%",
         overflow: "hidden",
+        overflowWrap: "anywhere",
         height: "1.3em",
         textAlign: "left",
       }}

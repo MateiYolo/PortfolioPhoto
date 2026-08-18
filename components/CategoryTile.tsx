@@ -76,7 +76,7 @@ export function CategoryTile({
                 className="flex items-baseline justify-between"
                 style={{ marginTop: "0.9rem" }}
               >
-                <span className="font-display text-[var(--step-1)] italic">
+                <span className="font-display text-[var(--step-1)]">
                   {category.title}
                 </span>
                 <span className="font-sans text-[var(--step--1)] tracking-[0.15em] text-grey-500 uppercase">
