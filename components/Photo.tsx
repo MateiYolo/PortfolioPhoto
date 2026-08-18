@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import type { Photo as PhotoType } from "@/lib/content";
 
@@ -11,7 +11,7 @@ const NOMINAL_WIDTHS = [720, 1440, 2560] as const;
  * ingest-time derivatives (clamped to the photo's real width so we never
  * claim a size larger than what was actually generated), blurs up from the
  * inlined LQIP, and reserves layout space via aspect-ratio so nothing
- * shifts while it loads — portrait and landscape both just work.
+ * shifts while it loads. Portrait and landscape both just work.
  */
 export function Photo({
   photo,
@@ -29,6 +29,17 @@ export function Photo({
   grayscale?: boolean;
 }) {
   const [loaded, setLoaded] = useState(false);
+  const imgRef = useRef<HTMLImageElement>(null);
+
+  // A cached or already-decoded image finishes loading while the server
+  // HTML is still being parsed, which is before React hydrates and gets a
+  // chance to attach onLoad. Without this catch-up check the handler never
+  // fires and the photo stays at opacity 0 forever, leaving nothing on
+  // screen but its blur placeholder.
+  useEffect(() => {
+    const img = imgRef.current;
+    if (img?.complete && img.naturalWidth > 0) setLoaded(true);
+  }, []);
 
   const srcSet = NOMINAL_WIDTHS.map((w) => {
     const path =
@@ -50,6 +61,7 @@ export function Photo({
       }}
     >
       <img
+        ref={imgRef}
         src={photo.src.w1440}
         srcSet={srcSet}
         sizes={sizes}

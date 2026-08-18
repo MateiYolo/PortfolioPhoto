@@ -6,12 +6,12 @@ import { Reveal } from "@/components/Reveal";
 import { getAbout } from "@/lib/content";
 
 export const metadata: Metadata = {
-  title: "About — Matei Convard",
+  title: "About / Matei Convard",
 };
 
 export default function AboutPage() {
   const about = getAbout();
-  // Paragraphs are separated by a blank line, not every line break — a YAML
+  // Paragraphs are separated by a blank line, not every line break. A YAML
   // `|` block in meta.md often soft-wraps a single paragraph across several
   // physical lines, so splitting on every "\n" would fragment one sentence
   // into several short <p> tags.
@@ -31,7 +31,7 @@ export default function AboutPage() {
         gap: "clamp(2.5rem, 6vw, 5rem)",
       }}
       // Inline styles always win over classes, so the responsive column
-      // count has to live entirely in Tailwind — grid-cols-1 by default,
+      // count has to live entirely in Tailwind: grid-cols-1 by default,
       // two asymmetric columns from md up. Without a portrait yet, stay
       // single-column at every width rather than reserving an empty slot.
       className={

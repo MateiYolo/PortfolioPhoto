@@ -6,7 +6,7 @@ import { useReducedMotion } from "@/lib/useReducedMotion";
 
 /**
  * Splits text into masked, staggered characters (or words) that rise into
- * place. Used for the homepage name and section headings — the signature
+ * place. Used for the homepage name and section headings: the signature
  * "typography as motion" moment.
  *
  * Splitting by character reads best short (a name, a title); long strings

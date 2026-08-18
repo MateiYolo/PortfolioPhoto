@@ -7,7 +7,7 @@ import type { Photo as PhotoType } from "@/lib/content";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 
 /**
- * The About page portrait, drifting slowly as the page scrolls — the one
+ * The About page portrait, drifting slowly as the page scrolls. The one
  * deliberately slow, understated parallax on the site (everything else on
  * this page is static text), which is what makes it read as a portrait
  * rather than a gallery shot.

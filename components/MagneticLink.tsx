@@ -8,7 +8,7 @@ import { useReducedMotion } from "@/lib/useReducedMotion";
 
 /**
  * Wraps interactive elements (nav links, tile titles) so they nudge toward
- * the cursor within their own bounds — a small, cheap detail that makes the
+ * the cursor within their own bounds: a small, cheap detail that makes the
  * whole UI feel physically responsive. No-ops on touch and reduced-motion.
  */
 export function MagneticLink({

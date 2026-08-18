@@ -7,7 +7,7 @@ import { useReducedMotion } from "@/lib/useReducedMotion";
 /**
  * Global smooth-scroll provider. Lenis takes over the native scroll and
  * drives it with inertia; because it updates real window scroll position
- * (root mode), Motion's own `useScroll` hooks stay in sync automatically —
+ * (root mode), Motion's own `useScroll` hooks stay in sync automatically:
  * no manual bridging needed.
  *
  * Fully bypassed under prefers-reduced-motion: native scroll is restored.

@@ -1,7 +1,7 @@
-# Matei Convard — Photography Portfolio
+# Matei Convard, Photography Portfolio
 
 A minimalist, black & white photography portfolio built with Next.js,
-Tailwind, and Motion. Categories are managed as folders on disk — there is
+Tailwind, and Motion. Categories are managed as folders on disk: there is
 no CMS login, no database, and no upload UI: you edit files locally and
 push.
 
@@ -33,7 +33,7 @@ git commit -m "Add Tokyo Nights"
 git push
 ```
 
-Pushing triggers the Vercel deploy — that's the entire publishing flow.
+Pushing triggers the Vercel deploy, and that's the entire publishing flow.
 
 ### What `npm run ingest` does
 
@@ -42,14 +42,14 @@ Pushing triggers the Vercel deploy — that's the entire publishing flow.
 - Generates AVIF derivatives at three widths (720/1440/2560px, never
   upscaled past the original) plus a tiny blurred placeholder, into
   `public/media/`.
-- Writes `data/manifest.json` — the single file every page reads from.
+- Writes `data/manifest.json`, the single file every page reads from.
 - Is **idempotent**: it hashes each source file and skips anything
   unchanged, so re-running after adding one photo to an existing category
   only processes that one photo.
 
 ### Where the bytes live
 
-Your original HD files in `content/categories/**` are **gitignored** —
+Your original HD files in `content/categories/**` are **gitignored**:
 they stay on your disk (and in your own photo backup), never in git. Only
 the generated `public/media/**` derivatives are committed, at roughly
 600KB per photo across all three sizes.
@@ -61,7 +61,7 @@ against the bucket, and every page picks it up with no component changes.
 ## Editing the About page
 
 Edit `content/about/meta.md` (title, bio, contact email, contact links).
-Bio paragraphs are separated by a **blank line** — a single sentence that
+Bio paragraphs are separated by a **blank line**. A single sentence that
 soft-wraps across several lines in your editor is still one paragraph.
 
 Drop a single photo of yourself in `content/about/` (any filename) and run
@@ -72,7 +72,7 @@ Drop a single photo of yourself in `content/about/` (any filename) and run
 ```
 npm install
 npm run dev       # http://localhost:3000
-npm run build     # production build — verifies every route is fully static
+npm run build     # production build, verifies every route is fully static
 ```
 
 ## Stack

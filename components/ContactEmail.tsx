@@ -18,7 +18,7 @@ export function ContactEmail({ email }: { email: string }) {
       setCopied(true);
       window.setTimeout(() => setCopied(false), 1800);
     } catch {
-      // Clipboard API unavailable — the address is still fully visible
+      // Clipboard API unavailable. The address is still fully visible
       // and selectable, so the user can copy it manually.
     }
   };
