@@ -5,6 +5,7 @@ import type { Metadata } from "next";
 import { Arrive } from "@/components/Arrive";
 import { CategoryPhotoSequence } from "@/components/CategoryPhotoSequence";
 import { MagneticLink } from "@/components/MagneticLink";
+import { SplitText } from "@/components/SplitText";
 import { getAdjacentCategory, getCategories, getCategory } from "@/lib/content";
 
 export function generateStaticParams() {
@@ -67,7 +68,7 @@ export default async function CategoryPage({
             className="font-display"
             style={{ fontSize: "var(--step-3)", lineHeight: 1 }}
           >
-            {category.title}
+            <SplitText text={category.title} />
           </h1>
         </ViewTransition>
 

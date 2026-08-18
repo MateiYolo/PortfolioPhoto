@@ -3,6 +3,7 @@ import { Inter_Tight, Space_Grotesk } from "next/font/google";
 import type { ReactNode } from "react";
 import { Cursor } from "@/components/Cursor";
 import { NavHeader } from "@/components/NavHeader";
+import { RouteScrollReset } from "@/components/RouteScrollReset";
 import { ScrollVelocityProvider } from "@/components/ScrollVelocity";
 import { SmoothScroll } from "@/components/SmoothScroll";
 import "./globals.css";
@@ -35,6 +36,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <body>
         <SmoothScroll>
           <ScrollVelocityProvider>
+            <RouteScrollReset />
             <Cursor />
             <NavHeader />
             {children}
