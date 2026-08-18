@@ -45,7 +45,9 @@ function frameWidth(photo: PhotoType, lead: boolean) {
  * photo opens it in the Lightbox.
  *
  * The first photo is the one the homepage thumbnail morphs into (that is
- * what `morphName` wires up), so it is never tilted and never lazy-loaded.
+ * what `morphName` wires up) and is never lazy-loaded. Its entry pose is
+ * already spent at the top of the page, so it only ever leans with scroll
+ * speed, and the morph is captured against an untransformed element.
  * Everything after it settles out of a tilt as it is scrolled into place;
  * see ScrollTilt for why that replaced the old mask-wipe reveal.
  */
@@ -96,13 +98,15 @@ export function CategoryPhotoSequence({
               className="category-tile-frame"
               style={{ "--tile-width": frameWidth(photo, lead) } as React.CSSProperties}
             >
-              {lead && morphName ? (
-                <ViewTransition name={morphName} share="morph" default="none">
-                  <div>{button}</div>
-                </ViewTransition>
-              ) : (
-                <ScrollTilt direction={i % 2 === 0 ? 1 : -1}>{button}</ScrollTilt>
-              )}
+              <ScrollTilt direction={i % 2 === 0 ? 1 : -1}>
+                {lead && morphName ? (
+                  <ViewTransition name={morphName} share="morph" default="none">
+                    <div>{button}</div>
+                  </ViewTransition>
+                ) : (
+                  button
+                )}
+              </ScrollTilt>
             </div>
           </div>
         );
