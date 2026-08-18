@@ -1,20 +1,20 @@
 "use client";
 
-import { motion, useScroll, useTransform } from "motion/react";
+import { motion, useInView, useScroll, useTransform } from "motion/react";
 import { useRef } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import { useScrollVelocityFactor } from "@/components/ScrollVelocity";
 
 /** Degrees a photo lies back by when it is at the very bottom of the viewport. */
-const ENTRY_TILT = 16;
-/** Degrees it swivels off-axis on the way in. */
-const ENTRY_SWIVEL = 6;
+const ENTRY_TILT = 9;
 /** Pixels it trails behind its final position. */
-const ENTRY_LAG = 56;
+const ENTRY_LAG = 22;
 /** Extra degrees at full scroll speed, applied to every photo on screen. */
-const DRAG_TILT = 8;
-/** How much of the entry tilt survives when the page is barely moving. */
-const REST_SHARE = 0.3;
+const DRAG_TILT = 4.5;
+/** How much of the entry pose is left showing when the page is barely moving. */
+const REST_SHARE = 0.35;
+/** How far outside the viewport a photo starts and stops being driven. */
+const ACTIVE_MARGIN = "300px";
 
 /**
  * Scroll-linked settle, used instead of a triggered reveal.
@@ -24,15 +24,19 @@ const REST_SHARE = 0.3;
  * two things at once.
  *
  * Position: while a photo is low in the viewport it lies back, hinged on
- * its bottom edge like a print being stood upright, and comes level with
- * the screen as it reaches reading position.
+ * its bottom edge, and comes level with the screen as it reaches reading
+ * position.
  *
  * Speed: the harder the visitor scrolls, the further everything on screen
  * leans away from the direction of travel, and the more of that entry
- * tilt is allowed to show. Ease off and the whole page settles back to
- * level under its own spring. This is the difference between an animation
- * that plays at you and one that answers you: drift down the page and the
- * photos barely move, throw the page and they lean into it.
+ * pose is allowed to show. Ease off and the page settles back to level.
+ * This is the difference between an animation that plays at you and one
+ * that answers you: drift down the page and the photos barely move,
+ * throw the page and they lean into it.
+ *
+ * The rotation is on one axis only. A photograph leaning away from the
+ * reader is a plane in space; the same photograph also swivelling on Y is
+ * a crooked frame, which is the thing this is trying not to look like.
  *
  * The perspective lives on the outer wrapper and the rotation on the
  * inner element, because perspective only applies to a child's transform.
@@ -46,14 +50,11 @@ const REST_SHARE = 0.3;
  */
 export function ScrollTilt({
   children,
-  direction = 1,
   intensity = 1,
   className,
   style,
 }: {
   children: ReactNode;
-  /** Which side the photo swivels in from. Alternate them down a page. */
-  direction?: 1 | -1;
   /** Scales the whole effect; 0 disables it. */
   intensity?: number;
   className?: string;
@@ -61,6 +62,12 @@ export function ScrollTilt({
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const speed = useScrollVelocityFactor();
+
+  // Anything well off screen is dropped out of the frame loop entirely and
+  // un-promoted: no style writes, and no compositor layer held open for a
+  // full-bleed photograph nobody can see. The margin means the handover
+  // always happens out of sight.
+  const active = useInView(ref, { margin: ACTIVE_MARGIN });
 
   const { scrollYProgress } = useScroll({
     target: ref,
@@ -71,35 +78,28 @@ export function ScrollTilt({
   // viewport, 0 once the photo has arrived.
   const owed = useTransform(scrollYProgress, [0, 1], [1, 0]);
 
-  const rotateX = useTransform([owed, speed], ([o, v]: number[]) => {
-    return (o * ENTRY_TILT * share(v) + v * DRAG_TILT) * intensity;
-  });
-  const rotateY = useTransform([owed, speed], ([o, v]: number[]) => {
-    return o * direction * ENTRY_SWIVEL * share(v) * intensity;
-  });
-  const y = useTransform([owed, speed], ([o, v]: number[]) => {
-    return o * ENTRY_LAG * share(v) * intensity;
-  });
-  const scale = useTransform([owed, speed], ([o, v]: number[]) => {
-    return 1 - o * 0.03 * share(v) * intensity;
-  });
+  const rotateX = useTransform([owed, speed], ([o, v]: number[]) =>
+    (o * ENTRY_TILT * share(v) + v * DRAG_TILT) * intensity
+  );
+  const y = useTransform([owed, speed], ([o, v]: number[]) =>
+    o * ENTRY_LAG * share(v) * intensity
+  );
 
   return (
     <div
       ref={ref}
       className={className}
-      style={{ perspective: "1150px", perspectiveOrigin: "50% 30%", ...style }}
+      style={{ perspective: "1400px", ...style }}
     >
       <motion.div
         data-scroll-tilt
         style={{
-          rotateX,
-          rotateY,
-          y,
-          scale,
+          rotateX: active ? rotateX : 0,
+          y: active ? y : 0,
           transformOrigin: "50% 100%",
           transformStyle: "preserve-3d",
-          willChange: "transform",
+          backfaceVisibility: "hidden",
+          willChange: active ? "transform" : "auto",
         }}
       >
         {children}

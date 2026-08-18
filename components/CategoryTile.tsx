@@ -21,13 +21,11 @@ import { useReducedMotion } from "@/lib/useReducedMotion";
 export function CategoryTile({
   category,
   parallaxRange,
-  tiltDirection,
   dimmed,
   onHoverChange,
 }: {
   category: Category;
   parallaxRange: [number, number];
-  tiltDirection: 1 | -1;
   dimmed: boolean;
   onHoverChange: (slug: string | null) => void;
 }) {
@@ -44,7 +42,7 @@ export function CategoryTile({
 
   return (
     <div ref={ref}>
-      <ScrollTilt direction={tiltDirection} intensity={0.7}>
+      <ScrollTilt intensity={0.7}>
         <motion.div
           style={{ y }}
           onPointerEnter={() => {

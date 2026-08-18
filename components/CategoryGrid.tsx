@@ -60,7 +60,6 @@ export function CategoryGrid({ categories }: { categories: Category[] }) {
             <CategoryTile
               category={category}
               parallaxRange={PARALLAX_PATTERN[i % PARALLAX_PATTERN.length]}
-              tiltDirection={i % 2 === 0 ? 1 : -1}
               dimmed={hoveredSlug !== null && hoveredSlug !== category.slug}
               onHoverChange={setHoveredSlug}
             />

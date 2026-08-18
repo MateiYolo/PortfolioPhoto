@@ -98,7 +98,7 @@ export function CategoryPhotoSequence({
               className="category-tile-frame"
               style={{ "--tile-width": frameWidth(photo, lead) } as React.CSSProperties}
             >
-              <ScrollTilt direction={i % 2 === 0 ? 1 : -1}>
+              <ScrollTilt>
                 {lead && morphName ? (
                   <ViewTransition name={morphName} share="morph" default="none">
                     <div>{button}</div>
