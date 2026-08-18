@@ -1,6 +1,226 @@
 {
-  "generatedAt": "2026-08-18T08:44:50.481Z",
-  "categories": [],
+  "generatedAt": "2026-08-18T09:31:30.564Z",
+  "categories": [
+    {
+      "slug": "pete-the-monkey",
+      "title": "Pete The Monkey",
+      "date": "2026-08-10",
+      "blurb": "Three days at Pete The Monkey festival, shot entirely on film — a\nPentax K1000 with a 40mm f/2.8 lens, loaded with Kodak Ultramax 400\nand Gold 200.\n",
+      "order": 1,
+      "cover": {
+        "id": "cover",
+        "src": {
+          "w720": "/media/pete-the-monkey/cover-720.avif",
+          "w1440": "/media/pete-the-monkey/cover-1440.avif",
+          "w2560": "/media/pete-the-monkey/cover-2560.avif"
+        },
+        "width": 2965,
+        "height": 1966,
+        "orientation": "landscape",
+        "lqip": "data:image/avif;base64,AAAAHGZ0eXBhdmlmAAAAAG1pZjFhdmlmbWlhZgAAANZtZXRhAAAAAAAAACFoZGxyAAAAAAAAAABwaWN0AAAAAAAAAAAAAAAAAAAAACJpbG9jAAAAAERAAAEAAQAAAAAA+gABAAAAAAAAAEQAAAAjaWluZgAAAAAAAQAAABVpbmZlAgAAAAABAABhdjAxAAAAAA5waXRtAAAAAAABAAAAVmlwcnAAAAA4aXBjbwAAAAxhdjFDgSACAAAAABRpc3BlAAAAAAAAABgAAAAQAAAAEHBpeGkAAAAAAwgICAAAABZpcG1hAAAAAAAAAAEAAQOBAgMAAABMbWRhdBIACgg4EO/tICGg0jI2G4Ji5OeeeeFCwADwA1+9hknY8KXPCN/CgLVkv8eREj1okBfrgoJnzqe2dwklo6OF+z8pooW0",
+        "luminance": 0.458,
+        "alt": "Cover"
+      },
+      "photos": [
+        {
+          "id": "2026-activite-cache-tetons-1-matei",
+          "src": {
+            "w720": "/media/pete-the-monkey/2026-activite-cache-tetons-1-matei-720.avif",
+            "w1440": "/media/pete-the-monkey/2026-activite-cache-tetons-1-matei-1440.avif",
+            "w2560": "/media/pete-the-monkey/2026-activite-cache-tetons-1-matei-2560.avif"
+          },
+          "width": 3089,
+          "height": 2048,
+          "orientation": "landscape",
+          "lqip": "data:image/avif;base64,AAAAHGZ0eXBhdmlmAAAAAG1pZjFhdmlmbWlhZgAAANZtZXRhAAAAAAAAACFoZGxyAAAAAAAAAABwaWN0AAAAAAAAAAAAAAAAAAAAACJpbG9jAAAAAERAAAEAAQAAAAAA+gABAAAAAAAAADoAAAAjaWluZgAAAAAAAQAAABVpbmZlAgAAAAABAABhdjAxAAAAAA5waXRtAAAAAAABAAAAVmlwcnAAAAA4aXBjbwAAAAxhdjFDgSACAAAAABRpc3BlAAAAAAAAABgAAAAQAAAAEHBpeGkAAAAAAwgICAAAABZpcG1hAAAAAAAAAAEAAQOBAgMAAABCbWRhdBIACgg4EO/tICGg0jIsG4Ji5OeeeeFCwADwA0gDeCcO3lF3e8ciIHWxMD0AMST2bBOSimrLvgEaEWA=",
+          "luminance": 0.446,
+          "alt": "Activité Cache Tetons 1 Matei"
+        },
+        {
+          "id": "2026-ambiance-3-matei",
+          "src": {
+            "w720": "/media/pete-the-monkey/2026-ambiance-3-matei-720.avif",
+            "w1440": "/media/pete-the-monkey/2026-ambiance-3-matei-1440.avif",
+            "w2560": "/media/pete-the-monkey/2026-ambiance-3-matei-2560.avif"
+          },
+          "width": 2986,
+          "height": 1980,
+          "orientation": "landscape",
+          "lqip": "data:image/avif;base64,AAAAHGZ0eXBhdmlmAAAAAG1pZjFhdmlmbWlhZgAAANZtZXRhAAAAAAAAACFoZGxyAAAAAAAAAABwaWN0AAAAAAAAAAAAAAAAAAAAACJpbG9jAAAAAERAAAEAAQAAAAAA+gABAAAAAAAAADkAAAAjaWluZgAAAAAAAQAAABVpbmZlAgAAAAABAABhdjAxAAAAAA5waXRtAAAAAAABAAAAVmlwcnAAAAA4aXBjbwAAAAxhdjFDgSACAAAAABRpc3BlAAAAAAAAABgAAAAQAAAAEHBpeGkAAAAAAwgICAAAABZpcG1hAAAAAAAAAAEAAQOBAgMAAABBbWRhdBIACgg4EO/tICGg0jIrG4Ji5OeeeeFCwADwA2TRAtJlWh3/3/1DOmSFFbBmpHa3cgg/afLJLm5PBA==",
+          "luminance": 0.653,
+          "alt": "Ambiance 3 Matei"
+        },
+        {
+          "id": "2026-ambiance-6-plage-matei",
+          "src": {
+            "w720": "/media/pete-the-monkey/2026-ambiance-6-plage-matei-720.avif",
+            "w1440": "/media/pete-the-monkey/2026-ambiance-6-plage-matei-1440.avif",
+            "w2560": "/media/pete-the-monkey/2026-ambiance-6-plage-matei-2048.avif"
+          },
+          "width": 2048,
+          "height": 3089,
+          "orientation": "portrait",
+          "lqip": "data:image/avif;base64,AAAAHGZ0eXBhdmlmAAAAAG1pZjFhdmlmbWlhZgAAANZtZXRhAAAAAAAAACFoZGxyAAAAAAAAAABwaWN0AAAAAAAAAAAAAAAAAAAAACJpbG9jAAAAAERAAAEAAQAAAAAA+gABAAAAAAAAAG0AAAAjaWluZgAAAAAAAQAAABVpbmZlAgAAAAABAABhdjAxAAAAAA5waXRtAAAAAAABAAAAVmlwcnAAAAA4aXBjbwAAAAxhdjFDgSACAAAAABRpc3BlAAAAAAAAABgAAAAkAAAAEHBpeGkAAAAAAwgICAAAABZpcG1hAAAAAAAAAAEAAQOBAgMAAAB1bWRhdBIACgk4EW8bSAhoNIAyXhuCYuTnnnnhQsAA8fVc1n+VBmNBhxobqYRAo/xyEOZlZct5noY3anJzmP6fEjLeJS4LCXxCvddgtX2sEohnTUEqPiq8a1GxSybOs5cgG8l+thawLiNSty2JXYuJ7YA=",
+          "luminance": 0.515,
+          "alt": "Ambiance 6 Plage Matei"
+        },
+        {
+          "id": "2026-ambiance-obsimo-vintage-clothes-matei",
+          "src": {
+            "w720": "/media/pete-the-monkey/2026-ambiance-obsimo-vintage-clothes-matei-720.avif",
+            "w1440": "/media/pete-the-monkey/2026-ambiance-obsimo-vintage-clothes-matei-1440.avif",
+            "w2560": "/media/pete-the-monkey/2026-ambiance-obsimo-vintage-clothes-matei-2560.avif"
+          },
+          "width": 3089,
+          "height": 2048,
+          "orientation": "landscape",
+          "lqip": "data:image/avif;base64,AAAAHGZ0eXBhdmlmAAAAAG1pZjFhdmlmbWlhZgAAANZtZXRhAAAAAAAAACFoZGxyAAAAAAAAAABwaWN0AAAAAAAAAAAAAAAAAAAAACJpbG9jAAAAAERAAAEAAQAAAAAA+gABAAAAAAAAADwAAAAjaWluZgAAAAAAAQAAABVpbmZlAgAAAAABAABhdjAxAAAAAA5waXRtAAAAAAABAAAAVmlwcnAAAAA4aXBjbwAAAAxhdjFDgSACAAAAABRpc3BlAAAAAAAAABgAAAAQAAAAEHBpeGkAAAAAAwgICAAAABZpcG1hAAAAAAAAAAEAAQOBAgMAAABEbWRhdBIACgg4EO/tICGg0jIuG4Ji5OeeeeFCwADwA1+8p4VBLg5hVnB6ucvuEvJX1JVLNNkHHvnBG8h/4B4heA==",
+          "luminance": 0.351,
+          "alt": "Ambiance Obsimo Vintage Clothes Matei"
+        },
+        {
+          "id": "2026-bingo-disco-2-matei",
+          "src": {
+            "w720": "/media/pete-the-monkey/2026-bingo-disco-2-matei-720.avif",
+            "w1440": "/media/pete-the-monkey/2026-bingo-disco-2-matei-1440.avif",
+            "w2560": "/media/pete-the-monkey/2026-bingo-disco-2-matei-2560.avif"
+          },
+          "width": 3089,
+          "height": 2048,
+          "orientation": "landscape",
+          "lqip": "data:image/avif;base64,AAAAHGZ0eXBhdmlmAAAAAG1pZjFhdmlmbWlhZgAAANZtZXRhAAAAAAAAACFoZGxyAAAAAAAAAABwaWN0AAAAAAAAAAAAAAAAAAAAACJpbG9jAAAAAERAAAEAAQAAAAAA+gABAAAAAAAAAD8AAAAjaWluZgAAAAAAAQAAABVpbmZlAgAAAAABAABhdjAxAAAAAA5waXRtAAAAAAABAAAAVmlwcnAAAAA4aXBjbwAAAAxhdjFDgSACAAAAABRpc3BlAAAAAAAAABgAAAAQAAAAEHBpeGkAAAAAAwgICAAAABZpcG1hAAAAAAAAAAEAAQOBAgMAAABHbWRhdBIACgg4EO/tICGg0jIxG4Ji5OeeeeFCwADwA1+9Iw+1Lw4054+8xD10WPsiwbyCHJe+ULwqFYTyG9QBMfrXiA==",
+          "luminance": 0.357,
+          "alt": "Bingo Disco 2 Matei"
+        },
+        {
+          "id": "2026-camping-3-matei",
+          "src": {
+            "w720": "/media/pete-the-monkey/2026-camping-3-matei-720.avif",
+            "w1440": "/media/pete-the-monkey/2026-camping-3-matei-1440.avif",
+            "w2560": "/media/pete-the-monkey/2026-camping-3-matei-2048.avif"
+          },
+          "width": 2048,
+          "height": 3089,
+          "orientation": "portrait",
+          "lqip": "data:image/avif;base64,AAAAHGZ0eXBhdmlmAAAAAG1pZjFhdmlmbWlhZgAAANZtZXRhAAAAAAAAACFoZGxyAAAAAAAAAABwaWN0AAAAAAAAAAAAAAAAAAAAACJpbG9jAAAAAERAAAEAAQAAAAAA+gABAAAAAAAAAGQAAAAjaWluZgAAAAAAAQAAABVpbmZlAgAAAAABAABhdjAxAAAAAA5waXRtAAAAAAABAAAAVmlwcnAAAAA4aXBjbwAAAAxhdjFDgSACAAAAABRpc3BlAAAAAAAAABgAAAAkAAAAEHBpeGkAAAAAAwgICAAAABZpcG1hAAAAAAAAAAEAAQOBAgMAAABsbWRhdBIACgk4EW8bSAhoNIAyVRuCYuTnnnnhQsAA8fVhzhuVtEHp2mUuWIqq5xJj3n11z8azdIcMCwx0dkxG2kTY7D0DmqNj/Cx+EXXaR5eglSfHnEVS+gEFdnh7qVNM2wN/ESeVRMA=",
+          "luminance": 0.194,
+          "alt": "Camping 3 Matei"
+        },
+        {
+          "id": "2026-dj-2-matei",
+          "src": {
+            "w720": "/media/pete-the-monkey/2026-dj-2-matei-720.avif",
+            "w1440": "/media/pete-the-monkey/2026-dj-2-matei-1440.avif",
+            "w2560": "/media/pete-the-monkey/2026-dj-2-matei-2560.avif"
+          },
+          "width": 2742,
+          "height": 1818,
+          "orientation": "landscape",
+          "lqip": "data:image/avif;base64,AAAAHGZ0eXBhdmlmAAAAAG1pZjFhdmlmbWlhZgAAANZtZXRhAAAAAAAAACFoZGxyAAAAAAAAAABwaWN0AAAAAAAAAAAAAAAAAAAAACJpbG9jAAAAAERAAAEAAQAAAAAA+gABAAAAAAAAAD8AAAAjaWluZgAAAAAAAQAAABVpbmZlAgAAAAABAABhdjAxAAAAAA5waXRtAAAAAAABAAAAVmlwcnAAAAA4aXBjbwAAAAxhdjFDgSACAAAAABRpc3BlAAAAAAAAABgAAAAQAAAAEHBpeGkAAAAAAwgICAAAABZpcG1hAAAAAAAAAAEAAQOBAgMAAABHbWRhdBIACgg4EO/tICGg0jIxG4Ji5OeeeeFCwADwA2U0feDTwVurMfwjh6GjfCLb11zKiY0BYIgane1pfGjaMHnP7g==",
+          "luminance": 0.378,
+          "alt": "Dj 2 Matei"
+        },
+        {
+          "id": "2026-nightscapes-secrect-marriagese-5-matei",
+          "src": {
+            "w720": "/media/pete-the-monkey/2026-nightscapes-secrect-marriagese-5-matei-720.avif",
+            "w1440": "/media/pete-the-monkey/2026-nightscapes-secrect-marriagese-5-matei-1358.avif",
+            "w2560": "/media/pete-the-monkey/2026-nightscapes-secrect-marriagese-5-matei-1358.avif"
+          },
+          "width": 1358,
+          "height": 2048,
+          "orientation": "portrait",
+          "lqip": "data:image/avif;base64,AAAAHGZ0eXBhdmlmAAAAAG1pZjFhdmlmbWlhZgAAANZtZXRhAAAAAAAAACFoZGxyAAAAAAAAAABwaWN0AAAAAAAAAAAAAAAAAAAAACJpbG9jAAAAAERAAAEAAQAAAAAA+gABAAAAAAAAAF0AAAAjaWluZgAAAAAAAQAAABVpbmZlAgAAAAABAABhdjAxAAAAAA5waXRtAAAAAAABAAAAVmlwcnAAAAA4aXBjbwAAAAxhdjFDgSACAAAAABRpc3BlAAAAAAAAABgAAAAkAAAAEHBpeGkAAAAAAwgICAAAABZpcG1hAAAAAAAAAAEAAQOBAgMAAABlbWRhdBIACgk4EW8bSAhoNIAyThuCYuTnnnnhQsAA8fR9MtmkumtOp4gXm5I+tVm0mtgmIcbcdnOjzS6jbLf1GSH/n43uSRnZclGR5DgXibAmsV7KMVuO6PCGfICZk+vMaA==",
+          "luminance": 0.409,
+          "alt": "Nightscapes Secrect Marriagese 5 Matei"
+        },
+        {
+          "id": "2026-nightscapes-secrect-marriagese-11-matei",
+          "src": {
+            "w720": "/media/pete-the-monkey/2026-nightscapes-secrect-marriagese-11-matei-720.avif",
+            "w1440": "/media/pete-the-monkey/2026-nightscapes-secrect-marriagese-11-matei-1440.avif",
+            "w2560": "/media/pete-the-monkey/2026-nightscapes-secrect-marriagese-11-matei-2560.avif"
+          },
+          "width": 3089,
+          "height": 2048,
+          "orientation": "landscape",
+          "lqip": "data:image/avif;base64,AAAAHGZ0eXBhdmlmAAAAAG1pZjFhdmlmbWlhZgAAANZtZXRhAAAAAAAAACFoZGxyAAAAAAAAAABwaWN0AAAAAAAAAAAAAAAAAAAAACJpbG9jAAAAAERAAAEAAQAAAAAA+gABAAAAAAAAAEQAAAAjaWluZgAAAAAAAQAAABVpbmZlAgAAAAABAABhdjAxAAAAAA5waXRtAAAAAAABAAAAVmlwcnAAAAA4aXBjbwAAAAxhdjFDgSACAAAAABRpc3BlAAAAAAAAABgAAAAQAAAAEHBpeGkAAAAAAwgICAAAABZpcG1hAAAAAAAAAAEAAQOBAgMAAABMbWRhdBIACgg4EO/tICGg0jI2G4Ji5OeeeeFCwADwA2SeQWMioCo6m4WIAOcaHFoBPHvEs2GgD/pRlyrYS6MvPhIyOUpMU5SQ",
+          "luminance": 0.33,
+          "alt": "Nightscapes Secrect Marriagese 11 Matei"
+        },
+        {
+          "id": "2026-pete-cirque-2-matei",
+          "src": {
+            "w720": "/media/pete-the-monkey/2026-pete-cirque-2-matei-720.avif",
+            "w1440": "/media/pete-the-monkey/2026-pete-cirque-2-matei-1440.avif",
+            "w2560": "/media/pete-the-monkey/2026-pete-cirque-2-matei-2560.avif"
+          },
+          "width": 3089,
+          "height": 2048,
+          "orientation": "landscape",
+          "lqip": "data:image/avif;base64,AAAAHGZ0eXBhdmlmAAAAAG1pZjFhdmlmbWlhZgAAANZtZXRhAAAAAAAAACFoZGxyAAAAAAAAAABwaWN0AAAAAAAAAAAAAAAAAAAAACJpbG9jAAAAAERAAAEAAQAAAAAA+gABAAAAAAAAADwAAAAjaWluZgAAAAAAAQAAABVpbmZlAgAAAAABAABhdjAxAAAAAA5waXRtAAAAAAABAAAAVmlwcnAAAAA4aXBjbwAAAAxhdjFDgSACAAAAABRpc3BlAAAAAAAAABgAAAAQAAAAEHBpeGkAAAAAAwgICAAAABZpcG1hAAAAAAAAAAEAAQOBAgMAAABEbWRhdBIACgg4EO/tICGg0jIuG4Ji5OeeeeFCwADwA30g1xTAE6JH8GuOd4f2RakGktE9fNibKjWXJXlHoILEgA==",
+          "luminance": 0.133,
+          "alt": "Pete Cirque 2 Matei"
+        },
+        {
+          "id": "2026-pete-radiofreealice-1-matei",
+          "src": {
+            "w720": "/media/pete-the-monkey/2026-pete-radiofreealice-1-matei-720.avif",
+            "w1440": "/media/pete-the-monkey/2026-pete-radiofreealice-1-matei-1440.avif",
+            "w2560": "/media/pete-the-monkey/2026-pete-radiofreealice-1-matei-2560.avif"
+          },
+          "width": 3089,
+          "height": 2048,
+          "orientation": "landscape",
+          "lqip": "data:image/avif;base64,AAAAHGZ0eXBhdmlmAAAAAG1pZjFhdmlmbWlhZgAAANZtZXRhAAAAAAAAACFoZGxyAAAAAAAAAABwaWN0AAAAAAAAAAAAAAAAAAAAACJpbG9jAAAAAERAAAEAAQAAAAAA+gABAAAAAAAAADAAAAAjaWluZgAAAAAAAQAAABVpbmZlAgAAAAABAABhdjAxAAAAAA5waXRtAAAAAAABAAAAVmlwcnAAAAA4aXBjbwAAAAxhdjFDgSACAAAAABRpc3BlAAAAAAAAABgAAAAQAAAAEHBpeGkAAAAAAwgICAAAABZpcG1hAAAAAAAAAAEAAQOBAgMAAAA4bWRhdBIACgg4EO/tICGg0jIiG4Ji5DzzzwoWAO02g4DamSDrUeouIXfnYy02EGBmX5vV6w==",
+          "luminance": 0.194,
+          "alt": "Pete RadioFreeAlice 1 Matei"
+        },
+        {
+          "id": "2026-runners-matei",
+          "src": {
+            "w720": "/media/pete-the-monkey/2026-runners-matei-720.avif",
+            "w1440": "/media/pete-the-monkey/2026-runners-matei-1440.avif",
+            "w2560": "/media/pete-the-monkey/2026-runners-matei-1901.avif"
+          },
+          "width": 1901,
+          "height": 2048,
+          "orientation": "portrait",
+          "lqip": "data:image/avif;base64,AAAAHGZ0eXBhdmlmAAAAAG1pZjFhdmlmbWlhZgAAANZtZXRhAAAAAAAAACFoZGxyAAAAAAAAAABwaWN0AAAAAAAAAAAAAAAAAAAAACJpbG9jAAAAAERAAAEAAQAAAAAA+gABAAAAAAAAAFYAAAAjaWluZgAAAAAAAQAAABVpbmZlAgAAAAABAABhdjAxAAAAAA5waXRtAAAAAAABAAAAVmlwcnAAAAA4aXBjbwAAAAxhdjFDgSACAAAAABRpc3BlAAAAAAAAABgAAAAaAAAAEHBpeGkAAAAAAwgICAAAABZpcG1hAAAAAAAAAAEAAQOBAgMAAABebWRhdBIACgg4ES+WkBDQaTJIG4Ji5OeeeeFCwADQWL8ssSEdNnnKIGQCA78WTM+QJc+yhqfEM/9syZRjgDm6ISxvn4ntObVu+fwmIm6oMzDD31zek40XXoGA",
+          "luminance": 0.554,
+          "alt": "Runners Matei"
+        },
+        {
+          "id": "2026-team-bad-body-chaos-code-matei",
+          "src": {
+            "w720": "/media/pete-the-monkey/2026-team-bad-body-chaos-code-matei-720.avif",
+            "w1440": "/media/pete-the-monkey/2026-team-bad-body-chaos-code-matei-1440.avif",
+            "w2560": "/media/pete-the-monkey/2026-team-bad-body-chaos-code-matei-2560.avif"
+          },
+          "width": 3089,
+          "height": 2048,
+          "orientation": "landscape",
+          "lqip": "data:image/avif;base64,AAAAHGZ0eXBhdmlmAAAAAG1pZjFhdmlmbWlhZgAAANZtZXRhAAAAAAAAACFoZGxyAAAAAAAAAABwaWN0AAAAAAAAAAAAAAAAAAAAACJpbG9jAAAAAERAAAEAAQAAAAAA+gABAAAAAAAAAD4AAAAjaWluZgAAAAAAAQAAABVpbmZlAgAAAAABAABhdjAxAAAAAA5waXRtAAAAAAABAAAAVmlwcnAAAAA4aXBjbwAAAAxhdjFDgSACAAAAABRpc3BlAAAAAAAAABgAAAAQAAAAEHBpeGkAAAAAAwgICAAAABZpcG1hAAAAAAAAAAEAAQOBAgMAAABGbWRhdBIACgg4EO/tICGg0jIwG4Ji5OeeeeFCwADwA0gJw5UB7luwt/S3DF6hosFpfzUr+bKxSEjY9gYEjP4gZCf0",
+          "luminance": 0.36,
+          "alt": "Team Bad Body Chaos Code Matei"
+        },
+        {
+          "id": "cover",
+          "src": {
+            "w720": "/media/pete-the-monkey/cover-720.avif",
+            "w1440": "/media/pete-the-monkey/cover-1440.avif",
+            "w2560": "/media/pete-the-monkey/cover-2560.avif"
+          },
+          "width": 2965,
+          "height": 1966,
+          "orientation": "landscape",
+          "lqip": "data:image/avif;base64,AAAAHGZ0eXBhdmlmAAAAAG1pZjFhdmlmbWlhZgAAANZtZXRhAAAAAAAAACFoZGxyAAAAAAAAAABwaWN0AAAAAAAAAAAAAAAAAAAAACJpbG9jAAAAAERAAAEAAQAAAAAA+gABAAAAAAAAAEQAAAAjaWluZgAAAAAAAQAAABVpbmZlAgAAAAABAABhdjAxAAAAAA5waXRtAAAAAAABAAAAVmlwcnAAAAA4aXBjbwAAAAxhdjFDgSACAAAAABRpc3BlAAAAAAAAABgAAAAQAAAAEHBpeGkAAAAAAwgICAAAABZpcG1hAAAAAAAAAAEAAQOBAgMAAABMbWRhdBIACgg4EO/tICGg0jI2G4Ji5OeeeeFCwADwA1+9hknY8KXPCN/CgLVkv8eREj1okBfrgoJnzqe2dwklo6OF+z8pooW0",
+          "luminance": 0.458,
+          "alt": "Cover"
+        }
+      ]
+    }
+  ],
   "about": {
     "title": "About",
     "bio": "I'm Matei — I make photographs of places and people that hold still just long enough to be looked at twice.\n\nThis is a slow, ongoing archive of that work.\n",
