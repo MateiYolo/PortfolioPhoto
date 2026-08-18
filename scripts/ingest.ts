@@ -314,12 +314,29 @@ async function processCategory(
     console.warn(`  ! skipping "${folderName}": no images found`);
     return null;
   }
-  if (imageFiles.length > 15) {
+
+  // The chosen cover can be named anything (e.g. `thumbnail.jpg`), which
+  // often sorts after the numbered shoot photos — trimming the naturally
+  // sorted list to 15 would silently drop it. Reserve its slot first, cap
+  // the rest at 15, then add it back so it's never the one that gets cut.
+  const coverSlug = slugify(fm.cover ?? "");
+  const coverFile = coverSlug
+    ? imageFiles.find(
+        (f) => slugify(path.basename(f, path.extname(f))) === coverSlug
+      )
+    : undefined;
+  const restFiles = coverFile
+    ? imageFiles.filter((f) => f !== coverFile)
+    : imageFiles;
+
+  if (restFiles.length > 15) {
     console.warn(
       `  ! "${folderName}" has ${imageFiles.length} photos, plan calls for 5-15, trimming to first 15`
     );
   }
-  const selected = imageFiles.slice(0, 15);
+  const selected = coverFile
+    ? [...restFiles.slice(0, 15), coverFile]
+    : restFiles.slice(0, 15);
 
   const outDir = path.join(MEDIA_DIR, slug);
   const outPublicPrefix = `/media/${slug}`;
