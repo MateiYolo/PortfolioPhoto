@@ -31,7 +31,7 @@ function getServerSnapshot(): boolean {
 /**
  * Tracks prefers-reduced-motion live (not just at mount), so a user who
  * flips the OS setting mid-session gets an immediate, correct response.
- * Every hand-rolled animation in this app should gate on this — the CSS
+ * Every hand-rolled animation in this app should gate on this. The CSS
  * fallback in globals.css only catches CSS-driven animation, not
  * Motion/JS-driven transforms.
  *

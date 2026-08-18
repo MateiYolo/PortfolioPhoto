@@ -20,13 +20,26 @@ export interface TileWidth {
   vw: number;
   /** Upper clamp bound, rem. */
   max: number;
+  /**
+   * Optional height ceiling, in svh. A photo is only ever sized by width,
+   * so the way to stop a tall portrait running off a short laptop screen
+   * is to cap that width by what the photo's own ratio allows in this much
+   * viewport height. Uncropped either way.
+   */
+  capSvh?: number;
 }
 
 /** Below this, `.category-tile-frame` goes full-bleed (see globals.css). */
 const MOBILE_MAX_PX = 767;
 
-export function tileWidth(t: TileWidth): string {
-  return `clamp(${t.min}rem, ${t.vw}vw, ${t.max}rem)`;
+export function tileWidth(t: TileWidth, photo?: Photo): string {
+  const base = `clamp(${t.min}rem, ${t.vw}vw, ${t.max}rem)`;
+  if (!t.capSvh || !photo) return base;
+  return `min(${base}, calc(${t.capSvh}svh * ${ratioOf(photo)}))`;
+}
+
+function ratioOf(photo: Photo): string {
+  return (photo.width / photo.height).toFixed(4);
 }
 
 /**
@@ -37,13 +50,28 @@ export function tileWidth(t: TileWidth): string {
  * The lower bound never appears: it only binds below ~27rem of viewport,
  * which is deep inside the mobile branch already.
  */
-export function tileSizes(t: TileWidth): string {
+export function tileSizes(t: TileWidth, photo?: Photo): string {
   const capRem = Math.round((t.max / t.vw) * 10000) / 100;
-  return [
-    `(max-width: ${MOBILE_MAX_PX}px) 100vw`,
-    `(min-width: ${capRem}rem) ${t.max}rem`,
-    `${t.vw}vw`,
-  ].join(", ");
+  const regimes = [
+    { at: `(max-width: ${MOBILE_MAX_PX}px)`, width: "100vw" },
+    { at: `(min-width: ${capRem}rem)`, width: `${t.max}rem` },
+    { at: "", width: `${t.vw}vw` },
+  ];
+
+  // A height-capped tile takes whichever bound is smaller, which is what
+  // `min()` says directly. Note `vh` here against `svh` in the layout: the
+  // two differ only while a mobile URL bar is mid-collapse, which is noise
+  // for picking a srcset rung, and `svh` is the shakier of the two to rely
+  // on inside a `sizes` attribute.
+  const cap =
+    t.capSvh && photo ? `${(t.capSvh * (photo.width / photo.height)).toFixed(2)}vh` : null;
+
+  return regimes
+    .map((r) => {
+      const width = cap ? `min(${r.width}, ${cap})` : r.width;
+      return r.at ? `${r.at} ${width}` : width;
+    })
+    .join(", ");
 }
 
 /** Homepage cover tiles — see components/CategoryGrid.tsx. */
@@ -55,9 +83,16 @@ export const GRID_TILE: Record<Photo["orientation"], TileWidth> = {
 
 /** Category page photo sequence — see components/CategoryPhotoSequence.tsx. */
 export const SEQUENCE_TILE: Record<Photo["orientation"], TileWidth> = {
-  landscape: { min: 20, vw: 74, max: 58 },
-  portrait: { min: 15, vw: 40, max: 28 },
-  square: { min: 17, vw: 52, max: 36 },
+  landscape: { min: 20, vw: 74, max: 58, capSvh: 88 },
+  portrait: { min: 15, vw: 40, max: 28, capSvh: 88 },
+  square: { min: 17, vw: 52, max: 36, capSvh: 88 },
+};
+
+/** The photo that opens a category carries the page, so it gets more room. */
+export const SEQUENCE_LEAD_TILE: Record<Photo["orientation"], TileWidth> = {
+  landscape: { min: 20, vw: 92, max: 72, capSvh: 78 },
+  portrait: { min: 15, vw: 52, max: 34, capSvh: 78 },
+  square: { min: 17, vw: 66, max: 46, capSvh: 78 },
 };
 
 /**

@@ -11,13 +11,13 @@ import { useReducedMotion } from "@/lib/useReducedMotion";
  * "revealed" rather than just faded in (section headers, photo blocks).
  *
  * Always animates the same property (clip-path) regardless of reduced
- * motion — only the transition duration changes (near-instant when
+ * motion; only the transition duration changes (near-instant when
  * reduced). This matters: useReducedMotion() reports `false` on first
  * render and corrects itself a tick later (see lib/useReducedMotion.ts),
  * so if the two branches animated *different* CSS properties, Motion
  * would leave the abandoned property (e.g. clip-path) stuck at its
- * initial hidden value forever when the branch switched underneath it —
- * content would mount and then silently vanish. Keeping the animated
+ * initial hidden value forever when the branch switched underneath it,
+ * and content would mount and then silently vanish. Keeping the animated
  * property constant sidesteps that entirely.
  */
 export function Reveal({

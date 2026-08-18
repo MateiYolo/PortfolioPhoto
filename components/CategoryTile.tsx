@@ -4,7 +4,7 @@ import Link from "next/link";
 import { motion, useScroll, useTransform } from "motion/react";
 import { useRef, useState, ViewTransition } from "react";
 import { Photo } from "@/components/Photo";
-import { Reveal } from "@/components/Reveal";
+import { ScrollTilt } from "@/components/ScrollTilt";
 import type { Category } from "@/lib/content";
 import { GRID_TILE, tileSizes } from "@/lib/imageSizes";
 import { ease } from "@/lib/motion";
@@ -12,9 +12,12 @@ import { useReducedMotion } from "@/lib/useReducedMotion";
 
 /**
  * One cover on the homepage grid. Hover brings colour into the (otherwise
- * grayscale) photo, scales it slightly within its frame, and — driven by
- * the parent's hoveredSlug — dims every sibling tile to push focus onto
+ * grayscale) photo, scales it slightly within its frame, and, driven by
+ * the parent's hoveredSlug, dims every sibling tile to push focus onto
  * whichever one the cursor is over.
+ *
+ * Only the title is set under the photo. No counts, no metadata: the grid
+ * is a list of places to go, not a table of contents.
  */
 export function CategoryTile({
   category,
@@ -40,14 +43,14 @@ export function CategoryTile({
 
   return (
     <div ref={ref}>
-      <Reveal>
+      <ScrollTilt intensity={0.7}>
         <motion.div
-          // The parallax transform is rewritten every scroll frame. Without
-          // an explicit promotion hint the browser is free to repaint the
-          // tile — a multi-megapixel photo — instead of just moving an
-          // existing layer, which is the difference between a composite and
-          // a raster on every frame of every scroll.
-          style={{ y, willChange: reducedMotion ? undefined : "transform" }}
+          // No promotion hint here on purpose: ScrollTilt already holds a
+          // compositor layer open around this subtree, and it drops that
+          // layer once the tile leaves the screen. A second permanent
+          // will-change would pin a full-size photo texture in memory for
+          // every tile on the page, on top of the one already held.
+          style={{ y }}
           onPointerEnter={() => {
             setHovered(true);
             onHoverChange(category.slug);
@@ -78,17 +81,12 @@ export function CategoryTile({
               </motion.div>
             </ViewTransition>
             <ViewTransition name={`title-${category.slug}`} share="title-morph" default="none">
-              <div
-                className="flex items-baseline justify-between"
+              <span
+                className="font-display block text-[var(--step-1)]"
                 style={{ marginTop: "0.9rem" }}
               >
-                <span className="font-display text-[var(--step-1)]">
-                  {category.title}
-                </span>
-                <span className="font-sans text-[var(--step--1)] tracking-[0.15em] text-grey-500 uppercase">
-                  {String(category.photos.length).padStart(2, "0")} photos
-                </span>
-              </div>
+                {category.title}
+              </span>
             </ViewTransition>
             <span
               aria-hidden
@@ -103,7 +101,7 @@ export function CategoryTile({
             />
           </Link>
         </motion.div>
-      </Reveal>
+      </ScrollTilt>
     </div>
   );
 }

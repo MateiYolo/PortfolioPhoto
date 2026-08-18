@@ -1,11 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, ViewTransition } from "react";
 import { Lightbox } from "@/components/Lightbox";
 import { Photo } from "@/components/Photo";
-import { Reveal } from "@/components/Reveal";
+import { ScrollTilt } from "@/components/ScrollTilt";
 import type { Photo as PhotoType } from "@/lib/content";
-import { SEQUENCE_TILE, tileSizes, tileWidth } from "@/lib/imageSizes";
+import {
+  SEQUENCE_LEAD_TILE,
+  SEQUENCE_TILE,
+  tileSizes,
+  tileWidth,
+} from "@/lib/imageSizes";
 
 const ALIGN_PATTERN: Array<"flex-start" | "flex-end" | "center"> = [
   "center",
@@ -15,52 +20,85 @@ const ALIGN_PATTERN: Array<"flex-start" | "flex-end" | "center"> = [
 
 /**
  * The photo set for one category: a vertical sequence of full-resolution
- * shots, each mask-revealed on scroll, sized by its own orientation and
- * alternately aligned so mixed portrait/landscape sets don't read as a
- * rigid uniform grid. Clicking any photo opens it in the Lightbox.
+ * shots, sized by their own orientation and alternately aligned so mixed
+ * portrait/landscape sets don't read as a rigid uniform grid. Clicking any
+ * photo opens it in the Lightbox.
+ *
+ * Every photo keeps its own aspect ratio, so a frame is only ever sized by
+ * width, and that width is capped by what the ratio allows in a screenful
+ * of height — which is how a tall portrait stays readable on a short
+ * laptop without a single pixel being cropped off it. Both the frame width
+ * and the `sizes` attribute come out of lib/imageSizes, off the same
+ * numbers, so what the browser is told to fetch matches what it paints.
+ *
+ * The first photo is the one the homepage thumbnail morphs into (that is
+ * what `morphName` wires up) and is never lazy-loaded. Its entry pose is
+ * already spent at the top of the page, so it only ever leans with scroll
+ * speed, and the morph is captured against an untransformed element.
+ * Everything after it settles out of a tilt as it is scrolled into place;
+ * see ScrollTilt for why that replaced the old mask-wipe reveal.
  */
-export function CategoryPhotoSequence({ photos }: { photos: PhotoType[] }) {
+export function CategoryPhotoSequence({
+  photos,
+  morphName,
+}: {
+  photos: PhotoType[];
+  morphName?: string;
+}) {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   return (
     <div style={{ display: "flex", flexDirection: "column" }}>
-      {photos.map((photo, i) => (
-        <div
-          key={photo.id}
-          className="category-row"
-          style={
-            {
-              "--tile-align": ALIGN_PATTERN[i % ALIGN_PATTERN.length],
-              marginBottom: "var(--gutter)",
-              paddingLeft: "var(--gutter)",
-              paddingRight: "var(--gutter)",
-            } as React.CSSProperties
-          }
-        >
+      {photos.map((photo, i) => {
+        const lead = i === 0;
+        const tile = (lead ? SEQUENCE_LEAD_TILE : SEQUENCE_TILE)[photo.orientation];
+        const button = (
+          <button
+            type="button"
+            onClick={() => setLightboxIndex(i)}
+            data-cursor="view"
+            className="block w-full cursor-pointer text-left"
+            aria-label={`Open ${photo.alt} in full screen`}
+          >
+            <Photo
+              photo={photo}
+              sizes={tileSizes(tile, photo)}
+              priority={lead}
+              style={{ borderRadius: 2 }}
+            />
+          </button>
+        );
+
+        return (
           <div
-            className="category-tile-frame"
+            key={photo.id}
+            className="category-row"
             style={
-              { "--tile-width": tileWidth(SEQUENCE_TILE[photo.orientation]) } as React.CSSProperties
+              {
+                "--tile-align": lead ? "center" : ALIGN_PATTERN[i % ALIGN_PATTERN.length],
+                marginBottom: lead ? "clamp(3rem, 9vw, 7rem)" : "var(--gutter)",
+                paddingLeft: "var(--gutter)",
+                paddingRight: "var(--gutter)",
+              } as React.CSSProperties
             }
           >
-            <Reveal>
-              <button
-                type="button"
-                onClick={() => setLightboxIndex(i)}
-                data-cursor="view"
-                className="block w-full cursor-pointer text-left"
-                aria-label={`Open ${photo.alt} in full screen`}
-              >
-                <Photo
-                  photo={photo}
-                  sizes={tileSizes(SEQUENCE_TILE[photo.orientation])}
-                  style={{ borderRadius: 2 }}
-                />
-              </button>
-            </Reveal>
+            <div
+              className="category-tile-frame"
+              style={{ "--tile-width": tileWidth(tile, photo) } as React.CSSProperties}
+            >
+              <ScrollTilt>
+                {lead && morphName ? (
+                  <ViewTransition name={morphName} share="morph" default="none">
+                    <div>{button}</div>
+                  </ViewTransition>
+                ) : (
+                  button
+                )}
+              </ScrollTilt>
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
 
       <Lightbox
         photos={photos}

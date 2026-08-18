@@ -161,7 +161,7 @@ export function Lightbox({
             className="relative"
             // The box is sized to exactly match the photo's own aspect
             // ratio (bounded by viewport), so cover-vs-contain never
-            // matters — there's no mismatch left to crop.
+            // matters: there's no mismatch left to crop.
             style={{
               width: `min(90vw, calc(84vh * ${photos[index].width / photos[index].height}))`,
               aspectRatio: `${photos[index].width} / ${photos[index].height}`,

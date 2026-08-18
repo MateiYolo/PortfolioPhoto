@@ -43,6 +43,9 @@ function warmMargin(): string {
   }
 }
 
+/** Length of the blur-up crossfade, shared by the transition and the timer. */
+const FADE_MS = 600;
+
 /**
  * The one place an <img> gets rendered. Builds a srcset from the ingest-time
  * derivatives, decodes off the main thread well before the photo is on
@@ -77,6 +80,11 @@ export function Photo({
   // warmMargin(); `ready` flips only once the pixels are actually decoded.
   const [warm, setWarm] = useState(priority);
   const [ready, setReady] = useState(false);
+  // Separate from `ready` because the LQIP has to outlive the *start* of
+  // the crossfade: drop it the moment the photo begins fading in and the
+  // photo spends 600ms dissolving out of the page background instead of
+  // out of its own placeholder, which reads as a wash.
+  const [settled, setSettled] = useState(false);
 
   const srcSet = buildSrcSet(photo);
   const fallbackSrc = largestSrc(photo);
@@ -153,6 +161,12 @@ export function Photo({
     };
   }, [fallbackSrc, warm]);
 
+  useEffect(() => {
+    if (!ready) return;
+    const timer = window.setTimeout(() => setSettled(true), FADE_MS);
+    return () => window.clearTimeout(timer);
+  }, [ready]);
+
   const eager = priority || warm;
 
   return (
@@ -163,9 +177,10 @@ export function Photo({
         position: "relative",
         overflow: "hidden",
         aspectRatio: `${photo.width} / ${photo.height}`,
-        // Dropped once the photo is up: an LQIP left painted underneath is
-        // a second layer the compositor blends on every frame, forever.
-        backgroundImage: ready ? undefined : `url(${photo.lqip})`,
+        // Dropped once the crossfade is over, not when it starts: an LQIP
+        // left painted underneath forever is a second layer the compositor
+        // blends on every frame for the life of the page.
+        backgroundImage: settled ? undefined : `url(${photo.lqip})`,
         backgroundSize: "cover",
         backgroundPosition: "center",
         ...style,
@@ -200,8 +215,8 @@ export function Photo({
           opacity: ready ? 1 : 0,
           transition:
             grayscale === undefined
-              ? "opacity 600ms cubic-bezier(0.65,0,0.35,1)"
-              : "opacity 600ms cubic-bezier(0.65,0,0.35,1), filter 600ms cubic-bezier(0.65,0,0.35,1)",
+              ? `opacity ${FADE_MS}ms cubic-bezier(0.65,0,0.35,1)`
+              : `opacity ${FADE_MS}ms cubic-bezier(0.65,0,0.35,1), filter ${FADE_MS}ms cubic-bezier(0.65,0,0.35,1)`,
         }}
       />
     </div>

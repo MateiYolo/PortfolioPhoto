@@ -25,7 +25,7 @@ const PARALLAX_PATTERN: Array<[number, number]> = [
  * Homepage grid: a vertical stack of full-bleed rows whose individual tile
  * gets a width (by cover orientation) and an alignment/offset (by a fixed
  * cycling pattern) so the composition reads as hand-arranged rather than a
- * uniform gallery grid — the "editorial asymmetric" layout from the brief.
+ * uniform gallery grid: the "editorial asymmetric" layout from the brief.
  *
  * Hover state lives here so hovering one tile can dim every sibling.
  */

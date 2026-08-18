@@ -3,7 +3,7 @@ import manifest from "@/data/manifest.json";
 /**
  * Typed accessors over the build-time manifest produced by
  * `npm run ingest` (scripts/ingest.ts). Nothing in `app/` or `components/`
- * should import `data/manifest.json` directly — go through here so the
+ * should import `data/manifest.json` directly. Go through here so the
  * shape only needs to change in one place.
  */
 
@@ -59,7 +59,7 @@ const data = manifest as unknown as Manifest;
 
 /**
  * Prefix every media path with this at read time so ingest output can be
- * moved to a bucket (Vercel Blob / R2) later without touching a component —
+ * moved to a bucket (Vercel Blob / R2) later without touching a component:
  * set NEXT_PUBLIC_MEDIA_BASE and re-run ingest against the bucket.
  */
 const MEDIA_BASE = process.env.NEXT_PUBLIC_MEDIA_BASE ?? "";

@@ -24,7 +24,7 @@ export default function HomePage() {
           className="font-sans text-grey-500"
           style={{ maxWidth: "34ch", marginTop: "1.25rem", fontSize: "var(--step-1)" }}
         >
-          A slow, ongoing archive of photographs — places and people,
+          A slow, ongoing archive of photographs: places and people,
           organised by category.
         </p>
       </section>

@@ -4,7 +4,7 @@
  * one designed object rather than a pile of unrelated effects.
  *
  * Keep the numeric values in sync with the CSS custom properties in
- * app/globals.css (--ease-*, --duration-base) — those drive the native
+ * app/globals.css (--ease-*, --duration-base): those drive the native
  * View Transition, these drive everything Motion animates directly.
  */
 
@@ -19,7 +19,6 @@ export const duration = {
   base: 0.6,
   fast: 0.35,
   slow: 0.9,
-  curtain: 0.7,
 };
 
 export const stagger = {

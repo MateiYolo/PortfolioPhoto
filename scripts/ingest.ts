@@ -297,7 +297,7 @@ async function processCategory(
   const entries = await readdir(dir, { withFileTypes: true });
   const metaFile = entries.find((e) => e.isFile() && e.name === "meta.md");
   if (!metaFile) {
-    console.warn(`  ! skipping "${folderName}" — no meta.md found`);
+    console.warn(`  ! skipping "${folderName}": no meta.md found`);
     return null;
   }
 
@@ -311,12 +311,12 @@ async function processCategory(
     .sort(naturalSort);
 
   if (imageFiles.length === 0) {
-    console.warn(`  ! skipping "${folderName}" — no images found`);
+    console.warn(`  ! skipping "${folderName}": no images found`);
     return null;
   }
   if (imageFiles.length > 15) {
     console.warn(
-      `  ! "${folderName}" has ${imageFiles.length} photos — plan calls for 5-15, trimming to first 15`
+      `  ! "${folderName}" has ${imageFiles.length} photos, plan calls for 5-15, trimming to first 15`
     );
   }
   const selected = imageFiles.slice(0, 15);
