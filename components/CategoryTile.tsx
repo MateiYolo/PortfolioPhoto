@@ -6,6 +6,7 @@ import { useRef, useState, ViewTransition } from "react";
 import { Photo } from "@/components/Photo";
 import { Reveal } from "@/components/Reveal";
 import type { Category } from "@/lib/content";
+import { GRID_TILE, tileSizes } from "@/lib/imageSizes";
 import { ease } from "@/lib/motion";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 
@@ -41,7 +42,12 @@ export function CategoryTile({
     <div ref={ref}>
       <Reveal>
         <motion.div
-          style={{ y }}
+          // The parallax transform is rewritten every scroll frame. Without
+          // an explicit promotion hint the browser is free to repaint the
+          // tile — a multi-megapixel photo — instead of just moving an
+          // existing layer, which is the difference between a composite and
+          // a raster on every frame of every scroll.
+          style={{ y, willChange: reducedMotion ? undefined : "transform" }}
           onPointerEnter={() => {
             setHovered(true);
             onHoverChange(category.slug);
@@ -65,7 +71,7 @@ export function CategoryTile({
               >
                 <Photo
                   photo={category.cover}
-                  sizes="(max-width: 767px) 100vw, 65vw"
+                  sizes={tileSizes(GRID_TILE[category.cover.orientation])}
                   grayscale={!hovered}
                   style={{ borderRadius: 2 }}
                 />

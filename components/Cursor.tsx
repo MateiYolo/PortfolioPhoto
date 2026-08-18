@@ -47,7 +47,9 @@ export function Cursor() {
       const target = (e.target as HTMLElement)?.closest("[data-cursor]");
       setLabel(target?.getAttribute("data-cursor") || null);
     };
-    window.addEventListener("pointermove", move);
+    // Passive: this handler never calls preventDefault, and saying so keeps
+    // it off the critical path of scroll/pointer input handling.
+    window.addEventListener("pointermove", move, { passive: true });
     return () => window.removeEventListener("pointermove", move);
   }, [enabled, reducedMotion, x, y]);
 

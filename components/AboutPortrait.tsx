@@ -24,7 +24,9 @@ export function AboutPortrait({ photo }: { photo: PhotoType }) {
 
   return (
     <div ref={ref} style={{ overflow: "hidden" }}>
-      <motion.div style={{ y }}>
+      {/* Promoted for the same reason as the homepage tiles: a scroll-driven
+          transform on a full-size photo should composite, not repaint. */}
+      <motion.div style={{ y, willChange: reducedMotion ? undefined : "transform" }}>
         <Photo
           photo={photo}
           sizes="(max-width: 767px) 100vw, 40vw"

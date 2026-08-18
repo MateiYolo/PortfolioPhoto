@@ -17,7 +17,11 @@ export function PageTransition({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const reducedMotion = useReducedMotion();
 
-  if (reducedMotion) return <>{children}</>;
+  // Note the absence of an early `return children` for reduced motion: that
+  // would change the shape of the tree when the media query resolves,
+  // remounting every page below it. Only the durations collapse.
+  const fade = reducedMotion ? 0 : duration.fast;
+  const curtain = reducedMotion ? 0 : duration.curtain;
 
   return (
     <>
@@ -27,7 +31,7 @@ export function PageTransition({ children }: { children: ReactNode }) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: duration.fast, ease: ease.inOutQuart }}
+          transition={{ duration: fade, ease: ease.inOutQuart }}
         >
           {children}
         </motion.div>
@@ -38,7 +42,7 @@ export function PageTransition({ children }: { children: ReactNode }) {
         style={{ originY: 0 }}
         initial={{ scaleY: 1 }}
         animate={{ scaleY: 0 }}
-        transition={{ duration: duration.curtain, ease: ease.inOutQuart }}
+        transition={{ duration: curtain, ease: ease.inOutQuart }}
       />
     </>
   );

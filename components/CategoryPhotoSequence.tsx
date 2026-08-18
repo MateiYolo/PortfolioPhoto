@@ -5,12 +5,7 @@ import { Lightbox } from "@/components/Lightbox";
 import { Photo } from "@/components/Photo";
 import { Reveal } from "@/components/Reveal";
 import type { Photo as PhotoType } from "@/lib/content";
-
-const WIDTHS: Record<PhotoType["orientation"], string> = {
-  landscape: "clamp(20rem, 74vw, 58rem)",
-  portrait: "clamp(15rem, 40vw, 28rem)",
-  square: "clamp(17rem, 52vw, 36rem)",
-};
+import { SEQUENCE_TILE, tileSizes, tileWidth } from "@/lib/imageSizes";
 
 const ALIGN_PATTERN: Array<"flex-start" | "flex-end" | "center"> = [
   "center",
@@ -44,7 +39,9 @@ export function CategoryPhotoSequence({ photos }: { photos: PhotoType[] }) {
         >
           <div
             className="category-tile-frame"
-            style={{ "--tile-width": WIDTHS[photo.orientation] } as React.CSSProperties}
+            style={
+              { "--tile-width": tileWidth(SEQUENCE_TILE[photo.orientation]) } as React.CSSProperties
+            }
           >
             <Reveal>
               <button
@@ -56,7 +53,7 @@ export function CategoryPhotoSequence({ photos }: { photos: PhotoType[] }) {
               >
                 <Photo
                   photo={photo}
-                  sizes="(max-width: 767px) 100vw, 75vw"
+                  sizes={tileSizes(SEQUENCE_TILE[photo.orientation])}
                   style={{ borderRadius: 2 }}
                 />
               </button>

@@ -7,12 +7,16 @@ import manifest from "@/data/manifest.json";
  * shape only needs to change in one place.
  */
 
-export interface PhotoSource {
-  /** Paths are relative to /public (or NEXT_PUBLIC_MEDIA_BASE, see below). */
-  w720: string;
-  w1440: string;
-  w2560: string;
-}
+/**
+ * Keyed by nominal derivative width — `w720`, `w1440`, … — whichever ones
+ * scripts/ingest.ts was configured to emit. Deliberately open-ended rather
+ * than a fixed triple: adding a width to the ingest pipeline should not
+ * require a matching edit in every consumer, and every consumer already
+ * reads it generically (see lib/imageSizes.ts).
+ *
+ * Paths are relative to /public (or NEXT_PUBLIC_MEDIA_BASE, see below).
+ */
+export type PhotoSource = Record<`w${number}`, string>;
 
 export interface Photo {
   id: string;
@@ -64,11 +68,9 @@ function resolvePhoto(photo: Photo): Photo {
   if (!MEDIA_BASE) return photo;
   return {
     ...photo,
-    src: {
-      w720: MEDIA_BASE + photo.src.w720,
-      w1440: MEDIA_BASE + photo.src.w1440,
-      w2560: MEDIA_BASE + photo.src.w2560,
-    },
+    src: Object.fromEntries(
+      Object.entries(photo.src).map(([slot, path]) => [slot, MEDIA_BASE + path])
+    ) as PhotoSource,
   };
 }
 

@@ -5,7 +5,19 @@ import { useLenis } from "lenis/react";
 import { useEffect } from "react";
 import { Photo } from "@/components/Photo";
 import type { Photo as PhotoType } from "@/lib/content";
+import { buildSrcSet } from "@/lib/imageSizes";
 import { ease } from "@/lib/motion";
+
+/**
+ * The lightbox box is `min(90vw, 84vh * ratio)` wide (see below), so a flat
+ * `90vw` would over-declare on any landscape photo — on a typical laptop by
+ * enough to pull the 2560px derivative in place of the 1440px one, roughly
+ * tripling the decode. Height-bounded photos get their real bound.
+ */
+function lightboxSizes(photo: PhotoType): string {
+  const heightBound = (84 * photo.width) / photo.height;
+  return `min(90vw, ${heightBound.toFixed(2)}vh)`;
+}
 
 /**
  * Full-screen photo viewer. Arrow keys / swipe to navigate, Escape or a
@@ -25,6 +37,34 @@ export function Lightbox({
 }) {
   const lenis = useLenis();
   const open = index !== null;
+
+  // Decode the neighbours while the current photo is being looked at, so
+  // pressing an arrow key swaps in an already-decoded image instead of
+  // stalling for the 30-120ms an AVIF of this size takes to decode.
+  useEffect(() => {
+    if (!open || index === null || photos.length < 2) return;
+    const neighbours = [
+      photos[(index + 1) % photos.length],
+      photos[(index - 1 + photos.length) % photos.length],
+    ];
+    let cancelled = false;
+    const timer = window.setTimeout(() => {
+      if (cancelled) return;
+      for (const photo of neighbours) {
+        const img = new Image();
+        img.decoding = "async";
+        img.sizes = lightboxSizes(photo);
+        img.srcset = buildSrcSet(photo);
+        // Kick the decode off-thread too; a warm HTTP cache still leaves
+        // the expensive half of the work to do.
+        img.decode?.().catch(() => {});
+      }
+    }, 300);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [open, index, photos]);
 
   useEffect(() => {
     if (!open) return;
@@ -132,7 +172,7 @@ export function Lightbox({
             transition={{ duration: 0.4, ease: ease.inOutQuart }}
             onClick={(e) => e.stopPropagation()}
           >
-            <Photo photo={photos[index]} sizes="90vw" priority />
+            <Photo photo={photos[index]} sizes={lightboxSizes(photos[index])} priority />
           </motion.div>
         </motion.div>
       )}
