@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ViewTransition } from "react";
 import type { Metadata } from "next";
+import { Arrive } from "@/components/Arrive";
 import { CategoryPhotoSequence } from "@/components/CategoryPhotoSequence";
 import { MagneticLink } from "@/components/MagneticLink";
 import { getAdjacentCategory, getCategories, getCategory } from "@/lib/content";
@@ -81,17 +82,21 @@ export default async function CategoryPage({
             }}
           >
             {category.date && (
-              <span className="font-sans text-grey-500 text-[var(--step--1)] uppercase tracking-[0.15em]">
-                {formatDate(category.date)}
-              </span>
+              <Arrive>
+                <span className="font-sans text-grey-500 text-[var(--step--1)] uppercase tracking-[0.15em]">
+                  {formatDate(category.date)}
+                </span>
+              </Arrive>
             )}
             {category.blurb && (
-              <p
-                className="font-sans text-grey-700"
-                style={{ maxWidth: "46ch", fontSize: "var(--step-0)", lineHeight: 1.6 }}
-              >
-                {category.blurb}
-              </p>
+              <Arrive delay={0.08}>
+                <p
+                  className="font-sans text-grey-700"
+                  style={{ maxWidth: "46ch", fontSize: "var(--step-0)", lineHeight: 1.6 }}
+                >
+                  {category.blurb}
+                </p>
+              </Arrive>
             )}
           </div>
         )}
