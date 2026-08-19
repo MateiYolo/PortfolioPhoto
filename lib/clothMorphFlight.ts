@@ -112,10 +112,6 @@ export function warm(): boolean {
   return engine.warm();
 }
 
-export function abort() {
-  cancel?.();
-}
-
 export function begin({
   frame,
   img,
@@ -135,6 +131,13 @@ export function begin({
 
   const from = measure(frame, img);
   if (from.rect.w < 1 || from.rect.h < 1) return false;
+
+  /**
+   * What the shader is told the flight has reached. Reversed for the way home,
+   * which flips the direction the wave sweeps; the sin() envelope is symmetric
+   * so it is zero at both ends either way.
+   */
+  const shaderProgress = (t: number) => (reverse ? 1 - t : t);
 
   const root = document.documentElement;
   const startedAt = performance.now();
@@ -185,7 +188,7 @@ export function begin({
     // Drawn synchronously, before the click handler returns: this and the
     // visibility change below land in the same paint, so there is no frame in
     // which the photo is either doubled or missing.
-    engine.draw(from.rect, from.crop, 0, 0, saturationFrom);
+    engine.draw(from.rect, from.crop, shaderProgress(0), 0, saturationFrom);
   } catch {
     end(true);
     return false;
@@ -252,7 +255,7 @@ export function begin({
       // yet. Keep redrawing so a scroll during the wait still tracks.
       raf = requestAnimationFrame(() => {
         const now = measure(targetEl, targetImg);
-        engine.draw(now.rect, now.crop, 1, DURATION_MS / 1000, saturationTo);
+        engine.draw(now.rect, now.crop, shaderProgress(1), DURATION_MS / 1000, saturationTo);
         handOff(targetEl, targetImg);
       });
       return;
@@ -270,6 +273,10 @@ export function begin({
       duration: DURATION_MS / 1000 / speed(),
       ease: "linear",
       onUpdate: (t) => {
+        if (!engine.alive) {
+          end(true);
+          return;
+        }
         // The destination page is a live, scrollable document under the canvas
         // (React cancels the root snapshot, so nothing is frozen) and Lenis may
         // still be settling it. Re-reading the target every frame is one
@@ -282,9 +289,7 @@ export function begin({
           mixCrop(from.crop, to.crop, eased),
           // Linear in time, so the shader's sin() envelope peaks at the middle
           // of the flight rather than wherever the easing happens to put it.
-          // The envelope is symmetric, so handing the shader 1 - t reverses
-          // which way the wave sweeps and changes nothing else.
-          reverse ? 1 - t : t,
+          shaderProgress(t),
           (t * DURATION_MS) / 1000,
           mix(saturationFrom, saturationTo, eased)
         );
@@ -301,7 +306,7 @@ export function begin({
       onComplete: () => {
         if (dead) return;
         const to = measure(targetEl, targetImg);
-        engine.draw(to.rect, to.crop, 1, DURATION_MS / 1000, saturationTo);
+        engine.draw(to.rect, to.crop, shaderProgress(1), DURATION_MS / 1000, saturationTo);
         handOff(targetEl, targetImg);
       },
     });
@@ -310,6 +315,10 @@ export function begin({
 
   const wait = () => {
     if (dead) return;
+    if (!engine.alive) {
+      end(true);
+      return;
+    }
     const el = findTarget();
     if (el) {
       fly(el);
@@ -322,7 +331,7 @@ export function begin({
     // Until the destination exists the quad holds over where the thumbnail
     // was, which is what the native morph does while it waits for the commit.
     // Redrawn each frame so a resize keeps it in place.
-    engine.draw(from.rect, from.crop, reverse ? 1 : 0, 0, saturationFrom);
+    engine.draw(from.rect, from.crop, shaderProgress(0), 0, saturationFrom);
     raf = requestAnimationFrame(wait);
   };
 

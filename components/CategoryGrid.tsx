@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { CategoryTile } from "@/components/CategoryTile";
-import { prewarmClothMorph } from "@/lib/clothMorph";
+import { prewarmClothMorphWhenIdle } from "@/lib/clothMorph";
 import type { Category } from "@/lib/content";
 import { GRID_TILE, tileWidth } from "@/lib/imageSizes";
 
@@ -46,13 +46,9 @@ const IMAGE_PARALLAX_PATTERN: Array<[number, number]> = [
 export function CategoryGrid({ categories }: { categories: Category[] }) {
   // A tile also warms this on pointer enter, which covers a mouse. Touch has
   // no hover to warm from — pointerenter arrives with the tap itself — so the
-  // shader chunk is fetched on idle instead, once the grid is up and the
-  // photos have had first claim on the network.
-  useEffect(() => {
-    const idle = window.requestIdleCallback?.bind(window) ?? window.setTimeout;
-    const id = idle(() => prewarmClothMorph());
-    return () => (window.cancelIdleCallback ?? window.clearTimeout)(id as number);
-  }, []);
+  // shader is fetched on idle as well, once the photos have had first claim
+  // on the network.
+  useEffect(prewarmClothMorphWhenIdle, []);
 
   return (
     <div style={{ display: "flex", flexDirection: "column" }}>

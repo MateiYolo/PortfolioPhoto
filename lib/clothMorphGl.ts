@@ -272,6 +272,16 @@ function compile(gl: WebGL2RenderingContext, type: number, src: string): WebGLSh
 function createGl(): Gl {
   const canvas = document.createElement("canvas");
   canvas.setAttribute("aria-hidden", "true");
+  // A driver reset would otherwise leave a flight drawing into nothing, with
+  // the photo it is standing in for still hidden. Dropping the context here
+  // makes engine.alive false, which is the flight's cue to hand back to the
+  // DOM immediately; warm() then builds a fresh one for the next navigation.
+  canvas.addEventListener("webglcontextlost", () => {
+    canvas.remove();
+    // Only if this is still the live one — a late event from a discarded
+    // canvas must not shoot down the context that replaced it.
+    if (ctx?.canvas === canvas) ctx = null;
+  });
   // Between the nav (z-50) and the cursor (z-100): the travelling photo passes
   // under the site chrome, exactly as the native morph does.
   canvas.style.cssText =
@@ -326,7 +336,7 @@ function createGl(): Gl {
 }
 
 /** Compiles ahead of the click so the first frame costs a draw call, not a link. */
-export function warm(): boolean {
+function warm(): boolean {
   if (ctx) return true;
   try {
     ctx = createGl();
@@ -414,6 +424,10 @@ function draw(
 
 export const engine = {
   warm,
+  /** False once the GL context has gone away under us. */
+  get alive() {
+    return ctx !== null;
+  },
   get canvas() {
     return ctx?.canvas ?? null;
   },
@@ -422,7 +436,7 @@ export const engine = {
   },
   /** True once a bigger derivative than the one we started from is in hand. */
   wouldUpgrade(img: HTMLImageElement) {
-    return Boolean(ctx) && img.naturalWidth > (ctx as Gl).textureWidth;
+    return ctx !== null && img.naturalWidth > ctx.textureWidth;
   },
   draw(rect: Rect, crop: Crop, progress: number, time: number, saturation: number) {
     if (ctx) draw(ctx, rect, crop, progress, time, saturation);

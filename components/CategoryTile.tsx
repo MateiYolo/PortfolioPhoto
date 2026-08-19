@@ -45,7 +45,7 @@ export function CategoryTile({
    */
   const handOffToCloth = () => {
     if (reducedMotion) return;
-    clothMorphToCategory(`photo-${category.slug}`, photoRef.current);
+    clothMorphToCategory(category.slug, photoRef.current);
   };
 
   const { scrollYProgress } = useScroll({

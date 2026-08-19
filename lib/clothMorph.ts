@@ -46,10 +46,10 @@ let landing: string | null = null;
 const SAFE_NAME = /^[\w-]+$/;
 
 /**
- * Pull in the shader and compile it ahead of the click. Called on idle from
- * the grid and from a category page, and again on pointer enter, so by the
- * time something is clicked the first frame costs a draw call rather than a
- * module fetch plus a link step.
+ * Pull in the shader and compile it ahead of the click, so the first frame
+ * costs a draw call rather than a module fetch plus a link step. Called
+ * directly on pointer enter, where the click is only a moment away; pages
+ * that are merely *likely* to need it use the idle version below.
  */
 export function prewarmClothMorph(): void {
   if (unsupported || flight || loading) return;
@@ -74,6 +74,21 @@ export function prewarmClothMorph(): void {
 }
 
 /**
+ * The same, but never in front of the photographs. A page that *might* need
+ * the effect later has no business fetching a shader while the images it
+ * exists to show are still on the wire. Returns its own teardown.
+ */
+export function prewarmClothMorphWhenIdle(): () => void {
+  if (typeof window === "undefined") return () => {};
+  if (!window.requestIdleCallback) {
+    const timer = window.setTimeout(prewarmClothMorph, 1200);
+    return () => window.clearTimeout(timer);
+  }
+  const id = window.requestIdleCallback(() => prewarmClothMorph());
+  return () => window.cancelIdleCallback(id);
+}
+
+/**
  * Returns false — and touches nothing — if the WebGL morph can't run, which is
  * the caller's cue to do nothing at all and let the native transition play.
  */
@@ -88,7 +103,7 @@ function begin(args: Parameters<Flight["begin"]>[0]): boolean {
  * part-way through it; reading the computed value hands the shader the exact
  * point to carry on from instead of guessing an end state.
  */
-export function readSaturation(el: HTMLElement): number {
+function readSaturation(el: HTMLElement): number {
   const filter = getComputedStyle(el).filter;
   const match = /grayscale\(([\d.]+)\)/.exec(filter);
   return match ? 1 - Math.min(1, Number(match[1])) : 1;
@@ -104,15 +119,21 @@ function photoParts(root: HTMLElement | null) {
   return img && frame ? { img, frame } : null;
 }
 
-/** Homepage tile -> category lead photo. */
-export function clothMorphToCategory(name: string, tile: HTMLElement | null): boolean {
-  if (!SAFE_NAME.test(name)) return false;
+/**
+ * Homepage tile -> category lead photo.
+ *
+ * Takes the slug, where watchClothMorphHome below takes the morph name: each
+ * is handed what its caller already holds. The grid knows the category; the
+ * photo sequence only ever knows the name it was given.
+ */
+export function clothMorphToCategory(slug: string, tile: HTMLElement | null): boolean {
+  if (!SAFE_NAME.test(slug)) return false;
   const parts = photoParts(tile);
   if (!parts) return false;
   return begin({
     ...parts,
-    target: `[data-cloth-target="${name}"]`,
-    destination: `/work/${name.replace(/^photo-/, "")}`,
+    target: `[data-cloth-target="photo-${slug}"]`,
+    destination: `/work/${slug}`,
     saturationFrom: readSaturation(parts.frame),
     // The category page has no filter on its photos.
     saturationTo: 1,
@@ -128,7 +149,7 @@ export function clothMorphToCategory(name: string, tile: HTMLElement | null): bo
  */
 export function watchClothMorphHome(name: string): () => void {
   if (typeof window === "undefined" || !SAFE_NAME.test(name)) return () => {};
-  prewarmClothMorph();
+  const stopPrewarm = prewarmClothMorphWhenIdle();
 
   const start = () => {
     const parts = photoParts(document.querySelector(`[data-cloth-target="${name}"]`));
@@ -186,6 +207,7 @@ export function watchClothMorphHome(name: string): () => void {
   document.addEventListener("click", onClick, true);
   navigation()?.addEventListener("navigate", onNavigate);
   return () => {
+    stopPrewarm();
     document.removeEventListener("click", onClick, true);
     navigation()?.removeEventListener("navigate", onNavigate);
   };
