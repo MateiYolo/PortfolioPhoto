@@ -18,14 +18,13 @@ export default function HomePage() {
         }}
       >
         <h1 className="font-display" style={{ fontSize: "var(--step-4)", lineHeight: 0.95 }}>
-          <SplitText text="Matei Convard" />
+          <SplitText text="Matei Convard" by="words" />
         </h1>
         <p
           className="font-sans text-grey-500"
           style={{ maxWidth: "34ch", marginTop: "1.25rem", fontSize: "var(--step-1)" }}
         >
-          A slow, ongoing archive of photographs: places and people,
-          organised by category.
+          A little space of mine, an ongoing archive of memories.
         </p>
       </section>
 

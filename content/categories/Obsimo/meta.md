@@ -2,7 +2,9 @@
 title: Obsimo
 date: '2026-03-29'
 blurb: |
-  Placeholder blurb — swap in real copy before this goes live.
+  Following Obsimo, an electronic producer, on tour: five dates
+  across two countries, ending in a sold-out headline show in
+  Paris. 2026.
 cover: thumbnail
 order: 2
 photoOrder:
