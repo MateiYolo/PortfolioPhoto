@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { CSSProperties } from "react";
+import { motion, type MotionValue } from "motion/react";
 import { preload } from "react-dom";
 import { buildSrcSet, largestSrc } from "@/lib/imageSizes";
 import type { Photo as PhotoType } from "@/lib/content";
@@ -60,6 +61,8 @@ export function Photo({
   className,
   style,
   grayscale,
+  imgY,
+  imgScale,
 }: {
   photo: PhotoType;
   sizes?: string;
@@ -72,6 +75,19 @@ export function Photo({
    * which actually animate between grey and colour — should pay for it.
    */
   grayscale?: boolean;
+  /**
+   * Scroll-linked vertical drift for the image *within* its own frame
+   * (percent of the frame's height, e.g. "-9%"), independent of any
+   * motion applied to the frame itself. Leave undefined for a static
+   * image — only the homepage grid passes this.
+   */
+  imgY?: MotionValue<string>;
+  /**
+   * Zoom applied together with `imgY` so the drift never uncovers the
+   * frame's edges. Callers that pass `imgY` must pass a scale large enough
+   * to cover its range; ignored otherwise.
+   */
+  imgScale?: number;
 }) {
   const frameRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
@@ -201,7 +217,7 @@ export function Photo({
         ...style,
       }}
     >
-      <img
+      <motion.img
         ref={imgRef}
         src={fallbackSrc}
         srcSet={srcSet}
@@ -223,6 +239,7 @@ export function Photo({
           objectFit: "cover",
           opacity: ready ? 1 : 0,
           transition: `opacity ${FADE_MS}ms cubic-bezier(0.65,0,0.35,1)`,
+          ...(imgY ? { y: imgY, scale: imgScale } : undefined),
         }}
       />
     </div>

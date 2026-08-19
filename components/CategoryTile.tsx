@@ -20,9 +20,12 @@ import { useReducedMotion } from "@/lib/useReducedMotion";
 export function CategoryTile({
   category,
   parallaxRange,
+  imageParallaxRange,
 }: {
   category: Category;
   parallaxRange: [number, number];
+  /** See IMAGE_PARALLAX_PATTERN in CategoryGrid.tsx. */
+  imageParallaxRange: [number, number];
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const [hovered, setHovered] = useState(false);
@@ -34,6 +37,17 @@ export function CategoryTile({
   });
   const rawY = useTransform(scrollYProgress, [0, 1], parallaxRange);
   const y = reducedMotion ? 0 : rawY;
+
+  const [imgFrom, imgTo] = imageParallaxRange;
+  const rawImgY = useTransform(scrollYProgress, [0, 1], [`${imgFrom}%`, `${imgTo}%`]);
+  const imgY = reducedMotion ? undefined : rawImgY;
+  // Must cover the translate range so the drift never uncovers the frame's
+  // edges: a translate of X% needs (scale - 1) / 2 >= X / 100 of headroom
+  // on each side. The 0.04 pads that margin so a fractional-pixel scroll
+  // position never exposes a sliver of the frame's background.
+  const imgScale = reducedMotion
+    ? undefined
+    : 1 + (Math.max(Math.abs(imgFrom), Math.abs(imgTo)) / 100) * 2 + 0.04;
 
   return (
     <div ref={ref}>
@@ -63,6 +77,8 @@ export function CategoryTile({
                   sizes={tileSizes(GRID_TILE[category.cover.orientation])}
                   grayscale={!hovered}
                   style={{ borderRadius: 2 }}
+                  imgY={imgY}
+                  imgScale={imgScale}
                 />
               </motion.div>
             </ViewTransition>

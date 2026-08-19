@@ -21,6 +21,21 @@ const PARALLAX_PATTERN: Array<[number, number]> = [
 ];
 
 /**
+ * How far the photo drifts *inside* its own frame as it crosses the
+ * viewport, in percent of the frame's height — independent of, and on top
+ * of, the whole-tile drift above. This is what reads as the image itself
+ * scrolling slower/faster than its frame, the classic parallax-in-a-mask
+ * effect. Alternating sign against PARALLAX_PATTERN (rather than mirroring
+ * it) is what keeps the grid from reading like everything is pinned to one
+ * shared rate.
+ */
+const IMAGE_PARALLAX_PATTERN: Array<[number, number]> = [
+  [-9, 9],
+  [7, -7],
+  [-6, 6],
+];
+
+/**
  * Homepage grid: a vertical stack of full-bleed rows whose individual tile
  * gets a width (by cover orientation) and an alignment/offset (by a fixed
  * cycling pattern) so the composition reads as hand-arranged rather than a
@@ -54,6 +69,9 @@ export function CategoryGrid({ categories }: { categories: Category[] }) {
             <CategoryTile
               category={category}
               parallaxRange={PARALLAX_PATTERN[i % PARALLAX_PATTERN.length]}
+              imageParallaxRange={
+                IMAGE_PARALLAX_PATTERN[i % IMAGE_PARALLAX_PATTERN.length]
+              }
             />
           </div>
         </div>
