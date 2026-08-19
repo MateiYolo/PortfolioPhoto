@@ -2,7 +2,8 @@
 title: Greece
 date: '2026-06-14'
 blurb: |
-  Placeholder blurb — swap in real copy before this goes live.
+  One of my favourite places on earth: Poros, an island close to
+  Athens. March 2025.
 cover: thumbnail
 order: 5
 ---
