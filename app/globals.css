@@ -89,11 +89,11 @@ html.lenis body {
    default="none"> (see CategoryTile.tsx and CategoryPhotoSequence.tsx),
    which assigns the "morph" class to the transition pseudo-elements below.
 
-   The photo is the only thing that moves. Everything else (headings,
-   captions, the rest of the sequence) is part of the untouched root
-   snapshot and simply cross-fades underneath it, so the page settles in
-   around the growing photo instead of arriving as a second, competing
-   animation. There is deliberately no curtain or wipe on top of this.
+   The photo and the title are the only things that move. Everything else
+   is not captured at all — React cancels the root snapshot (see the note
+   further down), so the rest of the page simply cuts to its new state under
+   the morph rather than arriving as a second, competing animation. There is
+   deliberately no curtain or wipe on top of this.
 -------------------------------------------------------------------------- */
 ::view-transition-group(.morph) {
   animation-duration: 780ms;
@@ -112,16 +112,44 @@ html.lenis body {
   animation-timing-function: var(--ease-out-expo);
 }
 
-/* The old page leaves quickly, the new one arrives over a longer, gentler
-   curve. The two overlap on purpose: at no point does the composite dip
-   towards transparent, so the fixed nav (identical on both pages) never
-   flickers mid-navigation. */
-::view-transition-old(root) {
-  animation: 300ms var(--ease-in-out-quart) both vt-fade-out;
+/* --------------------------------------------------------------------------
+   ...except when the WebGL cloth morph is driving the photo instead.
+
+   lib/clothMorph.ts sets this class on <html> for the length of one flight,
+   and only ever for a forward tile click on a browser that can run the
+   shader. Gating in CSS rather than by changing the markup is what keeps the
+   native morph above the *default* behaviour: nothing has to be restored,
+   and every path that doesn't take the WebGL branch — reduced motion, no
+   WebGL2, browser back — gets the transition this site shipped with.
+
+   Dropping the group removes both snapshots from the transition overlay, so
+   the photo is drawn exactly once, by the canvas. The title pair is left
+   alone and still morphs alongside it.
+-------------------------------------------------------------------------- */
+html.cloth-morph::view-transition-group(.morph) {
+  display: none;
 }
-::view-transition-new(root) {
-  animation: 520ms var(--ease-in-out-quart) both vt-fade-in;
+
+/* The landing photo has to be hidden from the frame it first paints in, not
+   a frame later, or it shows up under the quad that is still on its way to
+   it. A selector does that; a ref and an effect cannot. */
+html.cloth-morph [data-cloth-target] {
+  visibility: hidden;
 }
+
+/* There is deliberately no root crossfade here, and it is not an oversight.
+   React cancels the root snapshot on this navigation: cancelRootViewTransitionName
+   (react-dom) sets view-transition-name:none on <html> and force-animates
+   ::view-transition-group(root) to opacity 0 and ::view-transition to 0x0,
+   both with fill:forwards from the Animation origin, which outranks anything
+   author CSS can say. Enumerated against the live build in Chromium: a tile
+   click produces the two named pairs plus exactly those two zero-duration
+   cancellations, ::view-transition-new(root) is never created at all, and a
+   navigation with no shared element (the About link) produces no
+   view-transition animations whatsoever. So a rule on old(root) does still
+   tick — inside a group that is painted at opacity 0. The pair that used to
+   live here animated nothing anyone could see, which is why it is gone rather
+   than retuned. Everything but the named participants simply cuts. */
 
 /* The transition overlay swallows clicks by default; let them through so
    the page stays usable while the morph is still in flight. */
@@ -131,14 +159,6 @@ html.lenis body {
 
 @keyframes morph-blur {
   30% { filter: blur(4px); }
-}
-
-@keyframes vt-fade-out {
-  to { opacity: 0; }
-}
-
-@keyframes vt-fade-in {
-  from { opacity: 0; }
 }
 
 @media (prefers-reduced-motion: reduce) {

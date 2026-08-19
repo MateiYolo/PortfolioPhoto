@@ -90,7 +90,10 @@ export function CategoryPhotoSequence({
               <ScrollTilt>
                 {lead && morphName ? (
                   <ViewTransition name={morphName} share="morph" default="none">
-                    <div>{button}</div>
+                    {/* The WebGL cloth morph finds its landing rect through
+                        this attribute, and globals.css keeps the photo hidden
+                        underneath the canvas for as long as one is flying. */}
+                    <div data-cloth-target={morphName}>{button}</div>
                   </ViewTransition>
                 ) : (
                   button
