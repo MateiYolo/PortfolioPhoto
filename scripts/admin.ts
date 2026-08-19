@@ -376,15 +376,6 @@ function renderCategories() {
     row.addEventListener('click', () => { selected = cat.folder; renderCategories(); renderPhotos(); });
     list.appendChild(row);
   }
-  makeSortable(list, async (order) => {
-    setStatus('Saving…');
-    await fetch('/api/categories/reorder', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ order }),
-    });
-    state = order.map(folder => state.find(c => c.folder === folder));
-    setStatus('Saved');
-  });
 }
 
 function renderPhotos() {
@@ -411,16 +402,29 @@ function renderPhotos() {
     \`;
     el.appendChild(row);
   }
-  makeSortable(el, async (order) => {
-    setStatus('Saving…');
-    await fetch('/api/photos/reorder', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ folder: cat.folder, order }),
-    });
-    cat.photos = order;
-    setStatus('Saved');
-  });
 }
+
+makeSortable(document.getElementById('categoryList'), async (order) => {
+  setStatus('Saving…');
+  await fetch('/api/categories/reorder', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ order }),
+  });
+  state = order.map(folder => state.find(c => c.folder === folder));
+  setStatus('Saved');
+});
+
+makeSortable(document.getElementById('photos'), async (order) => {
+  const cat = state.find(c => c.folder === selected);
+  if (!cat) return;
+  setStatus('Saving…');
+  await fetch('/api/photos/reorder', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ folder: cat.folder, order }),
+  });
+  cat.photos = order;
+  setStatus('Saved');
+});
 
 document.getElementById('ingestBtn').addEventListener('click', async (e) => {
   const btn = e.currentTarget;
