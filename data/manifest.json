@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-19T07:42:40.034Z",
+  "generatedAt": "2026-08-19T07:51:45.284Z",
   "categories": [
     {
       "slug": "pete-the-monkey",
@@ -41,36 +41,20 @@
           "alt": "Activité Cache Tetons 1 Matei"
         },
         {
-          "id": "2026-ambiance-3-matei",
+          "id": "2026-dj-2-matei",
           "src": {
-            "w720": "/media/pete-the-monkey/2026-ambiance-3-matei-720.avif",
-            "w1080": "/media/pete-the-monkey/2026-ambiance-3-matei-1080.avif",
-            "w1440": "/media/pete-the-monkey/2026-ambiance-3-matei-1440.avif",
-            "w1920": "/media/pete-the-monkey/2026-ambiance-3-matei-1920.avif",
-            "w2560": "/media/pete-the-monkey/2026-ambiance-3-matei-2560.avif"
+            "w720": "/media/pete-the-monkey/2026-dj-2-matei-720.avif",
+            "w1080": "/media/pete-the-monkey/2026-dj-2-matei-1080.avif",
+            "w1440": "/media/pete-the-monkey/2026-dj-2-matei-1440.avif",
+            "w1920": "/media/pete-the-monkey/2026-dj-2-matei-1920.avif",
+            "w2560": "/media/pete-the-monkey/2026-dj-2-matei-2560.avif"
           },
-          "width": 2986,
-          "height": 1980,
+          "width": 2742,
+          "height": 1818,
           "orientation": "landscape",
-          "lqip": "data:image/avif;base64,AAAAHGZ0eXBhdmlmAAAAAG1pZjFhdmlmbWlhZgAAANZtZXRhAAAAAAAAACFoZGxyAAAAAAAAAABwaWN0AAAAAAAAAAAAAAAAAAAAACJpbG9jAAAAAERAAAEAAQAAAAAA+gABAAAAAAAAADkAAAAjaWluZgAAAAAAAQAAABVpbmZlAgAAAAABAABhdjAxAAAAAA5waXRtAAAAAAABAAAAVmlwcnAAAAA4aXBjbwAAAAxhdjFDgSACAAAAABRpc3BlAAAAAAAAABgAAAAQAAAAEHBpeGkAAAAAAwgICAAAABZpcG1hAAAAAAAAAAEAAQOBAgMAAABBbWRhdBIACgg4EO/tICGg0jIrG4Ji5OeeeeFCwADwA2TRAtJlWh3/3/1DOmSFFbBmpHa3cgg/afLJLm5PBA==",
-          "luminance": 0.653,
-          "alt": "Ambiance 3 Matei"
-        },
-        {
-          "id": "2026-ambiance-6-plage-matei",
-          "src": {
-            "w720": "/media/pete-the-monkey/2026-ambiance-6-plage-matei-720.avif",
-            "w1080": "/media/pete-the-monkey/2026-ambiance-6-plage-matei-1080.avif",
-            "w1440": "/media/pete-the-monkey/2026-ambiance-6-plage-matei-1440.avif",
-            "w1920": "/media/pete-the-monkey/2026-ambiance-6-plage-matei-1920.avif",
-            "w2560": "/media/pete-the-monkey/2026-ambiance-6-plage-matei-2048.avif"
-          },
-          "width": 2048,
-          "height": 3089,
-          "orientation": "portrait",
-          "lqip": "data:image/avif;base64,AAAAHGZ0eXBhdmlmAAAAAG1pZjFhdmlmbWlhZgAAANZtZXRhAAAAAAAAACFoZGxyAAAAAAAAAABwaWN0AAAAAAAAAAAAAAAAAAAAACJpbG9jAAAAAERAAAEAAQAAAAAA+gABAAAAAAAAAG0AAAAjaWluZgAAAAAAAQAAABVpbmZlAgAAAAABAABhdjAxAAAAAA5waXRtAAAAAAABAAAAVmlwcnAAAAA4aXBjbwAAAAxhdjFDgSACAAAAABRpc3BlAAAAAAAAABgAAAAkAAAAEHBpeGkAAAAAAwgICAAAABZpcG1hAAAAAAAAAAEAAQOBAgMAAAB1bWRhdBIACgk4EW8bSAhoNIAyXhuCYuTnnnnhQsAA8fVc1n+VBmNBhxobqYRAo/xyEOZlZct5noY3anJzmP6fEjLeJS4LCXxCvddgtX2sEohnTUEqPiq8a1GxSybOs5cgG8l+thawLiNSty2JXYuJ7YA=",
-          "luminance": 0.515,
-          "alt": "Ambiance 6 Plage Matei"
+          "lqip": "data:image/avif;base64,AAAAHGZ0eXBhdmlmAAAAAG1pZjFhdmlmbWlhZgAAANZtZXRhAAAAAAAAACFoZGxyAAAAAAAAAABwaWN0AAAAAAAAAAAAAAAAAAAAACJpbG9jAAAAAERAAAEAAQAAAAAA+gABAAAAAAAAAD8AAAAjaWluZgAAAAAAAQAAABVpbmZlAgAAAAABAABhdjAxAAAAAA5waXRtAAAAAAABAAAAVmlwcnAAAAA4aXBjbwAAAAxhdjFDgSACAAAAABRpc3BlAAAAAAAAABgAAAAQAAAAEHBpeGkAAAAAAwgICAAAABZpcG1hAAAAAAAAAAEAAQOBAgMAAABHbWRhdBIACgg4EO/tICGg0jIxG4Ji5OeeeeFCwADwA2U0feDTwVurMfwjh6GjfCLb11zKiY0BYIgane1pfGjaMHnP7g==",
+          "luminance": 0.378,
+          "alt": "Dj 2 Matei"
         },
         {
           "id": "2026-ambiance-obsimo-vintage-clothes-matei",
@@ -105,6 +89,22 @@
           "alt": "Bingo Disco 2 Matei"
         },
         {
+          "id": "2026-ambiance-3-matei",
+          "src": {
+            "w720": "/media/pete-the-monkey/2026-ambiance-3-matei-720.avif",
+            "w1080": "/media/pete-the-monkey/2026-ambiance-3-matei-1080.avif",
+            "w1440": "/media/pete-the-monkey/2026-ambiance-3-matei-1440.avif",
+            "w1920": "/media/pete-the-monkey/2026-ambiance-3-matei-1920.avif",
+            "w2560": "/media/pete-the-monkey/2026-ambiance-3-matei-2560.avif"
+          },
+          "width": 2986,
+          "height": 1980,
+          "orientation": "landscape",
+          "lqip": "data:image/avif;base64,AAAAHGZ0eXBhdmlmAAAAAG1pZjFhdmlmbWlhZgAAANZtZXRhAAAAAAAAACFoZGxyAAAAAAAAAABwaWN0AAAAAAAAAAAAAAAAAAAAACJpbG9jAAAAAERAAAEAAQAAAAAA+gABAAAAAAAAADkAAAAjaWluZgAAAAAAAQAAABVpbmZlAgAAAAABAABhdjAxAAAAAA5waXRtAAAAAAABAAAAVmlwcnAAAAA4aXBjbwAAAAxhdjFDgSACAAAAABRpc3BlAAAAAAAAABgAAAAQAAAAEHBpeGkAAAAAAwgICAAAABZpcG1hAAAAAAAAAAEAAQOBAgMAAABBbWRhdBIACgg4EO/tICGg0jIrG4Ji5OeeeeFCwADwA2TRAtJlWh3/3/1DOmSFFbBmpHa3cgg/afLJLm5PBA==",
+          "luminance": 0.653,
+          "alt": "Ambiance 3 Matei"
+        },
+        {
           "id": "2026-camping-3-matei",
           "src": {
             "w720": "/media/pete-the-monkey/2026-camping-3-matei-720.avif",
@@ -119,22 +119,6 @@
           "lqip": "data:image/avif;base64,AAAAHGZ0eXBhdmlmAAAAAG1pZjFhdmlmbWlhZgAAANZtZXRhAAAAAAAAACFoZGxyAAAAAAAAAABwaWN0AAAAAAAAAAAAAAAAAAAAACJpbG9jAAAAAERAAAEAAQAAAAAA+gABAAAAAAAAAGQAAAAjaWluZgAAAAAAAQAAABVpbmZlAgAAAAABAABhdjAxAAAAAA5waXRtAAAAAAABAAAAVmlwcnAAAAA4aXBjbwAAAAxhdjFDgSACAAAAABRpc3BlAAAAAAAAABgAAAAkAAAAEHBpeGkAAAAAAwgICAAAABZpcG1hAAAAAAAAAAEAAQOBAgMAAABsbWRhdBIACgk4EW8bSAhoNIAyVRuCYuTnnnnhQsAA8fVhzhuVtEHp2mUuWIqq5xJj3n11z8azdIcMCwx0dkxG2kTY7D0DmqNj/Cx+EXXaR5eglSfHnEVS+gEFdnh7qVNM2wN/ESeVRMA=",
           "luminance": 0.194,
           "alt": "Camping 3 Matei"
-        },
-        {
-          "id": "2026-dj-2-matei",
-          "src": {
-            "w720": "/media/pete-the-monkey/2026-dj-2-matei-720.avif",
-            "w1080": "/media/pete-the-monkey/2026-dj-2-matei-1080.avif",
-            "w1440": "/media/pete-the-monkey/2026-dj-2-matei-1440.avif",
-            "w1920": "/media/pete-the-monkey/2026-dj-2-matei-1920.avif",
-            "w2560": "/media/pete-the-monkey/2026-dj-2-matei-2560.avif"
-          },
-          "width": 2742,
-          "height": 1818,
-          "orientation": "landscape",
-          "lqip": "data:image/avif;base64,AAAAHGZ0eXBhdmlmAAAAAG1pZjFhdmlmbWlhZgAAANZtZXRhAAAAAAAAACFoZGxyAAAAAAAAAABwaWN0AAAAAAAAAAAAAAAAAAAAACJpbG9jAAAAAERAAAEAAQAAAAAA+gABAAAAAAAAAD8AAAAjaWluZgAAAAAAAQAAABVpbmZlAgAAAAABAABhdjAxAAAAAA5waXRtAAAAAAABAAAAVmlwcnAAAAA4aXBjbwAAAAxhdjFDgSACAAAAABRpc3BlAAAAAAAAABgAAAAQAAAAEHBpeGkAAAAAAwgICAAAABZpcG1hAAAAAAAAAAEAAQOBAgMAAABHbWRhdBIACgg4EO/tICGg0jIxG4Ji5OeeeeFCwADwA2U0feDTwVurMfwjh6GjfCLb11zKiY0BYIgane1pfGjaMHnP7g==",
-          "luminance": 0.378,
-          "alt": "Dj 2 Matei"
         },
         {
           "id": "2026-nightscapes-secrect-marriagese-5-matei",
@@ -201,6 +185,22 @@
           "alt": "Pete RadioFreeAlice 1 Matei"
         },
         {
+          "id": "2026-team-bad-body-chaos-code-matei",
+          "src": {
+            "w720": "/media/pete-the-monkey/2026-team-bad-body-chaos-code-matei-720.avif",
+            "w1080": "/media/pete-the-monkey/2026-team-bad-body-chaos-code-matei-1080.avif",
+            "w1440": "/media/pete-the-monkey/2026-team-bad-body-chaos-code-matei-1440.avif",
+            "w1920": "/media/pete-the-monkey/2026-team-bad-body-chaos-code-matei-1920.avif",
+            "w2560": "/media/pete-the-monkey/2026-team-bad-body-chaos-code-matei-2560.avif"
+          },
+          "width": 3089,
+          "height": 2048,
+          "orientation": "landscape",
+          "lqip": "data:image/avif;base64,AAAAHGZ0eXBhdmlmAAAAAG1pZjFhdmlmbWlhZgAAANZtZXRhAAAAAAAAACFoZGxyAAAAAAAAAABwaWN0AAAAAAAAAAAAAAAAAAAAACJpbG9jAAAAAERAAAEAAQAAAAAA+gABAAAAAAAAAD4AAAAjaWluZgAAAAAAAQAAABVpbmZlAgAAAAABAABhdjAxAAAAAA5waXRtAAAAAAABAAAAVmlwcnAAAAA4aXBjbwAAAAxhdjFDgSACAAAAABRpc3BlAAAAAAAAABgAAAAQAAAAEHBpeGkAAAAAAwgICAAAABZpcG1hAAAAAAAAAAEAAQOBAgMAAABGbWRhdBIACgg4EO/tICGg0jIwG4Ji5OeeeeFCwADwA0gJw5UB7luwt/S3DF6hosFpfzUr+bKxSEjY9gYEjP4gZCf0",
+          "luminance": 0.36,
+          "alt": "Team Bad Body Chaos Code Matei"
+        },
+        {
           "id": "2026-runners-matei",
           "src": {
             "w720": "/media/pete-the-monkey/2026-runners-matei-720.avif",
@@ -217,20 +217,20 @@
           "alt": "Runners Matei"
         },
         {
-          "id": "2026-team-bad-body-chaos-code-matei",
+          "id": "2026-ambiance-6-plage-matei",
           "src": {
-            "w720": "/media/pete-the-monkey/2026-team-bad-body-chaos-code-matei-720.avif",
-            "w1080": "/media/pete-the-monkey/2026-team-bad-body-chaos-code-matei-1080.avif",
-            "w1440": "/media/pete-the-monkey/2026-team-bad-body-chaos-code-matei-1440.avif",
-            "w1920": "/media/pete-the-monkey/2026-team-bad-body-chaos-code-matei-1920.avif",
-            "w2560": "/media/pete-the-monkey/2026-team-bad-body-chaos-code-matei-2560.avif"
+            "w720": "/media/pete-the-monkey/2026-ambiance-6-plage-matei-720.avif",
+            "w1080": "/media/pete-the-monkey/2026-ambiance-6-plage-matei-1080.avif",
+            "w1440": "/media/pete-the-monkey/2026-ambiance-6-plage-matei-1440.avif",
+            "w1920": "/media/pete-the-monkey/2026-ambiance-6-plage-matei-1920.avif",
+            "w2560": "/media/pete-the-monkey/2026-ambiance-6-plage-matei-2048.avif"
           },
-          "width": 3089,
-          "height": 2048,
-          "orientation": "landscape",
-          "lqip": "data:image/avif;base64,AAAAHGZ0eXBhdmlmAAAAAG1pZjFhdmlmbWlhZgAAANZtZXRhAAAAAAAAACFoZGxyAAAAAAAAAABwaWN0AAAAAAAAAAAAAAAAAAAAACJpbG9jAAAAAERAAAEAAQAAAAAA+gABAAAAAAAAAD4AAAAjaWluZgAAAAAAAQAAABVpbmZlAgAAAAABAABhdjAxAAAAAA5waXRtAAAAAAABAAAAVmlwcnAAAAA4aXBjbwAAAAxhdjFDgSACAAAAABRpc3BlAAAAAAAAABgAAAAQAAAAEHBpeGkAAAAAAwgICAAAABZpcG1hAAAAAAAAAAEAAQOBAgMAAABGbWRhdBIACgg4EO/tICGg0jIwG4Ji5OeeeeFCwADwA0gJw5UB7luwt/S3DF6hosFpfzUr+bKxSEjY9gYEjP4gZCf0",
-          "luminance": 0.36,
-          "alt": "Team Bad Body Chaos Code Matei"
+          "width": 2048,
+          "height": 3089,
+          "orientation": "portrait",
+          "lqip": "data:image/avif;base64,AAAAHGZ0eXBhdmlmAAAAAG1pZjFhdmlmbWlhZgAAANZtZXRhAAAAAAAAACFoZGxyAAAAAAAAAABwaWN0AAAAAAAAAAAAAAAAAAAAACJpbG9jAAAAAERAAAEAAQAAAAAA+gABAAAAAAAAAG0AAAAjaWluZgAAAAAAAQAAABVpbmZlAgAAAAABAABhdjAxAAAAAA5waXRtAAAAAAABAAAAVmlwcnAAAAA4aXBjbwAAAAxhdjFDgSACAAAAABRpc3BlAAAAAAAAABgAAAAkAAAAEHBpeGkAAAAAAwgICAAAABZpcG1hAAAAAAAAAAEAAQOBAgMAAAB1bWRhdBIACgk4EW8bSAhoNIAyXhuCYuTnnnnhQsAA8fVc1n+VBmNBhxobqYRAo/xyEOZlZct5noY3anJzmP6fEjLeJS4LCXxCvddgtX2sEohnTUEqPiq8a1GxSybOs5cgG8l+thawLiNSty2JXYuJ7YA=",
+          "luminance": 0.515,
+          "alt": "Ambiance 6 Plage Matei"
         },
         {
           "id": "cover",
