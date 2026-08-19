@@ -17,16 +17,17 @@
  * and the hand-off gains a visible brightness step.
  */
 
-/** Total flight time. Long enough for the billow to register as fabric. */
+/** Total flight time. Long enough for one wave to cross the photo. */
 const DURATION_MS = 1000;
 
 /**
- * How far the silhouette is allowed to bulge past the photo's own rect,
+ * How far the wave is allowed to carry the sheet past the photo's own rect,
  * in units of the rect's shorter side. The drawn quad is padded by this much
- * so an outward fold has somewhere to go; anything beyond it would be clipped
- * into a straight line, which is the one thing this effect must never show.
+ * so a crest has somewhere to go; beyond it the wave would be clipped into a
+ * straight line, which is the one thing this effect must never show. Keep
+ * comfortably above WAVE_AMP in the shader.
  */
-const PAD = 0.15;
+const PAD = 0.1;
 
 const VERT = /* glsl */ `#version 300 es
 in vec2 aPos;
@@ -66,41 +67,43 @@ uniform float uSaturation;
 const float PI = 3.14159265359;
 const float TAU = 6.28318530718;
 
+/** Wave cycles across the photo's width. Barely over one: a swell, not a ripple. */
+const float WAVE_FREQ = 1.35;
+/** Slight slant on the crests, so the wavefronts aren't perfectly upright. */
+const float WAVE_TILT = 0.12;
+/** Cycles the wave sweeps from hoist to fly over the flight. */
+const float WAVE_TRAVEL = 1.3;
+/** Peak displacement at the fly, in units of the photo's shorter side. */
+const float WAVE_AMP = 0.055;
 /**
- * Sampling frequency of the organic field, in shorter-side units — roughly
- * one feature per frame. The noise is not the effect here, it is only what
- * bends the wave off a perfect sine; any finer and it stops bending the wave
- * and starts eating the photograph.
+ * How steeply the wave grows away from the hoist. This is the whole shape of
+ * a flag: the fabric is held on one edge and free on the other, so amplitude
+ * is zero at the pole and largest at the far side. An even wave across the
+ * whole frame would read as a wobble; the falloff is what reads as flying.
  */
-const float NOISE_SCALE = 0.85;
+const float FLAG_FALLOFF = 0.75;
+/** Horizontal give where the surface turns away, as a fraction of WAVE_AMP. */
+const float FORESHORTEN = 0.32;
 
-/** Wave cycles across the shorter side. Under two: one swell, not a ripple. */
-const float WAVE_FREQ = 1.05;
-/** Tilt of the wavefronts, so the swell crosses the frame at an angle. */
-const float WAVE_TILT = 0.35;
-/** How far the noise is allowed to bend a wavefront, in cycles. */
-const float WAVE_BEND = 0.16;
-/** Cycles the wave travels over the flight. This is the "sweep". */
-const float WAVE_TRAVEL = 1.15;
+/**
+ * Sampling frequency of the noise that bends the wavefronts, and how far it
+ * is allowed to bend them, in cycles. Deliberately almost nothing: the noise
+ * exists only so the wave is not a perfect, mechanical sine. Any more of it
+ * and the effect stops being one clean ondulation and starts being texture.
+ */
+const float NOISE_SCALE = 0.7;
+const float WAVE_BEND = 0.035;
 
-/** Peak UV displacement carried by the wave, in shorter-side units. */
-const float DISPLACE = 0.03;
-/** How much of that displacement is along the wave rather than across it. */
-const float DISPLACE_LONG = 0.3;
-/** Peak excursion of the silhouette, in shorter-side units. Must be < PAD. */
-const float EDGE = 0.07;
-/** Width of the alpha ramp at the rippling border, at full amplitude. */
-const float FEATHER = 0.016;
 /** Photo.tsx rounds every frame by this much; the silhouette has to agree. */
 const float RADIUS_PX = 2.0;
-/** Strength of the light-through-fabric band along that border. */
-const float RIM = 0.1;
-
-/** How hard the crest and the trough of the swell shade the photo. */
-const float SHADE = 0.11;
+/** Width of the light-through-fabric band along the edge, shorter-side units. */
+const float RIM_WIDTH = 0.05;
+const float RIM = 0.07;
+/** How hard the turning surface shades the photo. */
+const float SHADE = 0.1;
 /** Per-channel UV split, as a fraction of the local displacement. */
 const float CHROMA = 0.05;
-const float GRAIN = 0.025;
+const float GRAIN = 0.02;
 
 // 2D simplex noise — Ashima Arts / Stefan Gustavson, MIT.
 vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
@@ -132,71 +135,48 @@ float snoise(vec2 v) {
   return 130.0 * dot(m, g);
 }
 
-/**
- * Three octaves. A fourth only adds detail an order of magnitude finer than a
- * fold, and every bit of that lands on the photograph as high-frequency
- * scribble — the thing that separates fabric from a liquify filter.
- */
+/** Two octaves. This field only nudges a phase; it is never seen directly. */
 float fbm(vec2 p) {
-  float sum = 0.0;
-  float amp = 0.5;
-  for (int i = 0; i < 3; i++) {
-    sum += amp * snoise(p);
-    p *= 2.03;   // not exactly 2, or the octaves line their features up
-    amp *= 0.5;
-  }
-  return sum;
-}
-
-/**
- * Two octaves, for the silhouette only. The border is read as a *shape*, and
- * a third octave there turns a rippling hem into a deckled, torn-paper edge —
- * detail at the boundary reads as damage, not as movement.
- */
-float fbm2(vec2 p) {
   return 0.5 * snoise(p) + 0.25 * snoise(p * 2.03);
 }
 
 void main() {
-  // Work in units of the rect's shorter side, so a given distortion is the
+  // Work in units of the rect's shorter side, so a given displacement is the
   // same number of pixels horizontally and vertically. In raw UV space a
-  // landscape photo would ripple twice as hard along one axis as the other.
+  // landscape photo would wave twice as hard along one axis as the other.
   vec2 aspect = uQuadSize / min(uQuadSize.x, uQuadSize.y);
   vec2 pos = (vUv - 0.5) * aspect;
 
   // The whole effect hangs off this: zero at both ends of the flight, so the
   // photo is a clean rectangle the instant it leaves the DOM and the instant
-  // it is handed back, and organic only in between.
+  // it is handed back, and moving only in between.
   float amp = sin(PI * uProgress);
 
-  // Domain-warped fbm (iquilezles.org/articles/warp): plain fbm gives clouds,
-  // fbm evaluated at a position that fbm itself displaced gives a field with
-  // structure to it. Here it is not the effect, only the thing that keeps the
-  // wave below from being a perfect, mechanical sine.
-  vec2 p = pos * NOISE_SCALE;
-  vec2 q = vec2(
-    fbm(p + vec2(0.0, uTime * 0.35)),
-    fbm(p + vec2(5.2, 1.3) - vec2(0.0, uTime * 0.30))
-  );
-  float n = fbm(p + 1.7 * q + vec2(1.7, 9.2));
+  // Amplitude grows away from the hoist (the left edge), which is what makes
+  // this a flag rather than a wobble.
+  float grow = pow(clamp(vUv.x, 0.0, 1.0), FLAG_FALLOFF);
 
-  // One wave, crossing the photo at an angle and sweeping over it for the
-  // length of the flight. Coherence is the whole point: scattered noise reads
-  // as damage, but a single swell travelling through a still image reads as
-  // the image itself being made of something that moves. The noise only bends
-  // the wavefronts; bend them harder than WAVE_BEND and the phase itself goes
-  // high-frequency, which is a moiré, not a wave.
-  float phase = pos.x * WAVE_FREQ + pos.y * WAVE_TILT
-              + n * WAVE_BEND - uProgress * WAVE_TRAVEL;
-  float wave = sin(phase * TAU);
+  float phase = (vUv.x * WAVE_FREQ + vUv.y * WAVE_TILT
+               + fbm(pos * NOISE_SCALE + vec2(0.0, uTime * 0.3)) * WAVE_BEND
+               - uProgress * WAVE_TRAVEL) * TAU;
 
-  // Mostly across the wavefronts — that is the direction a swell actually
-  // moves a surface. The small along-wave component is what puts the
-  // compression into the crest and the stretch into the trough.
-  vec2 along = normalize(vec2(WAVE_FREQ, WAVE_TILT));
-  vec2 across = vec2(-along.y, along.x);
-  vec2 disp = wave * (across + along * DISPLACE_LONG) * DISPLACE * amp;
-  vec2 uv = vUv + disp;
+  // One wave plus a swell at half its frequency. Two terms is all it takes to
+  // stop a sine reading as a sine, and it costs nothing next to more noise —
+  // which is what would make this busy again.
+  float wave  = sin(phase) * 0.72 + sin(phase * 0.5 + 0.9) * 0.38;
+  float slope = cos(phase) * 0.72 + cos(phase * 0.5 + 0.9) * 0.19;
+
+  // *The* displacement. Everything below reads the surface through this one
+  // vector, which is why the frame and the pixels can never disagree.
+  vec2 disp = vec2(-slope * FORESHORTEN, wave) * WAVE_AMP * grow * amp;
+
+  // Material space: where on the undisturbed sheet the fabric now sitting at
+  // this pixel came from. Sampling the photo *and* measuring the rect here —
+  // rather than warping the photo and separately perturbing an outline — is
+  // what makes the border a consequence of the wave instead of a second
+  // effect that has to be tuned to match it.
+  vec2 posMat = pos - disp;
+  vec2 uvMat = posMat / aspect + 0.5;
 
   // Cover-fit the visible slice into the rect. Photo.tsx gives every frame the
   // photo's own aspect ratio, so this is an identity today; it is here so that
@@ -205,8 +185,8 @@ void main() {
   vec2 cropPx = uImageSize * uCrop.zw;
   float k = max(uQuadSize.x / cropPx.x, uQuadSize.y / cropPx.y);
   vec2 cover = (uQuadSize / k) / cropPx;
-  vec2 base = uCrop.xy + ((uv - 0.5) * cover + 0.5) * uCrop.zw;
-  vec2 ca = disp * CHROMA * uCrop.zw;
+  vec2 base = uCrop.xy + ((uvMat - 0.5) * cover + 0.5) * uCrop.zw;
+  vec2 ca = (disp / aspect) * CHROMA * uCrop.zw;
 
   // Splitting the channels along the displacement reads as light bending
   // through a moving surface. It survives the desaturation below as edge
@@ -224,33 +204,27 @@ void main() {
   float luma = dot(col, vec3(0.2126, 0.7152, 0.0722));
   col = mix(vec3(luma), col, uSaturation);
 
-  // A crest turns toward the light and a trough away from it. A real normal
-  // would need a second noise fetch for the gradient; the wave's own sign is
-  // close enough at this amplitude and costs nothing.
-  col *= 1.0 + wave * SHADE * amp;
+  // Light follows the surface normal, and for a sheet displaced vertically the
+  // normal follows the *slope*, not the height — so the bright band sits on
+  // the rising face, a quarter cycle off the crest. Shading it on the crest
+  // instead is the usual tell that a wave is faked.
+  col *= 1.0 + slope * SHADE * grow * amp;
 
-  // Signed distance to the photo's rect, positive inside. Perturbing it with
-  // the same field that moved the pixels is what makes the *frame* stop being
-  // a rectangle: the border undulates, corners soften, and because the
-  // perturbation is multiplied by amp it snaps back to four
-  // straight edges at both ends of the flight.
+  // Signed distance to the photo's rect, measured in material space, positive
+  // inside. The straight edges of the sheet are still straight *in the
+  // fabric*; it is the fabric that is bent, so the silhouette comes out as
+  // the same wave, for free, and snaps back to four straight edges wherever
+  // amp is zero.
   float r = RADIUS_PX / min(uQuadSize.x, uQuadSize.y);
-  vec2 e = abs(pos) - 0.5 * aspect + r;
-  float sd = length(max(e, 0.0)) + min(max(e.x, e.y), 0.0) - r;
-  // The border rides the same wave as the pixels, which is what makes the
-  // frame read as one surface rather than as a photo inside a wobbling mask:
-  // where a crest reaches the edge, the edge goes out with it. The noise is a
-  // minority share, there only so the hem isn't identical on all four sides.
-  float border = fbm2(p * 0.5 + 1.2 * q + vec2(3.9, 6.1));
-  float d = -sd + (wave * 0.9 + border * 0.3) * EDGE * amp;
+  vec2 e = abs(posMat) - 0.5 * aspect + r;
+  float d = -(length(max(e, 0.0)) + min(max(e.x, e.y), 0.0) - r);
 
-  // The ramp collapses with the wave: soft as fabric at the crest, and one
-  // antialiased pixel wide at either end of the flight, so what is handed
-  // back to the DOM is a hard edge and not a photo with a blurred border.
-  float alpha = smoothstep(0.0, max(fwidth(d), FEATHER * amp), d);
+  // One antialiased pixel, and no more: a flag has a clean edge, and what is
+  // handed back to the DOM has to be a hard edge and not a blurred border.
+  float alpha = smoothstep(0.0, fwidth(d), d);
 
   // Sheer: a fabric edge held up to the light is brighter than its body.
-  col += pow(clamp(1.0 - abs(d) / EDGE, 0.0, 1.0), 3.0) * amp * RIM;
+  col += pow(clamp(1.0 - d / RIM_WIDTH, 0.0, 1.0), 3.0) * amp * RIM;
 
   // The archive is grainy film; a clean digital surface mid-flight would read
   // as a different image. Only while distorted, so the hand-off stays exact.
