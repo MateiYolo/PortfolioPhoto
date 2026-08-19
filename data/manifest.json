@@ -1,11 +1,11 @@
 {
-  "generatedAt": "2026-08-19T07:51:45.284Z",
+  "generatedAt": "2026-08-19T08:45:40.472Z",
   "categories": [
     {
       "slug": "pete-the-monkey",
       "title": "Pete The Monkey",
       "date": "2026-08-10",
-      "blurb": "Three days at Pete The Monkey festival, shot entirely on film: a\nPentax K1000 with a 40mm f/2.8 lens, loaded with Kodak Ultramax 400\nand Gold 200.\n",
+      "blurb": "Three days at Pete The Monkey festival, part of the official photo\ncrew. Shot entirely on film: a Pentax K1000 with a 40mm f/2.8 lens,\nloaded with Kodak Ultramax 400 and Gold 200.\n",
       "order": 1,
       "cover": {
         "id": "cover",
@@ -254,7 +254,7 @@
       "slug": "obsimo",
       "title": "Obsimo",
       "date": "2026-03-29",
-      "blurb": "Placeholder blurb — swap in real copy before this goes live.\n",
+      "blurb": "Following Obsimo, an electronic producer, on tour: five dates\nacross two countries, ending in a sold-out headline show in\nParis. 2026.\n",
       "order": 2,
       "cover": {
         "id": "thumbnail",
@@ -535,7 +535,7 @@
       "slug": "hiking",
       "title": "Hiking",
       "date": "2026-05-02",
-      "blurb": "Placeholder blurb — swap in real copy before this goes live.\n",
+      "blurb": "Four days in the Pyrénées with childhood friends, shot on an\nOlympus Trip 35 loaded with Kodak Ultramax 400. May 2026.\n",
       "order": 3,
       "cover": {
         "id": "thumbnail",
@@ -816,7 +816,7 @@
       "slug": "obsimo-vinyl",
       "title": "Obsimo Vinyl",
       "date": "2026-04-05",
-      "blurb": "Placeholder blurb — swap in real copy before this goes live.\n",
+      "blurb": "I designed Obsimo's first vinyl, from artwork to production.\nOnce it was in hand, we shot this series to promote it.\n",
       "order": 4,
       "cover": {
         "id": "thumbnail",
@@ -1065,7 +1065,7 @@
       "slug": "greece",
       "title": "Greece",
       "date": "2026-06-14",
-      "blurb": "Placeholder blurb — swap in real copy before this goes live.\n",
+      "blurb": "One of my favourite places on earth: Poros, an island close to\nAthens. March 2025.\n",
       "order": 5,
       "cover": {
         "id": "thumbnail",
@@ -1266,7 +1266,7 @@
       "slug": "nyc",
       "title": "NYC",
       "date": "2026-07-22",
-      "blurb": "Placeholder blurb — swap in real copy before this goes live.\n",
+      "blurb": "My friend Kara ran her first marathon in New York, and I was\nthere to catch the energy of the day. November 2025.\n",
       "order": 6,
       "cover": {
         "id": "01",
@@ -1450,12 +1450,12 @@
   ],
   "about": {
     "title": "About",
-    "bio": "I'm Matei. I make photographs of places and people that hold still just long enough to be looked at twice.\n\nThis is a slow, ongoing archive of that work.\n",
+    "bio": "Hey there, Matei here.\n\nPassionate about music and visuals, I've been around them all my life. I've worn a lot of hats: graphic designer for a music venue for 5+ years, a musician playing festivals and venues across France, and now a designer at a music startup. A couple of years ago I started bringing a camera along too, to capture moments of places and people.\n\nEverything not saved will be lost.\n",
     "contactEmail": "matei.convard@gmail.com",
     "contactLinks": [
       {
         "label": "Instagram",
-        "href": "https://instagram.com/"
+        "href": "https://www.instagram.com/maaaaaaaatei/"
       },
       {
         "label": "Email",
