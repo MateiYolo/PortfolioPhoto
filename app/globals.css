@@ -124,17 +124,12 @@ html.lenis body {
 
    Dropping the group removes both snapshots from the transition overlay, so
    the photo is drawn exactly once, by the canvas. The title pair is left
-   alone and still morphs alongside it.
+   alone and still morphs alongside it. Hiding the *arriving* photo is not
+   here: only the flight knows which one it is flying to, and on the way home
+   the grid is full of candidates — see lib/clothMorphFlight.ts.
 -------------------------------------------------------------------------- */
 html.cloth-morph::view-transition-group(.morph) {
   display: none;
-}
-
-/* The landing photo has to be hidden from the frame it first paints in, not
-   a frame later, or it shows up under the quad that is still on its way to
-   it. A selector does that; a ref and an effect cannot. */
-html.cloth-morph [data-cloth-target] {
-  visibility: hidden;
 }
 
 /* There is deliberately no root crossfade here, and it is not an oversight.

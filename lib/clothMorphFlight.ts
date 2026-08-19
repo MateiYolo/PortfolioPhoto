@@ -18,14 +18,16 @@ const GATE = "cloth-morph";
 
 /** Give up and let the page arrive plainly if the destination never shows. */
 const FIND_TIMEOUT_MS = 2500;
+/** How long to let a found destination stop moving before flying at it. */
+const SETTLE_TIMEOUT_MS = 300;
 /** ...and don't hold the last frame forever waiting on a photo that won't decode. */
 const PAINT_TIMEOUT_MS = 1500;
 
 /**
- * Symmetric easing, not the outExpo the native morph uses. The billow peaks at
+ * Symmetric easing, not the outExpo the native morph uses. The wave peaks at
  * the middle of the flight, and a front-loaded curve would have the photo
- * nearly parked by the time it is at its most distorted — which reads as a
- * glitch on a stationary image rather than as fabric moving through the air.
+ * nearly parked by the time it is moving most — which reads as a glitch on a
+ * stationary image rather than as fabric crossing the screen.
  */
 const geometry = cubicBezier(...ease.inOutQuart);
 
@@ -36,10 +38,19 @@ export interface BeginArgs {
   frame: HTMLElement;
   /** The decoded <img> inside it, used directly as the texture. */
   img: HTMLImageElement;
-  /** Selector for the destination photo's wrapper on the category page. */
+  /** Selector for the destination photo's wrapper on the arriving page. */
   target: string;
-  /** The tile's live grayscale amount, so the shader can finish the ramp. */
-  saturation: number;
+  /** Pathname this flight is heading for — see the popstate guard below. */
+  destination: string;
+  /** Colour the source is showing right now, and the colour to land on. */
+  saturationFrom: number;
+  saturationTo: number;
+  /**
+   * Sweep the wave the other way. Going home is the same flight played
+   * backwards, and a flag that flew left-to-right on the way out should not
+   * fly left-to-right on the way back too.
+   */
+  reverse?: boolean;
 }
 
 let cancel: (() => void) | null = null;
@@ -105,7 +116,15 @@ export function abort() {
   cancel?.();
 }
 
-export function begin({ frame, img, target, saturation }: BeginArgs): boolean {
+export function begin({
+  frame,
+  img,
+  target,
+  destination,
+  saturationFrom,
+  saturationTo,
+  reverse = false,
+}: BeginArgs): boolean {
   if (!engine.warm()) return false;
   const canvas = engine.canvas;
   if (!canvas) return false;
@@ -123,6 +142,17 @@ export function begin({ frame, img, target, saturation }: BeginArgs): boolean {
   let stopAnimation: (() => void) | null = null;
   let dead = false;
 
+  /**
+   * The destination has to be invisible from the frame it first paints in,
+   * not a frame later, or it shows up under a quad still on its way to it —
+   * so this is a rule, installed before the navigation, and not a ref and an
+   * effect. It is written here rather than kept in globals.css because only
+   * this code knows *which* photo is being flown to: on the way home the
+   * grid is full of candidates and hiding all of them would be a blackout.
+   */
+  const hide = document.createElement("style");
+  hide.textContent = `${target}{visibility:hidden}`;
+
   /** Idempotent: a stale popstate must never tear down a newer flight. */
   const end = (restoreSource: boolean) => {
     if (dead) return;
@@ -130,13 +160,23 @@ export function begin({ frame, img, target, saturation }: BeginArgs): boolean {
     if (raf) cancelAnimationFrame(raf);
     stopAnimation?.();
     window.removeEventListener("popstate", onPopState);
+    hide.remove();
     root.classList.remove(GATE);
     if (restoreSource) frame.style.visibility = "";
     engine.release();
     if (cancel === teardown) cancel = null;
   };
   const teardown = () => end(true);
-  const onPopState = () => end(true);
+  /**
+   * A history move that isn't the one this flight is riding has to kill it —
+   * the source is gone and the destination is never coming. The flight home
+   * *is* started by a history move, though (the back button, caught on the
+   * navigate event before the DOM swaps), so "any popstate" would abort the
+   * very navigation it was launched for. Where we ended up is the honest test.
+   */
+  const onPopState = () => {
+    if (location.pathname !== destination) end(true);
+  };
   cancel = teardown;
 
   try {
@@ -145,24 +185,53 @@ export function begin({ frame, img, target, saturation }: BeginArgs): boolean {
     // Drawn synchronously, before the click handler returns: this and the
     // visibility change below land in the same paint, so there is no frame in
     // which the photo is either doubled or missing.
-    engine.draw(from.rect, from.crop, 0, 0, saturation);
+    engine.draw(from.rect, from.crop, 0, 0, saturationFrom);
   } catch {
     end(true);
     return false;
   }
 
   frame.style.visibility = "hidden";
+  document.head.append(hide);
   // Suppresses the native photo morph for exactly this navigation. The title
   // morph is untouched and still runs. See globals.css.
   root.classList.add(GATE);
 
+  let settling: { el: HTMLElement; rect: Rect; since: number } | null = null;
+
+  /**
+   * The destination has to have stopped moving before it is worth aiming at.
+   * Arriving home the page is scrolled to the tile and the grid's parallax
+   * resolves against the new scroll position, so the first frame or two after
+   * mount report a rect the photo is not going to end up in. Waiting for two
+   * agreeing frames costs nothing and removes a whole class of near-miss —
+   * with a timeout, because "never settles" must not mean "never lands".
+   */
   const findTarget = (): HTMLElement | null => {
     const el = document.querySelector<HTMLElement>(target);
-    if (!el) return null;
-    const rect = el.getBoundingClientRect();
+    if (!el) {
+      settling = null;
+      return null;
+    }
+    const { rect } = measure(el, null);
     // A mounted-but-unlaid-out element measures zero; landing on that would
     // fling the photo into the corner.
-    return rect.width > 1 && rect.height > 1 ? el : null;
+    if (rect.w < 1 || rect.h < 1) {
+      settling = null;
+      return null;
+    }
+    const now = performance.now();
+    if (!settling || settling.el !== el) {
+      settling = { el, rect, since: now };
+      return null;
+    }
+    const still =
+      Math.abs(rect.x - settling.rect.x) < 0.5 &&
+      Math.abs(rect.y - settling.rect.y) < 0.5 &&
+      Math.abs(rect.w - settling.rect.w) < 0.5 &&
+      Math.abs(rect.h - settling.rect.h) < 0.5;
+    settling.rect = rect;
+    return still || now - settling.since > SETTLE_TIMEOUT_MS ? el : null;
   };
 
   /**
@@ -183,12 +252,13 @@ export function begin({ frame, img, target, saturation }: BeginArgs): boolean {
       // yet. Keep redrawing so a scroll during the wait still tracks.
       raf = requestAnimationFrame(() => {
         const now = measure(targetEl, targetImg);
-        engine.draw(now.rect, now.crop, 1, DURATION_MS / 1000, 1);
+        engine.draw(now.rect, now.crop, 1, DURATION_MS / 1000, saturationTo);
         handOff(targetEl, targetImg);
       });
       return;
     }
     root.classList.remove(GATE);
+    hide.remove();
     raf = requestAnimationFrame(() => end(false));
   };
 
@@ -212,9 +282,11 @@ export function begin({ frame, img, target, saturation }: BeginArgs): boolean {
           mixCrop(from.crop, to.crop, eased),
           // Linear in time, so the shader's sin() envelope peaks at the middle
           // of the flight rather than wherever the easing happens to put it.
-          t,
+          // The envelope is symmetric, so handing the shader 1 - t reverses
+          // which way the wave sweeps and changes nothing else.
+          reverse ? 1 - t : t,
           (t * DURATION_MS) / 1000,
-          mix(saturation, 1, eased)
+          mix(saturationFrom, saturationTo, eased)
         );
 
         // The lead photo is a larger derivative of the same file and is being
@@ -229,7 +301,7 @@ export function begin({ frame, img, target, saturation }: BeginArgs): boolean {
       onComplete: () => {
         if (dead) return;
         const to = measure(targetEl, targetImg);
-        engine.draw(to.rect, to.crop, 1, DURATION_MS / 1000, 1);
+        engine.draw(to.rect, to.crop, 1, DURATION_MS / 1000, saturationTo);
         handOff(targetEl, targetImg);
       },
     });
@@ -250,14 +322,14 @@ export function begin({ frame, img, target, saturation }: BeginArgs): boolean {
     // Until the destination exists the quad holds over where the thumbnail
     // was, which is what the native morph does while it waits for the commit.
     // Redrawn each frame so a resize keeps it in place.
-    engine.draw(from.rect, from.crop, 0, 0, saturation);
+    engine.draw(from.rect, from.crop, reverse ? 1 : 0, 0, saturationFrom);
     raf = requestAnimationFrame(wait);
   };
 
   raf = requestAnimationFrame(wait);
 
-  // Browser back mid-flight: the source element is gone and the destination
-  // never arrives, so the quad would otherwise hang in the air.
+  // Leaving mid-flight for anywhere else: the source element is gone and the
+  // destination never arrives, so the quad would otherwise hang in the air.
   window.addEventListener("popstate", onPopState);
 
   return true;

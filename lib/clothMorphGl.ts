@@ -17,8 +17,8 @@
  * and the hand-off gains a visible brightness step.
  */
 
-/** Total flight time. Long enough for one wave to cross the photo. */
-const DURATION_MS = 1000;
+/** Total flight time. Unhurried: the wave should read as weight, not speed. */
+const DURATION_MS = 1200;
 
 /**
  * How far the wave is allowed to carry the sheet past the photo's own rect,
@@ -71,10 +71,13 @@ const float TAU = 6.28318530718;
 const float WAVE_FREQ = 1.35;
 /** Slight slant on the crests, so the wavefronts aren't perfectly upright. */
 const float WAVE_TILT = 0.12;
-/** Cycles the wave sweeps from hoist to fly over the flight. */
-const float WAVE_TRAVEL = 1.3;
+/**
+ * Cycles the wave sweeps from hoist to fly over the flight. Under one, so the
+ * fabric is caught in a single pass rather than seen to flap.
+ */
+const float WAVE_TRAVEL = 0.8;
 /** Peak displacement at the fly, in units of the photo's shorter side. */
-const float WAVE_AMP = 0.055;
+const float WAVE_AMP = 0.04;
 /**
  * How steeply the wave grows away from the hoist. This is the whole shape of
  * a flag: the fabric is held on one edge and free on the other, so amplitude

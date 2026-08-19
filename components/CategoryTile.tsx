@@ -5,11 +5,7 @@ import { motion, useScroll, useTransform } from "motion/react";
 import { useRef, useState, ViewTransition } from "react";
 import { Photo } from "@/components/Photo";
 import { ScrollTilt } from "@/components/ScrollTilt";
-import {
-  beginClothMorph,
-  prewarmClothMorph,
-  readSaturation,
-} from "@/lib/clothMorph";
+import { clothMorphToCategory, prewarmClothMorph } from "@/lib/clothMorph";
 import type { Category } from "@/lib/content";
 import { GRID_TILE, tileSizes } from "@/lib/imageSizes";
 import { ease } from "@/lib/motion";
@@ -38,9 +34,10 @@ export function CategoryTile({
   const reducedMotion = useReducedMotion();
 
   /**
-   * Hands the cover photo to the WebGL cloth morph (lib/clothMorph.ts) and
-   * lets the Link navigate underneath it. Everything here is measured before
-   * the navigation starts, because after it the tile is unmounted.
+   * Hands the cover photo to the WebGL flag morph (lib/clothMorph.ts) and lets
+   * the Link navigate underneath it. It has to happen in the click itself,
+   * because a moment later this tile is unmounted and there is nothing left to
+   * measure.
    *
    * Returning silently is the fallback: the <ViewTransition> below is still in
    * the markup, so a browser without WebGL2 — or a visitor who asked for less
@@ -48,19 +45,7 @@ export function CategoryTile({
    */
   const handOffToCloth = () => {
     if (reducedMotion) return;
-    // Photo renders <div frame><img/></div>; the frame is the overflow-clipped
-    // box the photo is actually seen through, and the <img> inside it carries
-    // the parallax transform. The morph needs both, and neither is worth a
-    // prop on Photo that only this one call site would ever pass.
-    const img = photoRef.current?.querySelector("img");
-    const frame = img?.parentElement;
-    if (!img || !frame) return;
-    beginClothMorph({
-      img,
-      frame,
-      target: `[data-cloth-target="photo-${category.slug}"]`,
-      saturation: readSaturation(frame),
-    });
+    clothMorphToCategory(`photo-${category.slug}`, photoRef.current);
   };
 
   const { scrollYProgress } = useScroll({
@@ -108,6 +93,8 @@ export function CategoryTile({
             <ViewTransition name={`photo-${category.slug}`} share="morph" default="none">
               <motion.div
                 ref={photoRef}
+                // How the flight home finds the tile it is landing on.
+                data-cloth-tile={`photo-${category.slug}`}
                 animate={{ scale: hovered ? 1.04 : 1 }}
                 transition={{ duration: 0.6, ease: ease.inOutQuart }}
               >
