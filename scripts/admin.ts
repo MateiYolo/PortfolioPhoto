@@ -252,7 +252,7 @@ server.listen(PORT, "127.0.0.1", () => {
   console.log(`Admin panel: http://localhost:${PORT}`);
 });
 
-const HTML = String.raw`<!doctype html>
+const HTML = `<!doctype html>
 <html>
 <head>
 <meta charset="utf-8" />
@@ -382,6 +382,7 @@ function renderCategories() {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ order }),
     });
+    state = order.map(folder => state.find(c => c.folder === folder));
     setStatus('Saved');
   });
 }
