@@ -21,8 +21,12 @@ export default function HomePage() {
           <SplitText text="Matei Convard" by="words" />
         </h1>
         <p
-          className="font-sans text-grey-500"
-          style={{ maxWidth: "34ch", marginTop: "1.25rem", fontSize: "var(--step-1)" }}
+          className="font-sans text-grey-500 max-w-[34ch] md:max-w-none md:whitespace-nowrap"
+          style={{
+            marginTop: "1.25rem",
+            fontSize: "var(--step-1)",
+            textWrap: "balance",
+          }}
         >
           A little space of mine, an ongoing archive of memories.
         </p>
