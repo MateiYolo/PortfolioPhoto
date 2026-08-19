@@ -58,6 +58,20 @@ If the repo ever outgrows that, `NEXT_PUBLIC_MEDIA_BASE` is the escape
 hatch: point it at a bucket (Vercel Blob, Cloudflare R2, …), re-run ingest
 against the bucket, and every page picks it up with no component changes.
 
+## Reordering categories and photos
+
+```
+npm run admin      # http://localhost:4577
+```
+
+A small local-only page (not part of the deployed site) for
+drag-and-drop reordering: category order on the left, and the photo
+order within a category on the right. Both save straight to the
+relevant `meta.md` on drop — category order updates `order:`, photo
+order writes a `photoOrder:` filename list (no files are renamed, so
+`npm run ingest`'s cache stays warm). Click "Run ingest" in the page, or
+run it yourself, then commit and push as usual.
+
 ## Editing the About page
 
 Edit `content/about/meta.md` (title, bio, contact email, contact links).

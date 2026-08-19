@@ -127,6 +127,23 @@ function naturalSort(a: string, b: string): number {
 }
 
 /**
+ * `photoOrder` (written by `npm run admin`) is a filename list expressing a
+ * manual drag-and-drop order. Files it names come first, in that order;
+ * anything not listed (new photos added since the last reorder) falls back
+ * to natural sort and is appended after.
+ */
+function applyPhotoOrder(files: string[], photoOrder: unknown): string[] {
+  if (!Array.isArray(photoOrder)) return files;
+  const present = new Set(files);
+  const known = photoOrder.filter(
+    (f): f is string => typeof f === "string" && present.has(f)
+  );
+  const seen = new Set(known);
+  const rest = files.filter((f) => !seen.has(f));
+  return [...known, ...rest];
+}
+
+/**
  * gray-matter parses unquoted YAML dates (e.g. `date: 2026-01-10`) into a
  * JS Date, which would otherwise land in the manifest as a verbose string
  * like "Sat Jan 10 2026 00:00:00 GMT+0000". Normalize back to YYYY-MM-DD.
@@ -305,10 +322,13 @@ async function processCategory(
   const { data: fm } = matter(raw);
   const slug = slugify(fm.slug ?? folderName);
 
-  const imageFiles = entries
-    .filter((e) => e.isFile() && IMAGE_EXT.test(e.name))
-    .map((e) => e.name)
-    .sort(naturalSort);
+  const imageFiles = applyPhotoOrder(
+    entries
+      .filter((e) => e.isFile() && IMAGE_EXT.test(e.name))
+      .map((e) => e.name)
+      .sort(naturalSort),
+    fm.photoOrder
+  );
 
   if (imageFiles.length === 0) {
     console.warn(`  ! skipping "${folderName}": no images found`);
