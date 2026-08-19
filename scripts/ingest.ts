@@ -88,6 +88,7 @@ interface Photo {
 interface Category {
   slug: string;
   title: string;
+  caption: string;
   date: string;
   blurb: string;
   order: number;
@@ -384,6 +385,7 @@ async function processCategory(
   return {
     slug,
     title: fm.title ?? folderName,
+    caption: fm.caption ?? fm.title ?? folderName,
     date: formatDate(fm.date),
     blurb: fm.blurb ?? "",
     order: typeof fm.order === "number" ? fm.order : 999,

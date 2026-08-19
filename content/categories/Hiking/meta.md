@@ -1,5 +1,6 @@
 ---
 title: Hiking
+caption: 4 days hiking in the Pyrénées
 date: '2026-05-02'
 blurb: |
   Four days in the Pyrénées with childhood friends, shot on an

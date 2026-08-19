@@ -34,6 +34,7 @@ export interface Photo {
 export interface Category {
   slug: string;
   title: string;
+  caption: string;
   date: string;
   blurb: string;
   order: number;

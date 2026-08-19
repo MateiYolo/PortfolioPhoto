@@ -1,5 +1,6 @@
 ---
 title: Obsimo Vinyl
+caption: Obsimo's first vinyl
 date: '2026-04-05'
 blurb: |
   I designed Obsimo's first vinyl, from artwork to production.

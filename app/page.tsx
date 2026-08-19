@@ -28,7 +28,7 @@ export default function HomePage() {
             textWrap: "balance",
           }}
         >
-          A little space of mine, an ongoing archive of memories.
+          Ongoing archive of memories, a little space of mine.
         </p>
       </section>
 

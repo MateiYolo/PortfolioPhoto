@@ -14,7 +14,7 @@ import { useReducedMotion } from "@/lib/useReducedMotion";
  * One cover on the homepage grid. Hover brings colour into the (otherwise
  * grayscale) photo and scales it slightly within its frame.
  *
- * Only the title is set under the photo. No counts, no metadata: the grid
+ * Only the caption is set under the photo. No counts, no metadata: the grid
  * is a list of places to go, not a table of contents.
  */
 export function CategoryTile({
@@ -87,7 +87,7 @@ export function CategoryTile({
                 className="font-display block text-[var(--step-1)]"
                 style={{ marginTop: "0.9rem" }}
               >
-                {category.title}
+                {category.caption}
               </span>
             </ViewTransition>
           </Link>

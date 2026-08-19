@@ -1,5 +1,6 @@
 ---
 title: Obsimo
+caption: Obsimo. 5 shows, 2 countries.
 date: '2026-03-29'
 blurb: |
   Following Obsimo, an electronic producer, on tour: five dates
