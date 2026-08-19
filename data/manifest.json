@@ -4,6 +4,7 @@
     {
       "slug": "pete-the-monkey",
       "title": "Pete The Monkey",
+      "caption": "Pete the Monkey 2026",
       "date": "2026-08-10",
       "blurb": "Three days at Pete The Monkey festival, part of the official photo\ncrew. Shot entirely on film: a Pentax K1000 with a 40mm f/2.8 lens,\nloaded with Kodak Ultramax 400 and Gold 200.\n",
       "order": 1,
@@ -253,6 +254,7 @@
     {
       "slug": "obsimo",
       "title": "Obsimo",
+      "caption": "Obsimo. 5 shows, 2 countries.",
       "date": "2026-03-29",
       "blurb": "Following Obsimo, an electronic producer, on tour: five dates\nacross two countries, ending in a sold-out headline show in\nParis. 2026.\n",
       "order": 2,
@@ -534,6 +536,7 @@
     {
       "slug": "hiking",
       "title": "Hiking",
+      "caption": "4 days hiking in the Pyrénées",
       "date": "2026-05-02",
       "blurb": "Four days in the Pyrénées with childhood friends, shot on an\nOlympus Trip 35 loaded with Kodak Ultramax 400. May 2026.\n",
       "order": 3,
@@ -815,6 +818,7 @@
     {
       "slug": "obsimo-vinyl",
       "title": "Obsimo Vinyl",
+      "caption": "Obsimo's first vinyl",
       "date": "2026-04-05",
       "blurb": "I designed Obsimo's first vinyl, from artwork to production.\nOnce it was in hand, we shot this series to promote it.\n",
       "order": 4,
@@ -1064,6 +1068,7 @@
     {
       "slug": "greece",
       "title": "Greece",
+      "caption": "A piece of paradise in Greece",
       "date": "2026-06-14",
       "blurb": "One of my favourite places on earth: Poros, an island close to\nAthens. March 2025.\n",
       "order": 5,
@@ -1265,6 +1270,7 @@
     {
       "slug": "nyc",
       "title": "NYC",
+      "caption": "NYC's marathon",
       "date": "2026-07-22",
       "blurb": "My friend Kara ran her first marathon in New York, and I was\nthere to catch the energy of the day. November 2025.\n",
       "order": 6,

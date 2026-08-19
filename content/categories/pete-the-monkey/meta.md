@@ -1,5 +1,6 @@
 ---
 title: Pete The Monkey
+caption: Pete the Monkey 2026
 date: '2026-08-10'
 blurb: |
   Three days at Pete The Monkey festival, part of the official photo
