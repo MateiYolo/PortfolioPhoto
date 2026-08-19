@@ -8,22 +8,19 @@ blurb: |
 cover: Cover
 order: 1
 photoOrder:
-  - 02.jpg
-  - 03.jpg
-  - 04.jpg
-  - 01.jpg
-  - 05.jpg
-  - 06.jpg
-  - 07.jpg
-  - 08.jpg
-  - 09.jpg
-  - 10.jpg
-  - 11.jpg
-  - 12.jpg
-  - 13.jpg
-  - 14.jpg
-  - 15.jpg
-  - 000096220004.jpg
-  - thumbnail.jpg
+  - 2026-Activité-Cache-Tetons-1-Matei.jpg
+  - 2026-Dj-2-Matei.jpg
+  - 2026-Ambiance-Obsimo-Vintage-Clothes-Matei.jpg
+  - 2026-Bingo-Disco-2-Matei.jpg
+  - 2026-Ambiance-3-Matei.jpg
+  - 2026-Camping-3-Matei.jpg
+  - 2026-Nightscapes-Secrect-Marriagese-5-Matei.jpg
+  - 2026-Nightscapes-Secrect-Marriagese-11-Matei.jpg
+  - 2026-Pete-Cirque-2-Matei.jpg
+  - 2026-Pete-RadioFreeAlice-1-Matei.jpg
+  - 2026-Team-Bad-Body-Chaos-Code-Matei.jpg
+  - 2026-Runners-Matei.jpg
+  - 2026-Ambiance-6-Plage-Matei.jpg
+  - Cover.jpg
 ---
 
