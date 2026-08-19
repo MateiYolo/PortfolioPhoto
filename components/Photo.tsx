@@ -63,6 +63,7 @@ export function Photo({
   grayscale,
   imgY,
   imgScale,
+  instant,
 }: {
   photo: PhotoType;
   sizes?: string;
@@ -88,6 +89,16 @@ export function Photo({
    * to cover its range; ignored otherwise.
    */
   imgScale?: number;
+  /**
+   * Skip this component's own decode-then-fade reveal and paint the <img>
+   * at full opacity from the first render. Only for a photo that is itself
+   * the landing side of a `<ViewTransition share="morph">`: the browser's
+   * native ::view-transition-image-pair crossfade already dissolves the
+   * thumbnail into this photo, so running the normal blur-up sequence on
+   * top of it plays the same blur-to-sharp motion a second time, right as
+   * the first one finishes.
+   */
+  instant?: boolean;
 }) {
   const frameRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
@@ -237,8 +248,10 @@ export function Photo({
           width: "100%",
           height: "100%",
           objectFit: "cover",
-          opacity: ready ? 1 : 0,
-          transition: `opacity ${FADE_MS}ms cubic-bezier(0.65,0,0.35,1)`,
+          opacity: instant || ready ? 1 : 0,
+          transition: instant
+            ? undefined
+            : `opacity ${FADE_MS}ms cubic-bezier(0.65,0,0.35,1)`,
           ...(imgY ? { y: imgY, scale: imgScale } : undefined),
         }}
       />

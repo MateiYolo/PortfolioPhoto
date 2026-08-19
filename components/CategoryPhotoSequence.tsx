@@ -64,6 +64,7 @@ export function CategoryPhotoSequence({
               photo={photo}
               sizes={tileSizes(tile, photo)}
               priority={lead}
+              instant={lead && Boolean(morphName)}
               style={{ borderRadius: 2 }}
             />
           </button>
