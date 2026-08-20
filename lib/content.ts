@@ -18,6 +18,25 @@ import manifest from "@/data/manifest.json";
  */
 export type PhotoSource = Record<`w${number}`, string>;
 
+/**
+ * Where a clip's mp4 rungs live, keyed by nominal width the same way
+ * PhotoSource is. Short, muted, and already looping: see the video section
+ * of scripts/ingest.ts for what is baked into one of these.
+ */
+export type VideoSource = Record<`w${number}`, string>;
+
+export interface VideoClip {
+  src: VideoSource;
+  /** Of the encoded clip, after duplicated source frames are dropped. */
+  fps: number;
+  /** Unique frames in one wiggle cycle. */
+  frames: number;
+  /** Seconds of one wiggle cycle. */
+  cycle: number;
+  /** Seconds of the encoded file: `cycle` times however many are baked in. */
+  duration: number;
+}
+
 export interface Photo {
   id: string;
   src: PhotoSource;
@@ -29,6 +48,12 @@ export interface Photo {
   /** 0 (black) .. 1 (white) average luminance, for overlay text contrast. */
   luminance: number;
   alt: string;
+  /**
+   * Present only on an item that came from a video file, in which case
+   * every field above describes its poster frame. A consumer that ignores
+   * this renders the still and is not wrong, only quiet.
+   */
+  video?: VideoClip;
 }
 
 export interface Category {
@@ -65,13 +90,20 @@ const data = manifest as unknown as Manifest;
  */
 const MEDIA_BASE = process.env.NEXT_PUBLIC_MEDIA_BASE ?? "";
 
+function rebase<T extends PhotoSource | VideoSource>(src: T): T {
+  return Object.fromEntries(
+    Object.entries(src).map(([slot, path]) => [slot, MEDIA_BASE + path])
+  ) as T;
+}
+
 function resolvePhoto(photo: Photo): Photo {
   if (!MEDIA_BASE) return photo;
   return {
     ...photo,
-    src: Object.fromEntries(
-      Object.entries(photo.src).map(([slot, path]) => [slot, MEDIA_BASE + path])
-    ) as PhotoSource,
+    src: rebase(photo.src),
+    ...(photo.video
+      ? { video: { ...photo.video, src: rebase(photo.video.src) } }
+      : undefined),
   };
 }
 

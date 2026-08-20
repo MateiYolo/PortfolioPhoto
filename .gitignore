@@ -18,6 +18,11 @@ content/categories/**/*.PNG
 content/categories/**/*.tif
 content/categories/**/*.tiff
 content/categories/**/*.webp
+content/categories/**/*.mp4
+content/categories/**/*.MP4
+content/categories/**/*.mov
+content/categories/**/*.MOV
+content/categories/**/*.m4v
 content/originals/
 content/about/*.jpg
 content/about/*.jpeg

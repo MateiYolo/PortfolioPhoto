@@ -2,6 +2,7 @@
 
 import { useEffect, useState, ViewTransition } from "react";
 import { Lightbox } from "@/components/Lightbox";
+import { LoopVideo } from "@/components/LoopVideo";
 import { Photo } from "@/components/Photo";
 import { ScrollTilt } from "@/components/ScrollTilt";
 import { watchClothMorphHome } from "@/lib/clothMorph";
@@ -25,6 +26,9 @@ const ALIGN_PATTERN: Array<"flex-start" | "flex-end" | "center"> = [
  * shots, sized by their own orientation and alternately aligned so mixed
  * portrait/landscape sets don't read as a rigid uniform grid. Clicking any
  * photo opens it in the Lightbox.
+ *
+ * A photo here can be a wigglegram, in which case it loops on its own for
+ * as long as it is on screen, with no controls: see components/LoopVideo.
  *
  * Every photo keeps its own aspect ratio, so a frame is only ever sized by
  * width, and that width is capped by what the ratio allows in a screenful
@@ -77,7 +81,11 @@ export function CategoryPhotoSequence({
               priority={lead}
               instant={lead && Boolean(morphName)}
               style={{ borderRadius: 2 }}
-            />
+            >
+              {/* Inside a category there is nothing to reveal, so a clip
+                  runs from the moment it is on screen and keeps running. */}
+              {photo.video && <LoopVideo clip={photo.video} active />}
+            </Photo>
           </button>
         );
 

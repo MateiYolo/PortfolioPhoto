@@ -28,6 +28,10 @@ export async function generateMetadata({
 
 function formatDate(iso: string) {
   if (!iso) return "";
+  // A set shot over a year has no month worth printing, so `date: 2026` in
+  // a meta.md is honoured as written. Left to the parser it would become
+  // the 1st of January and print as a month nobody claimed.
+  if (/^\d{4}$/.test(iso.trim())) return iso.trim();
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return iso;
   return d.toLocaleDateString("en-US", { year: "numeric", month: "long" });

@@ -3,17 +3,25 @@
 import Link from "next/link";
 import { motion, useScroll, useTransform } from "motion/react";
 import { useRef, useState, ViewTransition } from "react";
+import { LoopVideo } from "@/components/LoopVideo";
 import { Photo } from "@/components/Photo";
 import { ScrollTilt } from "@/components/ScrollTilt";
 import { clothMorphToCategory, prewarmClothMorph } from "@/lib/clothMorph";
 import type { Category } from "@/lib/content";
 import { GRID_TILE, tileSizes } from "@/lib/imageSizes";
 import { ease } from "@/lib/motion";
+import { useCanHover } from "@/lib/useMediaQuery";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 
 /**
  * One cover on the homepage grid. Hover brings colour into the (otherwise
  * grayscale) photo and scales it slightly within its frame.
+ *
+ * A cover that is a wigglegram starts as its still, in grey, like every
+ * other tile, and starts moving under the same hover that brings the colour
+ * in. Where there is no hover to wait for, it plays whenever it is on
+ * screen, and stays grey while it does: the grid reads the same either way,
+ * and the alternative is a tile that never moves at all on a phone.
  *
  * Only the caption is set under the photo. No counts, no metadata: the grid
  * is a list of places to go, not a table of contents.
@@ -32,6 +40,7 @@ export function CategoryTile({
   const photoRef = useRef<HTMLDivElement>(null);
   const [hovered, setHovered] = useState(false);
   const reducedMotion = useReducedMotion();
+  const canHover = useCanHover();
 
   /**
    * Hands the cover photo to the WebGL flag morph (lib/clothMorph.ts) and lets
@@ -105,7 +114,16 @@ export function CategoryTile({
                   style={{ borderRadius: 2 }}
                   imgY={imgY}
                   imgScale={imgScale}
-                />
+                >
+                  {category.cover.video && (
+                    <LoopVideo
+                      clip={category.cover.video}
+                      active={canHover ? hovered : true}
+                      imgY={imgY}
+                      imgScale={imgScale}
+                    />
+                  )}
+                </Photo>
               </motion.div>
             </ViewTransition>
             <ViewTransition name={`title-${category.slug}`} share="title-morph" default="none">

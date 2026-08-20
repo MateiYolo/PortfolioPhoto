@@ -1,4 +1,4 @@
-import type { Photo } from "@/lib/content";
+import type { Photo, VideoClip } from "@/lib/content";
 
 /**
  * Tile geometry, declared once, in numbers.
@@ -122,6 +122,23 @@ export function buildSrcSet(photo: Photo): string {
     })
     .map((e) => `${e.path} ${Math.min(e.nominal, photo.width)}w`)
     .join(", ");
+}
+
+/**
+ * A `<video>` has no srcset: the browser is handed one file and that is the
+ * one it downloads. So the choice happens here instead, from the box the
+ * element actually measured (in device pixels) rather than from a `sizes`
+ * string describing a box it might have had. Smallest rung that covers the
+ * box wins; nothing covers it, the largest does.
+ */
+export function pickVideoSrc(clip: VideoClip, targetPx: number): string {
+  const rungs = Object.entries(clip.src)
+    .map(([slot, path]) => ({ width: Number(slot.slice(1)), path }))
+    .filter((r) => Number.isFinite(r.width) && r.width > 0 && Boolean(r.path))
+    .sort((a, b) => a.width - b.width);
+
+  if (rungs.length === 0) return "";
+  return (rungs.find((r) => r.width >= targetPx) ?? rungs[rungs.length - 1]).path;
 }
 
 /** Largest derivative available — the `src` fallback and preload target. */
