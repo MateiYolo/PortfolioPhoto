@@ -263,6 +263,25 @@ function gcd(a: number, b: number): number {
   return b === 0 ? a : gcd(b, a % b);
 }
 
+/**
+ * The categories in the manifest as it stands, before this run rewrites it.
+ *
+ * These are the fallback for a category whose originals are not on this
+ * machine. See "sources missing" in processCategory: without them, running
+ * ingest from a fresh clone or worktree quietly deletes the whole archive.
+ */
+async function loadPublishedCategories(): Promise<Map<string, Category>> {
+  try {
+    const manifest = JSON.parse(await readFile(MANIFEST_PATH, "utf-8"));
+    const published: Category[] = Array.isArray(manifest.categories)
+      ? manifest.categories
+      : [];
+    return new Map(published.map((c) => [c.slug, c]));
+  } catch {
+    return new Map();
+  }
+}
+
 async function loadCache(): Promise<Cache> {
   try {
     return JSON.parse(await readFile(CACHE_PATH, "utf-8"));
@@ -712,7 +731,8 @@ async function processVideo(
 
 async function processCategory(
   folderName: string,
-  cache: Cache
+  cache: Cache,
+  published: Map<string, Category>
 ): Promise<Category | null> {
   const dir = path.join(CATEGORIES_DIR, folderName);
   const entries = await readdir(dir, { withFileTypes: true });
@@ -726,6 +746,19 @@ async function processCategory(
   const { data: fm } = matter(raw);
   const slug = slugify(fm.slug ?? folderName);
 
+  // Everything a category is apart from its pictures. Split out because the
+  // two paths below (pictures processed here, or pictures carried over from
+  // the last run) should differ in nothing else: editing a title or an
+  // `order:` has to work in a checkout that has no originals in it.
+  const meta = {
+    slug,
+    title: fm.title ?? folderName,
+    caption: fm.caption ?? fm.title ?? folderName,
+    date: formatDate(fm.date),
+    blurb: fm.blurb ?? "",
+    order: typeof fm.order === "number" ? fm.order : 999,
+  };
+
   const mediaFiles = applyPhotoOrder(
     entries
       .filter((e) => e.isFile() && (IMAGE_EXT.test(e.name) || VIDEO_EXT.test(e.name)))
@@ -735,8 +768,7 @@ async function processCategory(
   );
 
   if (mediaFiles.length === 0) {
-    console.warn(`  ! skipping "${folderName}": no photos or videos found`);
-    return null;
+    return withoutSources(folderName, meta, published);
   }
 
   // The chosen cover can be named anything (e.g. `thumbnail.jpg`), which
@@ -790,23 +822,46 @@ async function processCategory(
   }
 
   if (photos.length === 0) {
-    console.warn(`  ! skipping "${folderName}": nothing could be processed`);
-    return null;
+    return withoutSources(folderName, meta, published);
   }
 
   const coverPhoto =
     photos.find((p) => p.id === slugify(fm.cover ?? "")) ?? photos[0];
 
-  return {
-    slug,
-    title: fm.title ?? folderName,
-    caption: fm.caption ?? fm.title ?? folderName,
-    date: formatDate(fm.date),
-    blurb: fm.blurb ?? "",
-    order: typeof fm.order === "number" ? fm.order : 999,
-    cover: coverPhoto,
-    photos,
-  };
+  return { ...meta, cover: coverPhoto, photos };
+}
+
+/**
+ * A category folder with a meta.md and nothing to ingest.
+ *
+ * Almost always this is a checkout that doesn't have the originals: they are
+ * gitignored, so every fresh clone and every new worktree starts out like
+ * this, while `public/media/**` and the manifest are checked in and complete.
+ * Dropping the category there would delete a published set of derivatives
+ * (see cleanupOrphans) over nothing more than which machine ingest ran on.
+ * So the pictures from the last run are carried forward, under whatever the
+ * meta.md says now.
+ *
+ * Nothing is lost when the folder really is empty on purpose: it was already
+ * dropped from the manifest that is being read here, so there is nothing to
+ * carry, and the warning says what to do instead.
+ */
+function withoutSources(
+  folderName: string,
+  meta: Omit<Category, "cover" | "photos">,
+  published: Map<string, Category>
+): Category | null {
+  const previous = published.get(meta.slug);
+  if (!previous) {
+    console.warn(`  ! skipping "${folderName}": no photos or videos found`);
+    return null;
+  }
+
+  console.log(
+    `  · ${meta.slug} (${previous.photos.length} photos, none on this machine: ` +
+      `keeping what is in the manifest)`
+  );
+  return { ...meta, cover: previous.cover, photos: previous.photos };
 }
 
 async function processAbout(cache: Cache): Promise<AboutContent> {
@@ -888,6 +943,7 @@ async function main() {
   await mkdir(path.dirname(MANIFEST_PATH), { recursive: true });
 
   const cache = await loadCache();
+  const published = await loadPublishedCategories();
   const liveKeys = new Set<string>();
   const origCacheKeyCount = Object.keys(cache).length;
 
@@ -898,7 +954,7 @@ async function main() {
 
   const categories: Category[] = [];
   for (const folder of folders) {
-    const category = await processCategory(folder, cache);
+    const category = await processCategory(folder, cache, published);
     if (category) categories.push(category);
 
     // Cache keys are "slug/filename" (see processImage's cacheKey), so
@@ -906,9 +962,22 @@ async function main() {
     // for photos that have since been deleted from the folder.
     const dir = path.join(CATEGORIES_DIR, folder);
     const entries = await readdir(dir, { withFileTypes: true }).catch(() => []);
+    let sources = 0;
     for (const e of entries) {
       if (e.isFile() && (IMAGE_EXT.test(e.name) || VIDEO_EXT.test(e.name))) {
         liveKeys.add(`${slugify(folder)}/${e.name}`);
+        sources++;
+      }
+    }
+
+    // A category carried over from the manifest (see withoutSources) has no
+    // filenames to record, and pruning on that would throw away work that is
+    // still good: the originals are elsewhere, not gone, and the whole
+    // archive would re-encode the moment they were plugged back in.
+    if (sources === 0 && category) {
+      const prefix = `${slugify(folder)}/`;
+      for (const key of Object.keys(cache)) {
+        if (key.startsWith(prefix)) liveKeys.add(key);
       }
     }
   }
