@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { CSSProperties } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { motion, type MotionValue } from "motion/react";
 import { preload } from "react-dom";
 import { buildSrcSet, largestSrc } from "@/lib/imageSizes";
@@ -64,6 +64,7 @@ export function Photo({
   imgY,
   imgScale,
   instant,
+  children,
 }: {
   photo: PhotoType;
   sizes?: string;
@@ -99,6 +100,13 @@ export function Photo({
    * the first one finishes.
    */
   instant?: boolean;
+  /**
+   * Rendered inside the frame, over the <img>. For a layer that has to sit
+   * in the photo's own box and be clipped by it — the looping clip of a
+   * wigglegram (components/LoopVideo.tsx) is the only one so far. Anything
+   * that merely sits *near* the photo belongs outside this component.
+   */
+  children?: ReactNode;
 }) {
   const frameRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
@@ -255,6 +263,7 @@ export function Photo({
           ...(imgY ? { y: imgY, scale: imgScale } : undefined),
         }}
       />
+      {children}
     </div>
   );
 }

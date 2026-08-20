@@ -6,6 +6,6 @@ blurb: |
   I designed Obsimo's first vinyl, from artwork to production.
   Once it was in hand, we shot this series to promote it.
 cover: thumbnail
-order: 4
+order: 5
 ---
 

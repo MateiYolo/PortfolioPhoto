@@ -3,6 +3,7 @@
 import { AnimatePresence, motion } from "motion/react";
 import { useLenis } from "lenis/react";
 import { useEffect } from "react";
+import { LoopVideo } from "@/components/LoopVideo";
 import { Photo } from "@/components/Photo";
 import type { Photo as PhotoType } from "@/lib/content";
 import { buildSrcSet } from "@/lib/imageSizes";
@@ -178,7 +179,11 @@ export function Lightbox({
             transition={{ duration: 0.4, ease: ease.inOutQuart }}
             onClick={(e) => e.stopPropagation()}
           >
-            <Photo photo={photos[index]} sizes={lightboxSizes(photos[index])} priority />
+            <Photo photo={photos[index]} sizes={lightboxSizes(photos[index])} priority>
+              {photos[index].video && (
+                <LoopVideo clip={photos[index].video} active />
+              )}
+            </Photo>
           </motion.div>
         </motion.div>
       )}

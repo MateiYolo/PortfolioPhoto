@@ -13,22 +13,32 @@
  *      black or white without a designer eyeballing every photo.
  *   5. Writes data/manifest.json, the single file every page reads from.
  *
+ * Video files in a category folder (the wigglegrams) go through the same
+ * shape: a still poster frame is run through every step above, so a clip is
+ * a Photo like any other and lays out like any other, and alongside it
+ * ffmpeg bakes the loop itself into short muted mp4s. See the video section
+ * further down for what "the loop itself" means here.
+ *
  * Idempotent: each source file's content hash is cached in
  * data/.ingest-cache.json. Re-running after adding one photo to an
  * existing category only processes that one photo.
  */
 
+import { execFile, spawn } from "node:child_process";
 import { createHash } from "node:crypto";
 import {
   mkdir,
+  mkdtemp,
   readdir,
   readFile,
   rm,
   stat,
   writeFile,
 } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { promisify } from "node:util";
 import matter from "gray-matter";
 import sharp from "sharp";
 import type { Metadata } from "sharp";
@@ -71,8 +81,50 @@ const PIPELINE_VERSION = "2";
 
 const LQIP_WIDTH = 24;
 const IMAGE_EXT = /\.(jpe?g|png|tiff?|webp|avif)$/i;
+const VIDEO_EXT = /\.(mp4|mov|m4v|webm)$/i;
+
+/**
+ * Video derivative widths. Two rungs, not five: a clip is only ever painted
+ * into the same tiles the photos use (~480px on the homepage, ~550px for a
+ * category's lead), so 1080 covers a 2x screen and 720 covers everything
+ * else. Unlike an <img>, a <video> has no srcset — the component picks one
+ * of these once, from the box it measured, so extra rungs would be extra
+ * bytes in the repo that nothing ever asks for.
+ */
+const VIDEO_WIDTHS = [720, 1080] as const;
+
+/** Per-width x264 quality. Grain is what costs here, so 1080 gets the finer one. */
+const VIDEO_CRF: Record<(typeof VIDEO_WIDTHS)[number], number> = {
+  720: 27,
+  1080: 26,
+};
+
+/**
+ * How long a baked clip should run before it hands back to `<video loop>`.
+ * One wiggle cycle is 0.5-1s, and a browser's loop seam is the one place a
+ * hitch could show, so the cycle is repeated until the file is about this
+ * long: the seam still exists, it just comes round a third as often.
+ */
+const VIDEO_TARGET_SECONDS = 3;
+const VIDEO_MAX_CYCLES = 8;
+
+/** Bumped alongside VIDEO_* the way PIPELINE_VERSION is for stills. */
+const VIDEO_PIPELINE_VERSION = "1";
 
 type PhotoSource = Record<`w${(typeof WIDTHS)[number]}`, string>;
+type VideoSource = Record<`w${(typeof VIDEO_WIDTHS)[number]}`, string>;
+
+interface VideoClip {
+  src: VideoSource;
+  /** Of the encoded clip, after duplicated source frames are dropped. */
+  fps: number;
+  /** Unique frames in one wiggle cycle. */
+  frames: number;
+  /** Seconds of one wiggle cycle. */
+  cycle: number;
+  /** Seconds of the encoded file: `cycle` times however many are baked in. */
+  duration: number;
+}
 
 interface Photo {
   id: string;
@@ -83,6 +135,8 @@ interface Photo {
   lqip: string;
   luminance: number;
   alt: string;
+  /** Present only for a video item; the fields above then describe its poster. */
+  video?: VideoClip;
 }
 
 interface Category {
@@ -183,14 +237,30 @@ function orientationOf(width: number, height: number): Photo["orientation"] {
   return width > height ? "landscape" : "portrait";
 }
 
-async function hashFile(filePath: string): Promise<string> {
+async function hashFile(filePath: string, extra = ""): Promise<string> {
   const buf = await readFile(filePath);
   return createHash("sha1")
     .update(PIPELINE_VERSION)
     .update(WIDTHS.join(","))
     .update(JSON.stringify(AVIF_OPTIONS))
+    .update(extra)
     .update(buf)
     .digest("hex");
+}
+
+/** The settings half of a video's cache key — see hashFile's `extra`. */
+function videoSettingsKey(): string {
+  return [
+    VIDEO_PIPELINE_VERSION,
+    VIDEO_WIDTHS.join(","),
+    JSON.stringify(VIDEO_CRF),
+    VIDEO_TARGET_SECONDS,
+    VIDEO_MAX_CYCLES,
+  ].join("|");
+}
+
+function gcd(a: number, b: number): number {
+  return b === 0 ? a : gcd(b, a % b);
 }
 
 async function loadCache(): Promise<Cache> {
@@ -214,35 +284,54 @@ async function pathExists(p: string): Promise<boolean> {
 // Core: process one source image into derivatives + Photo metadata
 // ---------------------------------------------------------------------------
 
-async function processImage(opts: {
+interface SourceRef {
   sourcePath: string;
   outDir: string;
   outPublicPrefix: string; // e.g. /media/tokyo-nights
   id: string;
   alt: string;
-  cache: Cache;
-  cacheKey: string;
-}): Promise<Photo> {
-  const { sourcePath, outDir, outPublicPrefix, id, alt, cache, cacheKey } = opts;
+}
 
-  const hash = await hashFile(sourcePath);
+/**
+ * A cache hit is only a hit if the files it claims to have written are still
+ * on disk. Check the paths the entry actually recorded, not the nominal
+ * widths: derivatives are named for their *clamped* width, so a 1358px
+ * original never produces an `id-2560.avif` — probing for one would declare
+ * the cache stale on every run and re-encode the whole archive.
+ */
+async function cacheHit(
+  cache: Cache,
+  cacheKey: string,
+  hash: string
+): Promise<Photo | null> {
   const cached = cache[cacheKey];
+  if (!cached || cached.hash !== hash) return null;
 
-  // Check the paths the cached entry actually recorded, not the nominal
-  // widths. Derivatives are named for their *clamped* width, so a 1358px
-  // original never produces an `id-2560.avif` — probing for one would
-  // declare the cache stale on every run and re-encode the whole archive.
-  const derivativesExist =
-    cached?.hash === hash &&
-    (await Promise.all(
-      [...new Set(Object.values(cached.photo.src))].map((publicPath) =>
-        pathExists(path.join(ROOT, "public", publicPath))
-      )
-    ).then((results) => results.every(Boolean)));
+  const outputs = new Set([
+    ...Object.values(cached.photo.src),
+    ...Object.values(cached.photo.video?.src ?? {}),
+  ]);
+  const present = await Promise.all(
+    [...outputs].map((publicPath) => pathExists(path.join(ROOT, "public", publicPath)))
+  );
+  return present.every(Boolean) ? cached.photo : null;
+}
 
-  if (cached?.hash === hash && derivativesExist) {
-    return cached.photo;
-  }
+async function processImage(
+  opts: SourceRef & { cache: Cache; cacheKey: string }
+): Promise<Photo> {
+  const hash = await hashFile(opts.sourcePath);
+  const hit = await cacheHit(opts.cache, opts.cacheKey, hash);
+  if (hit) return hit;
+
+  const photo = await buildPhoto(opts);
+  opts.cache[opts.cacheKey] = { hash, photo };
+  return photo;
+}
+
+/** The derivatives themselves, with no cache in the way. */
+async function buildPhoto(opts: SourceRef): Promise<Photo> {
+  const { sourcePath, outDir, outPublicPrefix, id, alt } = opts;
 
   await mkdir(outDir, { recursive: true });
 
@@ -288,7 +377,7 @@ async function processImage(opts: {
   const luminance =
     (0.2126 * r.mean + 0.7152 * g.mean + 0.0722 * b.mean) / 255;
 
-  const photo: Photo = {
+  return {
     id,
     src: src as PhotoSource,
     width: fullWidth,
@@ -298,9 +387,323 @@ async function processImage(opts: {
     luminance: Math.round(luminance * 1000) / 1000,
     alt,
   };
+}
 
-  cache[cacheKey] = { hash, photo };
-  return photo;
+// ---------------------------------------------------------------------------
+// Core: process one source video into a looping clip + its poster frame
+// ---------------------------------------------------------------------------
+
+/** Probe frames are decoded this small: enough to compare, cheap to hold. */
+const PROBE_W = 48;
+const PROBE_H = 64;
+const PROBE_SIZE = PROBE_W * PROBE_H;
+
+/** Mean 8-bit difference below which two probe frames count as the same. */
+const LOOP_EPS = 1.0;
+
+const execFileAsync = promisify(execFile);
+
+let ffmpegProbe: Promise<boolean> | null = null;
+
+/**
+ * ffmpeg is only needed to *add or change* a video, and the encoded clips are
+ * committed like every other derivative, so a checkout without it can still
+ * run ingest for the photos. Checked once per run.
+ */
+function hasFfmpeg(): Promise<boolean> {
+  ffmpegProbe ??= Promise.all([
+    execFileAsync("ffmpeg", ["-version"]),
+    execFileAsync("ffprobe", ["-version"]),
+  ]).then(
+    () => true,
+    () => false
+  );
+  return ffmpegProbe;
+}
+
+/** ffmpeg writing raw bytes to stdout, collected into one buffer. */
+function ffmpegCapture(args: string[]): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
+    const proc = spawn("ffmpeg", args);
+    const out: Buffer[] = [];
+    const err: Buffer[] = [];
+    proc.stdout.on("data", (chunk: Buffer) => out.push(chunk));
+    proc.stderr.on("data", (chunk: Buffer) => err.push(chunk));
+    proc.on("error", reject);
+    proc.on("close", (code) => {
+      if (code === 0) resolve(Buffer.concat(out));
+      else reject(new Error(Buffer.concat(err).toString().trim() || `ffmpeg exited ${code}`));
+    });
+  });
+}
+
+interface VideoMeta {
+  width: number;
+  height: number;
+  fpsNum: number;
+  fpsDen: number;
+}
+
+async function probeVideo(sourcePath: string): Promise<VideoMeta> {
+  const { stdout } = await execFileAsync("ffprobe", [
+    "-v",
+    "error",
+    "-select_streams",
+    "v:0",
+    "-show_entries",
+    "stream=width,height,r_frame_rate",
+    "-of",
+    "json",
+    sourcePath,
+  ]);
+  const stream = JSON.parse(stdout).streams?.[0];
+  if (!stream?.width || !stream?.height) {
+    throw new Error(`no video stream in ${path.basename(sourcePath)}`);
+  }
+  const [num, den] = String(stream.r_frame_rate ?? "25/1").split("/").map(Number);
+  return {
+    width: stream.width,
+    height: stream.height,
+    fpsNum: num > 0 ? num : 25,
+    fpsDen: den > 0 ? den : 1,
+  };
+}
+
+interface Loop {
+  /** Source frames until the clip starts repeating itself. */
+  period: number;
+  /** Source frames each distinct picture is held for. */
+  hold: number;
+}
+
+/**
+ * A wigglegram is three or four frames rocked back and forth, and the file
+ * that comes off the camera is that handful already repeated out to 5-20
+ * seconds, usually with each picture held over several frames to reach
+ * 30fps. Both are duplication, and duplication is not free here: h264 codes
+ * a repeat of a grainy film frame against a *lossy* reconstruction of it,
+ * which costs nearly what the frame cost the first time. Left alone, the
+ * eleven clips in one category weigh 190MB and encode to 30MB of loop that
+ * shows four pictures.
+ *
+ * So the source is decoded once at thumbnail size and read for two numbers,
+ * which between them say what is actually in the file:
+ *
+ *   period — frames before it starts over. This is the wiggle; everything
+ *            after it is a copy of it.
+ *   hold   — frames each picture is held for. Dropping the held copies and
+ *            lowering the frame rate to match plays back identically on a
+ *            quarter of the frames.
+ *
+ * Anything that isn't a loop (a clip that never repeats) comes back
+ * period = frame count, hold = 1, and is encoded whole.
+ */
+function detectLoop(frames: Buffer, count: number): Loop {
+  const meanDiff = (a: number, b: number): number => {
+    const ao = a * PROBE_SIZE;
+    const bo = b * PROBE_SIZE;
+    let sum = 0;
+    for (let i = 0; i < PROBE_SIZE; i++) sum += Math.abs(frames[ao + i] - frames[bo + i]);
+    return sum / PROBE_SIZE;
+  };
+
+  // The period has to hold across the whole clip, not just the first pair:
+  // a wiggle that happens to pass back through a similar frame mid-cycle
+  // would otherwise be read as a loop half its real length.
+  let period = count;
+  for (let p = 1; p <= Math.floor(count / 2); p++) {
+    let repeats = true;
+    for (let i = 0; i + p < count; i++) {
+      if (meanDiff(i, i + p) >= LOOP_EPS) {
+        repeats = false;
+        break;
+      }
+    }
+    if (repeats) {
+      period = p;
+      break;
+    }
+  }
+
+  // Within one cycle, the frames where the picture actually changes. A hold
+  // of 4 puts those at 4, 8, 12…, so their greatest common divisor is the
+  // hold. A threshold relative to the largest change in the cycle keeps
+  // grain and compression noise from reading as a change of picture.
+  const diffs: number[] = [];
+  for (let i = 1; i < period; i++) diffs.push(meanDiff(i - 1, i));
+  const eps = Math.max(0.35, Math.max(0, ...diffs) * 0.05);
+
+  let hold = 0;
+  for (let i = 1; i < period; i++) {
+    if (diffs[i - 1] > eps) hold = gcd(hold, i);
+  }
+  return { period, hold: hold > 0 && period % hold === 0 ? hold : 1 };
+}
+
+/**
+ * One derivative: the wiggle, its held duplicates dropped, repeated until
+ * the file is about VIDEO_TARGET_SECONDS long.
+ */
+async function encodeClip(opts: {
+  sourcePath: string;
+  outPath: string;
+  meta: VideoMeta;
+  loop: Loop;
+  cycles: number;
+  width: number;
+  crf: number;
+}): Promise<void> {
+  const { sourcePath, outPath, meta, loop, cycles, width, crf } = opts;
+  const unique = loop.period / loop.hold;
+  const rate = `${meta.fpsNum}/${meta.fpsDen * loop.hold}`;
+
+  const filters = [
+    // One cycle, and of that only the frames where the picture changes.
+    `select='lt(n\\,${loop.period})*not(mod(n\\,${loop.hold}))'`,
+    `scale=${width}:-2:flags=lanczos`,
+    "setsar=1",
+    ...(cycles > 1 ? [`loop=loop=${cycles - 1}:size=${unique}:start=0`] : []),
+    // select and loop both pass the source's own timestamps through, which
+    // after dropping three frames in four describes a clip that stalls and
+    // then plays the same second again — and the muxer drops every frame
+    // whose timestamp it has already seen. Restamp at the new rate.
+    `setpts=N/(${rate})/TB`,
+  ].join(",");
+
+  await execFileAsync("ffmpeg", [
+    "-v", "error",
+    "-y",
+    "-i", sourcePath,
+    // Nothing but picture: these autoplay, so a muted audio track would be
+    // bytes that can never be heard, and a stray subtitle or data stream
+    // would only stand between the file and its first frame.
+    "-an", "-sn", "-dn",
+    "-vf", filters,
+    "-r", rate,
+    "-c:v", "libx264",
+    "-profile:v", "high",
+    "-crf", String(crf),
+    "-preset", "slow",
+    // Twelve reference frames, so a baked repeat predicts from the identical
+    // frame one cycle back instead of from the nearest wiggle neighbour.
+    // With the default four it can't reach that far, and every extra cycle
+    // costs as much as the first one did. The deeper buffer is what puts
+    // these at H.264 level 5.0, which is far inside what any browser that
+    // can decode the AVIFs next to them will play.
+    "-refs", "12",
+    // A cycle boundary looks like a cut, and both of these exist to stop the
+    // encoder treating it as one and spending a fresh keyframe on it.
+    "-bf", "0",
+    "-sc_threshold", "0",
+    "-g", "9999",
+    "-pix_fmt", "yuv420p",
+    "-movflags", "+faststart",
+    outPath,
+  ]);
+}
+
+async function processVideo(
+  opts: SourceRef & { cache: Cache; cacheKey: string }
+): Promise<Photo | null> {
+  const hash = await hashFile(opts.sourcePath, videoSettingsKey());
+  const hit = await cacheHit(opts.cache, opts.cacheKey, hash);
+  if (hit) return hit;
+
+  const { sourcePath, outDir, outPublicPrefix, id } = opts;
+  const name = path.basename(sourcePath);
+
+  if (!(await hasFfmpeg())) {
+    console.warn(`  ! skipping "${name}": needs ffmpeg on PATH (brew install ffmpeg)`);
+    return null;
+  }
+
+  const meta = await probeVideo(sourcePath);
+  const probeFrames = await ffmpegCapture([
+    "-v", "error",
+    "-i", sourcePath,
+    "-an",
+    "-vf", `scale=${PROBE_W}:${PROBE_H}`,
+    "-pix_fmt", "gray",
+    "-f", "rawvideo",
+    "-",
+  ]);
+  const frameCount = Math.floor(probeFrames.length / PROBE_SIZE);
+  if (frameCount === 0) throw new Error(`no frames decoded from ${name}`);
+
+  const loop = detectLoop(probeFrames, frameCount);
+  const sourceFps = meta.fpsNum / meta.fpsDen;
+  const cycle = loop.period / sourceFps;
+  const cycles = Math.max(
+    1,
+    Math.min(VIDEO_MAX_CYCLES, Math.round(VIDEO_TARGET_SECONDS / cycle))
+  );
+  const unique = loop.period / loop.hold;
+
+  console.log(
+    `    · ${name}: ${unique} frame loop of ${cycle.toFixed(2)}s, baked ${cycles}x`
+  );
+
+  await mkdir(outDir, { recursive: true });
+
+  // Same clamping rule as the stills: never upscale, and reuse one file for
+  // any two rungs that clamp to the same width. x264 also needs both
+  // dimensions even, which `scale=w:-2` handles for the height.
+  const src: Partial<VideoSource> = {};
+  const encodedAtWidth = new Map<number, string>();
+  for (const targetWidth of VIDEO_WIDTHS) {
+    const clamped = Math.min(targetWidth, meta.width) & ~1;
+    const key = `w${targetWidth}` as keyof VideoSource;
+    const filename = `${id}-${clamped}.mp4`;
+
+    if (!encodedAtWidth.has(clamped)) {
+      await encodeClip({
+        sourcePath,
+        outPath: path.join(outDir, filename),
+        meta,
+        loop,
+        cycles,
+        width: clamped,
+        crf: VIDEO_CRF[targetWidth],
+      });
+      encodedAtWidth.set(clamped, `${outPublicPrefix}/${filename}`);
+    }
+    src[key] = encodedAtWidth.get(clamped)!;
+  }
+
+  // The poster is frame one of the loop, run through the still pipeline like
+  // any photograph: it is what the grid shows before a clip is asked to
+  // play, what fills the frame while the video is still on the wire, and
+  // what the layout measures itself against.
+  const scratch = await mkdtemp(path.join(tmpdir(), "ingest-poster-"));
+  try {
+    const posterPath = path.join(scratch, `${id}.png`);
+    await execFileAsync("ffmpeg", [
+      "-v", "error",
+      "-y",
+      "-i", sourcePath,
+      "-frames:v", "1",
+      "-f", "image2",
+      "-c:v", "png",
+      posterPath,
+    ]);
+
+    const poster = await buildPhoto({ ...opts, sourcePath: posterPath });
+    const photo: Photo = {
+      ...poster,
+      video: {
+        src: src as VideoSource,
+        fps: Math.round((sourceFps / loop.hold) * 1000) / 1000,
+        frames: unique,
+        cycle: Math.round(cycle * 1000) / 1000,
+        duration: Math.round(cycle * cycles * 1000) / 1000,
+      },
+    };
+
+    opts.cache[opts.cacheKey] = { hash, photo };
+    return photo;
+  } finally {
+    await rm(scratch, { recursive: true, force: true });
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -323,16 +726,16 @@ async function processCategory(
   const { data: fm } = matter(raw);
   const slug = slugify(fm.slug ?? folderName);
 
-  const imageFiles = applyPhotoOrder(
+  const mediaFiles = applyPhotoOrder(
     entries
-      .filter((e) => e.isFile() && IMAGE_EXT.test(e.name))
+      .filter((e) => e.isFile() && (IMAGE_EXT.test(e.name) || VIDEO_EXT.test(e.name)))
       .map((e) => e.name)
       .sort(naturalSort),
     fm.photoOrder
   );
 
-  if (imageFiles.length === 0) {
-    console.warn(`  ! skipping "${folderName}": no images found`);
+  if (mediaFiles.length === 0) {
+    console.warn(`  ! skipping "${folderName}": no photos or videos found`);
     return null;
   }
 
@@ -342,17 +745,17 @@ async function processCategory(
   // the rest at 15, then add it back so it's never the one that gets cut.
   const coverSlug = slugify(fm.cover ?? "");
   const coverFile = coverSlug
-    ? imageFiles.find(
+    ? mediaFiles.find(
         (f) => slugify(path.basename(f, path.extname(f))) === coverSlug
       )
     : undefined;
   const restFiles = coverFile
-    ? imageFiles.filter((f) => f !== coverFile)
-    : imageFiles;
+    ? mediaFiles.filter((f) => f !== coverFile)
+    : mediaFiles;
 
   if (restFiles.length > 15) {
     console.warn(
-      `  ! "${folderName}" has ${imageFiles.length} photos, plan calls for 5-15, trimming to first 15`
+      `  ! "${folderName}" has ${mediaFiles.length} photos, plan calls for 5-15, trimming to first 15`
     );
   }
   const selected = coverFile
@@ -367,7 +770,7 @@ async function processCategory(
   const photos: Photo[] = [];
   for (const filename of selected) {
     const id = slugify(path.basename(filename, path.extname(filename)));
-    const photo = await processImage({
+    const ref = {
       sourcePath: path.join(dir, filename),
       outDir,
       outPublicPrefix,
@@ -375,8 +778,20 @@ async function processCategory(
       alt: humanizeFilename(filename) || fm.title || slug,
       cache,
       cacheKey: `${slug}/${filename}`,
-    });
-    photos.push(photo);
+    };
+    // A video comes back as a Photo (its poster) carrying the clip, so
+    // everything downstream — ordering, the cover, the manifest, the page —
+    // treats the two the same. Null only when ffmpeg is missing, which
+    // leaves the rest of the category to ingest normally.
+    const photo = VIDEO_EXT.test(filename)
+      ? await processVideo(ref)
+      : await processImage(ref);
+    if (photo) photos.push(photo);
+  }
+
+  if (photos.length === 0) {
+    console.warn(`  ! skipping "${folderName}": nothing could be processed`);
+    return null;
   }
 
   const coverPhoto =
@@ -492,7 +907,7 @@ async function main() {
     const dir = path.join(CATEGORIES_DIR, folder);
     const entries = await readdir(dir, { withFileTypes: true }).catch(() => []);
     for (const e of entries) {
-      if (e.isFile() && IMAGE_EXT.test(e.name)) {
+      if (e.isFile() && (IMAGE_EXT.test(e.name) || VIDEO_EXT.test(e.name))) {
         liveKeys.add(`${slugify(folder)}/${e.name}`);
       }
     }

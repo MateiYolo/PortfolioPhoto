@@ -35,10 +35,39 @@ git push
 
 Pushing triggers the Vercel deploy, and that's the entire publishing flow.
 
+## Adding a category of videos
+
+A category folder can hold video files (`.mp4`, `.mov`, `.m4v`) instead of,
+or alongside, photos. The Wigglegram set is one of these. Everything else
+is the same: same `meta.md`, same `npm run ingest`, and `cover:` can name a
+clip as happily as a photo.
+
+What ingest does with a clip is worth knowing, because it decides what you
+should hand it. A wigglegram is a few frames on a loop, and the file that
+comes off the camera is usually that loop already repeated out to 5-20
+seconds, often with every frame held four times over to reach 30fps.
+Ingest finds the loop, drops the held duplicates, and re-encodes just the
+wiggle, so 190MB of source becomes about 1MB of mp4 that plays
+identically. You don't need to trim or compress anything first: hand it
+the file as it came off the camera.
+
+On the site a clip is a still until something asks it to move. The
+homepage shows its first frame, in grey like every other cover, and starts
+it under the same hover that brings the colour in. Inside the category
+every clip loops on its own, muted, with no controls, for as long as it is
+on screen. `prefers-reduced-motion` gets the stills and nothing else.
+
+Videos need `ffmpeg` on your PATH (`brew install ffmpeg`). Only that first
+encode does: the mp4s are committed like every other derivative, so a
+checkout without ffmpeg still builds and deploys the site.
+
 ### What `npm run ingest` does
 
 - Reads each photo's real (EXIF-corrected) dimensions, so portrait and
   landscape both lay out correctly with no manual tagging.
+- Cuts a poster frame off each video and runs it through every step below,
+  so a clip lays out exactly like a photograph, then encodes the loop
+  itself to mp4 at two widths.
 - Generates AVIF derivatives at three widths (720/1440/2560px, never
   upscaled past the original) plus a tiny blurred placeholder, into
   `public/media/`.
@@ -49,10 +78,11 @@ Pushing triggers the Vercel deploy, and that's the entire publishing flow.
 
 ### Where the bytes live
 
-Your original HD files in `content/categories/**` are **gitignored**:
-they stay on your disk (and in your own photo backup), never in git. Only
-the generated `public/media/**` derivatives are committed, at roughly
-600KB per photo across all three sizes.
+Your original HD files and videos in `content/categories/**` are
+**gitignored**: they stay on your disk (and in your own photo backup),
+never in git. Only the generated `public/media/**` derivatives are
+committed, at roughly 600KB per photo across all three sizes, or about
+1.5MB per video clip across both of its.
 
 If the repo ever outgrows that, `NEXT_PUBLIC_MEDIA_BASE` is the escape
 hatch: point it at a bucket (Vercel Blob, Cloudflare R2, …), re-run ingest

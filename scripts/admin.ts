@@ -30,6 +30,8 @@ const MEDIA_DIR = path.join(ROOT, "public", "media");
 const PORT = 4577;
 
 const IMAGE_EXT = /\.(jpe?g|png|tiff?|webp|avif)$/i;
+/** Kept in step with scripts/ingest.ts, which decides what a category holds. */
+const VIDEO_EXT = /\.(mp4|mov|m4v|webm)$/i;
 const CONTENT_TYPE: Record<string, string> = {
   ".jpg": "image/jpeg",
   ".jpeg": "image/jpeg",
@@ -96,8 +98,12 @@ async function buildState(): Promise<CategoryState[]> {
     const { parsed } = await readMeta(folder);
     const { data } = parsed;
 
-    const images = entries
-      .filter((e) => e.isFile() && IMAGE_EXT.test(e.name))
+    // Videos are listed alongside photos: they are ordered by the same
+    // `photoOrder` list and reordered by the same drag. Their thumbnail is
+    // the poster frame ingest cut for them, which is an ordinary derivative
+    // under public/media (see findThumb).
+    const media = entries
+      .filter((e) => e.isFile() && (IMAGE_EXT.test(e.name) || VIDEO_EXT.test(e.name)))
       .map((e) => e.name)
       .sort(naturalSort);
 
@@ -107,7 +113,7 @@ async function buildState(): Promise<CategoryState[]> {
       title: String(data.title ?? folder),
       order: typeof data.order === "number" ? data.order : 999,
       cover: String(data.cover ?? ""),
-      photos: applyPhotoOrder(images, data.photoOrder),
+      photos: applyPhotoOrder(media, data.photoOrder),
     });
   }
 

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-19T08:45:40.472Z",
+  "generatedAt": "2026-08-20T09:45:43.281Z",
   "categories": [
     {
       "slug": "pete-the-monkey",
@@ -534,12 +534,334 @@
       ]
     },
     {
+      "slug": "wigglegram",
+      "title": "Wigglegram",
+      "caption": "A batch of moving memories",
+      "date": "2026",
+      "blurb": "A weird '89 analog camera I picked up in New York and have carried\naround for the past few months. Its four lenses fire at once, so a\nsingle frame holds one instant from four perspectives.\n",
+      "order": 3,
+      "cover": {
+        "id": "01",
+        "src": {
+          "w720": "/media/wigglegram/01-720.avif",
+          "w1080": "/media/wigglegram/01-1080.avif",
+          "w1440": "/media/wigglegram/01-1440.avif",
+          "w1920": "/media/wigglegram/01-1612.avif",
+          "w2560": "/media/wigglegram/01-1612.avif"
+        },
+        "width": 1612,
+        "height": 2304,
+        "orientation": "portrait",
+        "lqip": "data:image/avif;base64,AAAAHGZ0eXBhdmlmAAAAAG1pZjFhdmlmbWlhZgAAANZtZXRhAAAAAAAAACFoZGxyAAAAAAAAAABwaWN0AAAAAAAAAAAAAAAAAAAAACJpbG9jAAAAAERAAAEAAQAAAAAA+gABAAAAAAAAAHcAAAAjaWluZgAAAAAAAQAAABVpbmZlAgAAAAABAABhdjAxAAAAAA5waXRtAAAAAAABAAAAVmlwcnAAAAA4aXBjbwAAAAxhdjFDgSACAAAAABRpc3BlAAAAAAAAABgAAAAiAAAAEHBpeGkAAAAAAwgICAAAABZpcG1hAAAAAAAAAAEAAQOBAgMAAAB/bWRhdBIACgk4EW8LSAhoNIAyaBuCYuTnnnnhQsAA8fR9HN3tFu+4lcGftTD3r64jC7kiwaN9hvkmBkgzw6FpXLko360kcObC/WEQyMWL95Cwy+jiwm/g4a1tOusvwOUXZAIpIcHlP8SI8gxUN+zc2F0W83N96qOU0770",
+        "luminance": 0.335,
+        "alt": "01",
+        "video": {
+          "src": {
+            "w720": "/media/wigglegram/01-720.mp4",
+            "w1080": "/media/wigglegram/01-1080.mp4"
+          },
+          "fps": 7.5,
+          "frames": 6,
+          "cycle": 0.8,
+          "duration": 3.2
+        }
+      },
+      "photos": [
+        {
+          "id": "thumbnail",
+          "src": {
+            "w720": "/media/wigglegram/thumbnail-720.avif",
+            "w1080": "/media/wigglegram/thumbnail-1080.avif",
+            "w1440": "/media/wigglegram/thumbnail-1440.avif",
+            "w1920": "/media/wigglegram/thumbnail-1600.avif",
+            "w2560": "/media/wigglegram/thumbnail-1600.avif"
+          },
+          "width": 1600,
+          "height": 2220,
+          "orientation": "portrait",
+          "lqip": "data:image/avif;base64,AAAAHGZ0eXBhdmlmAAAAAG1pZjFhdmlmbWlhZgAAANZtZXRhAAAAAAAAACFoZGxyAAAAAAAAAABwaWN0AAAAAAAAAAAAAAAAAAAAACJpbG9jAAAAAERAAAEAAQAAAAAA+gABAAAAAAAAAGAAAAAjaWluZgAAAAAAAQAAABVpbmZlAgAAAAABAABhdjAxAAAAAA5waXRtAAAAAAABAAAAVmlwcnAAAAA4aXBjbwAAAAxhdjFDgSACAAAAABRpc3BlAAAAAAAAABgAAAAhAAAAEHBpeGkAAAAAAwgICAAAABZpcG1hAAAAAAAAAAEAAQOBAgMAAABobWRhdBIACgk4EW8DSAhoNIAyURuCYuTnnnnhQsAA8fVfYiM+ECKsvhJ9sG5b779JAd3MCtyMiYYLWT5D4/tKi+nQk04Yl19q6+6sWTuyTDPMF+lI/9BPtu9S5b0Cc8cGBC7ueQ==",
+          "luminance": 0.177,
+          "alt": "Thumbnail",
+          "video": {
+            "src": {
+              "w720": "/media/wigglegram/thumbnail-720.mp4",
+              "w1080": "/media/wigglegram/thumbnail-1080.mp4"
+            },
+            "fps": 6,
+            "frames": 6,
+            "cycle": 1,
+            "duration": 3
+          }
+        },
+        {
+          "id": "02",
+          "src": {
+            "w720": "/media/wigglegram/02-720.avif",
+            "w1080": "/media/wigglegram/02-1080.avif",
+            "w1440": "/media/wigglegram/02-1440.avif",
+            "w1920": "/media/wigglegram/02-1600.avif",
+            "w2560": "/media/wigglegram/02-1600.avif"
+          },
+          "width": 1600,
+          "height": 2256,
+          "orientation": "portrait",
+          "lqip": "data:image/avif;base64,AAAAHGZ0eXBhdmlmAAAAAG1pZjFhdmlmbWlhZgAAANZtZXRhAAAAAAAAACFoZGxyAAAAAAAAAABwaWN0AAAAAAAAAAAAAAAAAAAAACJpbG9jAAAAAERAAAEAAQAAAAAA+gABAAAAAAAAAGsAAAAjaWluZgAAAAAAAQAAABVpbmZlAgAAAAABAABhdjAxAAAAAA5waXRtAAAAAAABAAAAVmlwcnAAAAA4aXBjbwAAAAxhdjFDgSACAAAAABRpc3BlAAAAAAAAABgAAAAiAAAAEHBpeGkAAAAAAwgICAAAABZpcG1hAAAAAAAAAAEAAQOBAgMAAABzbWRhdBIACgk4EW8LSAhoNIAyXBuCYuTnnnnhQsAA8fVcJVwDhlFoln6jD6QPFKpht569QdOsWdJPlZgxrR5wJQFlkCsilKoeg6Ug7z+ow6fNzF6IL/hhNmC+qCXIRlVZpqBp9d7C9hAyByHpqBaA",
+          "luminance": 0.41,
+          "alt": "02",
+          "video": {
+            "src": {
+              "w720": "/media/wigglegram/02-720.mp4",
+              "w1080": "/media/wigglegram/02-1080.mp4"
+            },
+            "fps": 6,
+            "frames": 6,
+            "cycle": 1,
+            "duration": 3
+          }
+        },
+        {
+          "id": "03",
+          "src": {
+            "w720": "/media/wigglegram/03-720.avif",
+            "w1080": "/media/wigglegram/03-1080.avif",
+            "w1440": "/media/wigglegram/03-1440.avif",
+            "w1920": "/media/wigglegram/03-1600.avif",
+            "w2560": "/media/wigglegram/03-1600.avif"
+          },
+          "width": 1600,
+          "height": 2144,
+          "orientation": "portrait",
+          "lqip": "data:image/avif;base64,AAAAHGZ0eXBhdmlmAAAAAG1pZjFhdmlmbWlhZgAAANZtZXRhAAAAAAAAACFoZGxyAAAAAAAAAABwaWN0AAAAAAAAAAAAAAAAAAAAACJpbG9jAAAAAERAAAEAAQAAAAAA+gABAAAAAAAAAF0AAAAjaWluZgAAAAAAAQAAABVpbmZlAgAAAAABAABhdjAxAAAAAA5waXRtAAAAAAABAAAAVmlwcnAAAAA4aXBjbwAAAAxhdjFDgSACAAAAABRpc3BlAAAAAAAAABgAAAAgAAAAEHBpeGkAAAAAAwgICAAAABZpcG1hAAAAAAAAAAEAAQOBAgMAAABlbWRhdBIACgg4ES/2kBDQaTJPG4Ji5OeeeeFCwADQWMT+bYAvAM07nhTFzJ6AS4sEsM3QFWxexBIV+vg/UuIwF3N/NGFlEgAGIQNwESPyptj5O1nncCOz0vQXhtCATGvGUA==",
+          "luminance": 0.224,
+          "alt": "03",
+          "video": {
+            "src": {
+              "w720": "/media/wigglegram/03-720.mp4",
+              "w1080": "/media/wigglegram/03-1080.mp4"
+            },
+            "fps": 6,
+            "frames": 6,
+            "cycle": 1,
+            "duration": 3
+          }
+        },
+        {
+          "id": "04",
+          "src": {
+            "w720": "/media/wigglegram/04-720.avif",
+            "w1080": "/media/wigglegram/04-1080.avif",
+            "w1440": "/media/wigglegram/04-1440.avif",
+            "w1920": "/media/wigglegram/04-1600.avif",
+            "w2560": "/media/wigglegram/04-1600.avif"
+          },
+          "width": 1600,
+          "height": 2144,
+          "orientation": "portrait",
+          "lqip": "data:image/avif;base64,AAAAHGZ0eXBhdmlmAAAAAG1pZjFhdmlmbWlhZgAAANZtZXRhAAAAAAAAACFoZGxyAAAAAAAAAABwaWN0AAAAAAAAAAAAAAAAAAAAACJpbG9jAAAAAERAAAEAAQAAAAAA+gABAAAAAAAAAF4AAAAjaWluZgAAAAAAAQAAABVpbmZlAgAAAAABAABhdjAxAAAAAA5waXRtAAAAAAABAAAAVmlwcnAAAAA4aXBjbwAAAAxhdjFDgSACAAAAABRpc3BlAAAAAAAAABgAAAAgAAAAEHBpeGkAAAAAAwgICAAAABZpcG1hAAAAAAAAAAEAAQOBAgMAAABmbWRhdBIACgg4ES/2kBDQaTJQG4Ji5OeeeeFCwADQWL8iPcFDIpdQKvpOpGWV+wPQTuEI6VZwyNAtmc0VuOqJvBPtr807hV3tCajuSzM8ymXr4QsjVw7+Ha29IgXouBo2h2A=",
+          "luminance": 0.266,
+          "alt": "04",
+          "video": {
+            "src": {
+              "w720": "/media/wigglegram/04-720.mp4",
+              "w1080": "/media/wigglegram/04-1080.mp4"
+            },
+            "fps": 6,
+            "frames": 6,
+            "cycle": 1,
+            "duration": 3
+          }
+        },
+        {
+          "id": "05",
+          "src": {
+            "w720": "/media/wigglegram/05-720.avif",
+            "w1080": "/media/wigglegram/05-1080.avif",
+            "w1440": "/media/wigglegram/05-1440.avif",
+            "w1920": "/media/wigglegram/05-1600.avif",
+            "w2560": "/media/wigglegram/05-1600.avif"
+          },
+          "width": 1600,
+          "height": 2276,
+          "orientation": "portrait",
+          "lqip": "data:image/avif;base64,AAAAHGZ0eXBhdmlmAAAAAG1pZjFhdmlmbWlhZgAAANZtZXRhAAAAAAAAACFoZGxyAAAAAAAAAABwaWN0AAAAAAAAAAAAAAAAAAAAACJpbG9jAAAAAERAAAEAAQAAAAAA+gABAAAAAAAAAGYAAAAjaWluZgAAAAAAAQAAABVpbmZlAgAAAAABAABhdjAxAAAAAA5waXRtAAAAAAABAAAAVmlwcnAAAAA4aXBjbwAAAAxhdjFDgSACAAAAABRpc3BlAAAAAAAAABgAAAAiAAAAEHBpeGkAAAAAAwgICAAAABZpcG1hAAAAAAAAAAEAAQOBAgMAAABubWRhdBIACgk4EW8LSAhoNIAyVxuCYuTnnnnhQsAA8fVcJc4j4NYH+PdYOyHWxDdxQsAeoWlJJL1RaB0Sx2M3Ia8zlKhJaZYk1wKLC4PS6SwaJ5xrfa9hlLm+awQd2I9+KglCyVs52J1eVg==",
+          "luminance": 0.492,
+          "alt": "05",
+          "video": {
+            "src": {
+              "w720": "/media/wigglegram/05-720.mp4",
+              "w1080": "/media/wigglegram/05-1080.mp4"
+            },
+            "fps": 6,
+            "frames": 6,
+            "cycle": 1,
+            "duration": 3
+          }
+        },
+        {
+          "id": "06",
+          "src": {
+            "w720": "/media/wigglegram/06-720.avif",
+            "w1080": "/media/wigglegram/06-1080.avif",
+            "w1440": "/media/wigglegram/06-1440.avif",
+            "w1920": "/media/wigglegram/06-1612.avif",
+            "w2560": "/media/wigglegram/06-1612.avif"
+          },
+          "width": 1612,
+          "height": 2304,
+          "orientation": "portrait",
+          "lqip": "data:image/avif;base64,AAAAHGZ0eXBhdmlmAAAAAG1pZjFhdmlmbWlhZgAAANZtZXRhAAAAAAAAACFoZGxyAAAAAAAAAABwaWN0AAAAAAAAAAAAAAAAAAAAACJpbG9jAAAAAERAAAEAAQAAAAAA+gABAAAAAAAAAGAAAAAjaWluZgAAAAAAAQAAABVpbmZlAgAAAAABAABhdjAxAAAAAA5waXRtAAAAAAABAAAAVmlwcnAAAAA4aXBjbwAAAAxhdjFDgSACAAAAABRpc3BlAAAAAAAAABgAAAAiAAAAEHBpeGkAAAAAAwgICAAAABZpcG1hAAAAAAAAAAEAAQOBAgMAAABobWRhdBIACgk4EW8LSAhoNIAyURuCYuTnnnnhQsAA8e2vBmGTRQzhDnnPQUGMFgg7I8r0KWOQD9EnmvK7ciR30yVrPqdTh8rWEBERY7kiawEyX1fzUvUDe8t/lRA3WQgHCf3f0A==",
+          "luminance": 0.333,
+          "alt": "06",
+          "video": {
+            "src": {
+              "w720": "/media/wigglegram/06-720.mp4",
+              "w1080": "/media/wigglegram/06-1080.mp4"
+            },
+            "fps": 7.5,
+            "frames": 4,
+            "cycle": 0.533,
+            "duration": 3.2
+          }
+        },
+        {
+          "id": "07",
+          "src": {
+            "w720": "/media/wigglegram/07-720.avif",
+            "w1080": "/media/wigglegram/07-1080.avif",
+            "w1440": "/media/wigglegram/07-1440.avif",
+            "w1920": "/media/wigglegram/07-1612.avif",
+            "w2560": "/media/wigglegram/07-1612.avif"
+          },
+          "width": 1612,
+          "height": 2304,
+          "orientation": "portrait",
+          "lqip": "data:image/avif;base64,AAAAHGZ0eXBhdmlmAAAAAG1pZjFhdmlmbWlhZgAAANZtZXRhAAAAAAAAACFoZGxyAAAAAAAAAABwaWN0AAAAAAAAAAAAAAAAAAAAACJpbG9jAAAAAERAAAEAAQAAAAAA+gABAAAAAAAAAG8AAAAjaWluZgAAAAAAAQAAABVpbmZlAgAAAAABAABhdjAxAAAAAA5waXRtAAAAAAABAAAAVmlwcnAAAAA4aXBjbwAAAAxhdjFDgSACAAAAABRpc3BlAAAAAAAAABgAAAAiAAAAEHBpeGkAAAAAAwgICAAAABZpcG1hAAAAAAAAAAEAAQOBAgMAAAB3bWRhdBIACgk4EW8LSAhoNIAyYBuCYuTnnnnhQsAA8fVchCCGg3WHc/co9svFQbHOkXoE6cgpgW5WMXqyOzSIGre1NN16Tb2uPI2M4qUMCWCx0LlLkt66GnNM0/g8zp0sshNcQjkd9RFlZVLN/28T5m8wTA==",
+          "luminance": 0.285,
+          "alt": "07",
+          "video": {
+            "src": {
+              "w720": "/media/wigglegram/07-720.mp4",
+              "w1080": "/media/wigglegram/07-1080.mp4"
+            },
+            "fps": 7.5,
+            "frames": 6,
+            "cycle": 0.8,
+            "duration": 3.2
+          }
+        },
+        {
+          "id": "08",
+          "src": {
+            "w720": "/media/wigglegram/08-720.avif",
+            "w1080": "/media/wigglegram/08-1080.avif",
+            "w1440": "/media/wigglegram/08-1440.avif",
+            "w1920": "/media/wigglegram/08-1600.avif",
+            "w2560": "/media/wigglegram/08-1600.avif"
+          },
+          "width": 1600,
+          "height": 2234,
+          "orientation": "portrait",
+          "lqip": "data:image/avif;base64,AAAAHGZ0eXBhdmlmAAAAAG1pZjFhdmlmbWlhZgAAANZtZXRhAAAAAAAAACFoZGxyAAAAAAAAAABwaWN0AAAAAAAAAAAAAAAAAAAAACJpbG9jAAAAAERAAAEAAQAAAAAA+gABAAAAAAAAAFsAAAAjaWluZgAAAAAAAQAAABVpbmZlAgAAAAABAABhdjAxAAAAAA5waXRtAAAAAAABAAAAVmlwcnAAAAA4aXBjbwAAAAxhdjFDgSACAAAAABRpc3BlAAAAAAAAABgAAAAiAAAAEHBpeGkAAAAAAwgICAAAABZpcG1hAAAAAAAAAAEAAQOBAgMAAABjbWRhdBIACgk4EW8LSAhoNIAyTBuCYuTnnnnhQsAA8fVcJaAf/xAR2VYKfcEI7XbUfXgyCHeGyaeIQLHuKdMLCRW9R0O+5eaoDoQXYpE9wksQijUq0Iu5qfpRA+usy6Q=",
+          "luminance": 0.461,
+          "alt": "08",
+          "video": {
+            "src": {
+              "w720": "/media/wigglegram/08-720.mp4",
+              "w1080": "/media/wigglegram/08-1080.mp4"
+            },
+            "fps": 6,
+            "frames": 6,
+            "cycle": 1,
+            "duration": 3
+          }
+        },
+        {
+          "id": "09",
+          "src": {
+            "w720": "/media/wigglegram/09-720.avif",
+            "w1080": "/media/wigglegram/09-1080.avif",
+            "w1440": "/media/wigglegram/09-1440.avif",
+            "w1920": "/media/wigglegram/09-1600.avif",
+            "w2560": "/media/wigglegram/09-1600.avif"
+          },
+          "width": 1600,
+          "height": 2182,
+          "orientation": "portrait",
+          "lqip": "data:image/avif;base64,AAAAHGZ0eXBhdmlmAAAAAG1pZjFhdmlmbWlhZgAAANZtZXRhAAAAAAAAACFoZGxyAAAAAAAAAABwaWN0AAAAAAAAAAAAAAAAAAAAACJpbG9jAAAAAERAAAEAAQAAAAAA+gABAAAAAAAAAFwAAAAjaWluZgAAAAAAAQAAABVpbmZlAgAAAAABAABhdjAxAAAAAA5waXRtAAAAAAABAAAAVmlwcnAAAAA4aXBjbwAAAAxhdjFDgSACAAAAABRpc3BlAAAAAAAAABgAAAAhAAAAEHBpeGkAAAAAAwgICAAAABZpcG1hAAAAAAAAAAEAAQOBAgMAAABkbWRhdBIACgk4EW8DSAhoNIAyTRuCYuTnnnnhQsAA8fVfYwwOVHS9dq78SDkTtfe0tCZgbs5Sgw/NbtpHfwjOq3+IqSDT21uIC7TCSy+aDhPKBJR64YV1xXTFvBoNVS3A",
+          "luminance": 0.305,
+          "alt": "09",
+          "video": {
+            "src": {
+              "w720": "/media/wigglegram/09-720.mp4",
+              "w1080": "/media/wigglegram/09-1080.mp4"
+            },
+            "fps": 6,
+            "frames": 6,
+            "cycle": 1,
+            "duration": 3
+          }
+        },
+        {
+          "id": "10",
+          "src": {
+            "w720": "/media/wigglegram/10-720.avif",
+            "w1080": "/media/wigglegram/10-1080.avif",
+            "w1440": "/media/wigglegram/10-1440.avif",
+            "w1920": "/media/wigglegram/10-1612.avif",
+            "w2560": "/media/wigglegram/10-1612.avif"
+          },
+          "width": 1612,
+          "height": 2304,
+          "orientation": "portrait",
+          "lqip": "data:image/avif;base64,AAAAHGZ0eXBhdmlmAAAAAG1pZjFhdmlmbWlhZgAAANZtZXRhAAAAAAAAACFoZGxyAAAAAAAAAABwaWN0AAAAAAAAAAAAAAAAAAAAACJpbG9jAAAAAERAAAEAAQAAAAAA+gABAAAAAAAAAGQAAAAjaWluZgAAAAAAAQAAABVpbmZlAgAAAAABAABhdjAxAAAAAA5waXRtAAAAAAABAAAAVmlwcnAAAAA4aXBjbwAAAAxhdjFDgSACAAAAABRpc3BlAAAAAAAAABgAAAAiAAAAEHBpeGkAAAAAAwgICAAAABZpcG1hAAAAAAAAAAEAAQOBAgMAAABsbWRhdBIACgk4EW8LSAhoNIAyVRuCYuTnnnnhQsAA8fR9WfjoQUCEyVVBoT1f82dC/hPBBYYl0Qlj8xL64WU6RJdXyzPhS+fa+oHevUNb7T7gnLe3zexEdV3kgZzszgKrpmEtb777sYA=",
+          "luminance": 0.297,
+          "alt": "10",
+          "video": {
+            "src": {
+              "w720": "/media/wigglegram/10-720.mp4",
+              "w1080": "/media/wigglegram/10-1080.mp4"
+            },
+            "fps": 10,
+            "frames": 6,
+            "cycle": 0.6,
+            "duration": 3
+          }
+        },
+        {
+          "id": "01",
+          "src": {
+            "w720": "/media/wigglegram/01-720.avif",
+            "w1080": "/media/wigglegram/01-1080.avif",
+            "w1440": "/media/wigglegram/01-1440.avif",
+            "w1920": "/media/wigglegram/01-1612.avif",
+            "w2560": "/media/wigglegram/01-1612.avif"
+          },
+          "width": 1612,
+          "height": 2304,
+          "orientation": "portrait",
+          "lqip": "data:image/avif;base64,AAAAHGZ0eXBhdmlmAAAAAG1pZjFhdmlmbWlhZgAAANZtZXRhAAAAAAAAACFoZGxyAAAAAAAAAABwaWN0AAAAAAAAAAAAAAAAAAAAACJpbG9jAAAAAERAAAEAAQAAAAAA+gABAAAAAAAAAHcAAAAjaWluZgAAAAAAAQAAABVpbmZlAgAAAAABAABhdjAxAAAAAA5waXRtAAAAAAABAAAAVmlwcnAAAAA4aXBjbwAAAAxhdjFDgSACAAAAABRpc3BlAAAAAAAAABgAAAAiAAAAEHBpeGkAAAAAAwgICAAAABZpcG1hAAAAAAAAAAEAAQOBAgMAAAB/bWRhdBIACgk4EW8LSAhoNIAyaBuCYuTnnnnhQsAA8fR9HN3tFu+4lcGftTD3r64jC7kiwaN9hvkmBkgzw6FpXLko360kcObC/WEQyMWL95Cwy+jiwm/g4a1tOusvwOUXZAIpIcHlP8SI8gxUN+zc2F0W83N96qOU0770",
+          "luminance": 0.335,
+          "alt": "01",
+          "video": {
+            "src": {
+              "w720": "/media/wigglegram/01-720.mp4",
+              "w1080": "/media/wigglegram/01-1080.mp4"
+            },
+            "fps": 7.5,
+            "frames": 6,
+            "cycle": 0.8,
+            "duration": 3.2
+          }
+        }
+      ]
+    },
+    {
       "slug": "hiking",
       "title": "Hiking",
       "caption": "4 days hiking in the Pyrénées",
       "date": "2026-05-02",
       "blurb": "Four days in the Pyrénées with childhood friends, shot on an\nOlympus Trip 35 loaded with Kodak Ultramax 400. May 2026.\n",
-      "order": 3,
+      "order": 4,
       "cover": {
         "id": "thumbnail",
         "src": {
@@ -821,7 +1143,7 @@
       "caption": "Obsimo's first vinyl",
       "date": "2026-04-05",
       "blurb": "I designed Obsimo's first vinyl, from artwork to production.\nOnce it was in hand, we shot this series to promote it.\n",
-      "order": 4,
+      "order": 5,
       "cover": {
         "id": "thumbnail",
         "src": {
@@ -1071,7 +1393,7 @@
       "caption": "A piece of paradise in Greece",
       "date": "2026-06-14",
       "blurb": "One of my favourite places on earth: Poros, an island close to\nAthens. March 2025.\n",
-      "order": 5,
+      "order": 6,
       "cover": {
         "id": "thumbnail",
         "src": {
@@ -1273,7 +1595,7 @@
       "caption": "NYC's marathon",
       "date": "2026-07-22",
       "blurb": "My friend Kara ran her first marathon in New York, and I was\nthere to catch the energy of the day. November 2025.\n",
-      "order": 6,
+      "order": 7,
       "cover": {
         "id": "01",
         "src": {
