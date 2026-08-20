@@ -5,6 +5,7 @@ import type { Metadata } from "next";
 import { Arrive } from "@/components/Arrive";
 import { CategoryPhotoSequence } from "@/components/CategoryPhotoSequence";
 import { MagneticLink } from "@/components/MagneticLink";
+import { ScrollVeilProvider } from "@/components/ScrollVeil";
 import { SplitText } from "@/components/SplitText";
 import { getAdjacentCategory, getCategories, getCategory } from "@/lib/content";
 
@@ -107,7 +108,13 @@ export default async function CategoryPage({
         )}
       </section>
 
-      <CategoryPhotoSequence photos={photos} morphName={`photo-${category.slug}`} />
+      {/* The veil is this page's scroll effect and nothing else's: the
+          homepage grid greys and parallaxes its thumbnails, which is a
+          different photograph in the same frame, and not one a single flat
+          quad can stand in for. */}
+      <ScrollVeilProvider>
+        <CategoryPhotoSequence photos={photos} morphName={`photo-${category.slug}`} />
+      </ScrollVeilProvider>
 
       <footer
         style={{

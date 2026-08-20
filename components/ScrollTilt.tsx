@@ -62,12 +62,17 @@ export function ScrollTilt({
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const speed = useScrollVelocityFactor();
+  // Turned all the way down means off, not zeroed every frame: a photo the
+  // scroll veil has taken over (components/ScrollVeil.tsx) is drawn where
+  // this element *is*, so it must not hold a compositor layer open, and any
+  // transform at all here would move the photo out from under its stand-in.
+  const idle = intensity === 0;
 
   // Anything well off screen is dropped out of the frame loop entirely and
   // un-promoted: no style writes, and no compositor layer held open for a
   // full-bleed photograph nobody can see. The margin means the handover
   // always happens out of sight.
-  const active = useInView(ref, { margin: ACTIVE_MARGIN });
+  const active = useInView(ref, { margin: ACTIVE_MARGIN }) && !idle;
 
   const { scrollYProgress } = useScroll({
     target: ref,

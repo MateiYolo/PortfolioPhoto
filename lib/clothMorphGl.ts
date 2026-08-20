@@ -1,3 +1,5 @@
+import { SIMPLEX_2D } from "@/lib/glslNoise";
+
 /**
  * The WebGL half of the cloth morph (see lib/clothMorph.ts for the façade and
  * the reasoning about when this runs at all).
@@ -108,40 +110,7 @@ const float SHADE = 0.1;
 const float CHROMA = 0.05;
 const float GRAIN = 0.02;
 
-// 2D simplex noise — Ashima Arts / Stefan Gustavson, MIT.
-vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
-vec2 mod289(vec2 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
-vec3 permute(vec3 x) { return mod289(((x * 34.0) + 1.0) * x); }
-
-float snoise(vec2 v) {
-  const vec4 C = vec4(0.211324865405187, 0.366025403784439,
-                     -0.577350269189626, 0.024390243902439);
-  vec2 i  = floor(v + dot(v, C.yy));
-  vec2 x0 = v - i + dot(i, C.xx);
-  vec2 i1 = (x0.x > x0.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
-  vec4 x12 = x0.xyxy + C.xxzz;
-  x12.xy -= i1;
-  i = mod289(i);
-  vec3 p = permute(permute(i.y + vec3(0.0, i1.y, 1.0))
-                         + i.x + vec3(0.0, i1.x, 1.0));
-  vec3 m = max(0.5 - vec3(dot(x0, x0), dot(x12.xy, x12.xy), dot(x12.zw, x12.zw)), 0.0);
-  m = m * m;
-  m = m * m;
-  vec3 x = 2.0 * fract(p * C.www) - 1.0;
-  vec3 h = abs(x) - 0.5;
-  vec3 ox = floor(x + 0.5);
-  vec3 a0 = x - ox;
-  m *= 1.79284291400159 - 0.85373472095314 * (a0 * a0 + h * h);
-  vec3 g;
-  g.x  = a0.x * x0.x + h.x * x0.y;
-  g.yz = a0.yz * x12.xz + h.yz * x12.yw;
-  return 130.0 * dot(m, g);
-}
-
-/** Two octaves. This field only nudges a phase; it is never seen directly. */
-float fbm(vec2 p) {
-  return 0.5 * snoise(p) + 0.25 * snoise(p * 2.03);
-}
+${SIMPLEX_2D}
 
 void main() {
   // Work in units of the rect's shorter side, so a given displacement is the
@@ -396,8 +365,13 @@ function draw(
   saturation: number
 ) {
   const { gl, u } = c;
-  const vw = window.innerWidth;
-  const vh = window.innerHeight;
+  // The canvas's own box, not window.innerWidth: a fixed, inset:0 element is
+  // laid out inside the classic scrollbar and getBoundingClientRect() reports
+  // in that same space, where innerWidth counts the scrollbar in. Projecting
+  // through innerWidth stretches the quad by that ratio and the flight lands
+  // a few pixels wide of the photo it is dissolving into.
+  const vw = c.canvas.clientWidth || window.innerWidth;
+  const vh = c.canvas.clientHeight || window.innerHeight;
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
   const bw = Math.round(vw * dpr);
   const bh = Math.round(vh * dpr);

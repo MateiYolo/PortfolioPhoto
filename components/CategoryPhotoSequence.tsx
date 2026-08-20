@@ -5,6 +5,7 @@ import { Lightbox } from "@/components/Lightbox";
 import { LoopVideo } from "@/components/LoopVideo";
 import { Photo } from "@/components/Photo";
 import { ScrollTilt } from "@/components/ScrollTilt";
+import { Veil, useVeilActive } from "@/components/ScrollVeil";
 import { watchClothMorphHome } from "@/lib/clothMorph";
 import type { Photo as PhotoType } from "@/lib/content";
 import {
@@ -38,11 +39,16 @@ const ALIGN_PATTERN: Array<"flex-start" | "flex-end" | "center"> = [
  * numbers, so what the browser is told to fetch matches what it paints.
  *
  * The first photo is the one the homepage thumbnail morphs into (that is
- * what `morphName` wires up) and is never lazy-loaded. Its entry pose is
- * already spent at the top of the page, so it only ever leans with scroll
- * speed, and the morph is captured against an untransformed element.
- * Everything after it settles out of a tilt as it is scrolled into place;
- * see ScrollTilt for why that replaced the old mask-wipe reveal.
+ * what `morphName` wires up) and is never lazy-loaded.
+ *
+ * What the scroll does to these photographs is the veil: while it is
+ * running (components/ScrollVeil.tsx) each one is painted by WebGL and put
+ * through the same sheet of fabric as the morph, as hard as the visitor is
+ * scrolling and no harder — a page read slowly is a page that barely moves.
+ * ScrollTilt is what runs when the veil can't: reduced motion, no WebGL2,
+ * and the wigglegrams, whose photograph is a <video> the veil has no way to
+ * carry. The two never share a photo, because the veil draws where the
+ * frame *is* and a tilt is a transform that moves it.
  */
 export function CategoryPhotoSequence({
   photos,
@@ -53,6 +59,7 @@ export function CategoryPhotoSequence({
 }) {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const reducedMotion = useReducedMotion();
+  const veilActive = useVeilActive();
 
   // The lead photo flies back to its tile when the visitor goes home. This has
   // to be armed for the whole visit rather than hung off one link, because the
@@ -66,6 +73,7 @@ export function CategoryPhotoSequence({
     <div style={{ display: "flex", flexDirection: "column" }}>
       {photos.map((photo, i) => {
         const lead = i === 0;
+        const veiled = veilActive && !photo.video;
         const tile = (lead ? SEQUENCE_LEAD_TILE : SEQUENCE_TILE)[photo.orientation];
         const button = (
           <button
@@ -106,17 +114,19 @@ export function CategoryPhotoSequence({
               className="category-tile-frame"
               style={{ "--tile-width": tileWidth(tile, photo) } as React.CSSProperties}
             >
-              <ScrollTilt>
-                {lead && morphName ? (
-                  <ViewTransition name={morphName} share="morph" default="none">
-                    {/* Both directions of the WebGL morph find this photo
-                        through the attribute — as the rect to land on coming
-                        in, and as the one to take off from going home. */}
-                    <div data-cloth-target={morphName}>{button}</div>
-                  </ViewTransition>
-                ) : (
-                  button
-                )}
+              <ScrollTilt intensity={veiled ? 0 : 1}>
+                <Veil enabled={veiled}>
+                  {lead && morphName ? (
+                    <ViewTransition name={morphName} share="morph" default="none">
+                      {/* Both directions of the WebGL morph find this photo
+                          through the attribute — as the rect to land on coming
+                          in, and as the one to take off from going home. */}
+                      <div data-cloth-target={morphName}>{button}</div>
+                    </ViewTransition>
+                  ) : (
+                    button
+                  )}
+                </Veil>
               </ScrollTilt>
             </div>
           </div>

@@ -1,5 +1,6 @@
 import { animate, cubicBezier } from "motion/react";
 import { DURATION_MS, engine, type Crop, type Rect } from "@/lib/clothMorphGl";
+import { MORPH_END, MORPH_GATE, MORPH_START, signalMorph } from "@/lib/clothMorphSignal";
 import { ease } from "@/lib/motion";
 
 /**
@@ -12,9 +13,6 @@ import { ease } from "@/lib/motion";
  * cannot see and a flicker — and React cannot promise that ordering across a
  * navigation that is itself unmounting the source element.
  */
-
-/** Set on <html> for the length of the flight; see globals.css for what it gates. */
-const GATE = "cloth-morph";
 
 /** Give up and let the page arrive plainly if the destination never shows. */
 const FIND_TIMEOUT_MS = 2500;
@@ -164,10 +162,11 @@ export function begin({
     stopAnimation?.();
     window.removeEventListener("popstate", onPopState);
     hide.remove();
-    root.classList.remove(GATE);
+    root.classList.remove(MORPH_GATE);
     if (restoreSource) frame.style.visibility = "";
     engine.release();
     if (cancel === teardown) cancel = null;
+    signalMorph(MORPH_END);
   };
   const teardown = () => end(true);
   /**
@@ -181,6 +180,10 @@ export function begin({
     if (location.pathname !== destination) end(true);
   };
   cancel = teardown;
+
+  // Before the texture, the canvas and the hidden thumbnail: anything else
+  // standing in for a photograph has to be off the screen first.
+  signalMorph(MORPH_START);
 
   try {
     engine.setTexture(img);
@@ -198,7 +201,7 @@ export function begin({
   document.head.append(hide);
   // Suppresses the native photo morph for exactly this navigation. The title
   // morph is untouched and still runs. See globals.css.
-  root.classList.add(GATE);
+  root.classList.add(MORPH_GATE);
 
   let settling: { el: HTMLElement; rect: Rect; since: number } | null = null;
 
@@ -260,7 +263,7 @@ export function begin({
       });
       return;
     }
-    root.classList.remove(GATE);
+    root.classList.remove(MORPH_GATE);
     hide.remove();
     raf = requestAnimationFrame(() => end(false));
   };
