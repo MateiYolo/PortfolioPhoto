@@ -14,6 +14,7 @@ import type { ReactNode } from "react";
 import { useScrollVelocityFactor } from "@/components/ScrollVelocity";
 import { MORPH_END, MORPH_GATE, MORPH_START } from "@/lib/clothMorphSignal";
 import type { VeilEngine, VeilQuad, VeilTexture } from "@/lib/scrollVeilGl";
+import { useCanHover, useMediaQuery } from "@/lib/useMediaQuery";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 
 /**
@@ -78,13 +79,43 @@ const DORMANT: VeilApi = { active: false, register: () => () => {} };
 const VeilContext = createContext<VeilApi>(DORMANT);
 
 /**
- * Whether the veil is running. False on reduced motion, on anything without
- * WebGL2, and on the first render everywhere — callers are expected to have
- * a resting state that needs no canvas, and to keep the same elements
- * mounted when this flips, since remounting a photo throws away its decode.
+ * Whether the veil is running. False on touch devices and on reduced motion
+ * (see useVeilAllowed below), false without WebGL2, and false on the first
+ * render everywhere — callers are expected to have a resting state that
+ * needs no canvas, and to keep the same elements mounted when this flips,
+ * since remounting a photo throws away its decode.
  */
 export function useVeilActive(): boolean {
   return useContext(VeilContext).active;
+}
+
+/**
+ * Whether this device may run the veil at all.
+ *
+ * The veil does not decorate a photograph, it *is* the photograph: the DOM
+ * one is hidden and a quad is drawn where the layout says it should be. So
+ * the whole effect rests on being able to place that quad exactly, on every
+ * frame — and that only holds while the page is being moved from JavaScript,
+ * which here means the wheel. SmoothScroll leaves touch to the platform on
+ * purpose (`syncTouch: false`), and a scroll the compositor is running is
+ * one the main thread only hears about after the fact. On iOS that gap is
+ * wide enough to see: the photographs trail the page they belong to, and
+ * the collapsing URL bar resizes the drawing buffer on top of it.
+ *
+ * So: a pointer that hovers, and no touchscreen anywhere on the device — a
+ * tablet with a trackpad reports a fine pointer while a finger is always one
+ * gesture away. Everywhere else keeps components/ScrollTilt.tsx, which has
+ * no such problem: there the browser still positions the photo and only a
+ * few degrees of rotation arrive late.
+ *
+ * Reduced motion is in here too because the answer is the same shape: the
+ * veil never starts, and nothing downstream has to know why.
+ */
+function useVeilAllowed(): boolean {
+  const canHover = useCanHover();
+  const touchscreen = useMediaQuery("(any-pointer: coarse)");
+  const reducedMotion = useReducedMotion();
+  return canHover && !touchscreen && !reducedMotion;
 }
 
 /**
@@ -96,6 +127,8 @@ export function useVeilActive(): boolean {
  * still. The DOM photo underneath is only hidden — never unmounted — so
  * every hand-off is a visibility flip on an element that keeps its layout,
  * its click target and its place in the document.
+ *
+ * It runs on pointer devices only; useVeilAllowed below says why.
  *
  * Three rules hold the illusion together, and none of them is optional:
  *
@@ -112,7 +145,7 @@ export function useVeilActive(): boolean {
  */
 export function ScrollVeilProvider({ children }: { children: ReactNode }) {
   const speed = useScrollVelocityFactor();
-  const reducedMotion = useReducedMotion();
+  const allowed = useVeilAllowed();
   const [active, setActive] = useState(false);
 
   const entriesRef = useRef<Set<Entry> | null>(null);
@@ -156,7 +189,7 @@ export function ScrollVeilProvider({ children }: { children: ReactNode }) {
   );
 
   useEffect(() => {
-    if (reducedMotion) return;
+    if (!allowed) return;
 
     const entries = entriesRef.current!;
     let engine: VeilEngine | null = null;
@@ -442,7 +475,7 @@ export function ScrollVeilProvider({ children }: { children: ReactNode }) {
       engine?.destroy();
       setActive(false);
     };
-  }, [reducedMotion, speed]);
+  }, [allowed, speed]);
 
   const api = useMemo<VeilApi>(() => ({ active, register }), [active, register]);
 
