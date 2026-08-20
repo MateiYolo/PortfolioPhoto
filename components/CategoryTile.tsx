@@ -5,6 +5,7 @@ import { motion, useScroll, useTransform } from "motion/react";
 import { useRef, useState, ViewTransition } from "react";
 import { Photo } from "@/components/Photo";
 import { ScrollTilt } from "@/components/ScrollTilt";
+import { clothMorphToCategory, prewarmClothMorph } from "@/lib/clothMorph";
 import type { Category } from "@/lib/content";
 import { GRID_TILE, tileSizes } from "@/lib/imageSizes";
 import { ease } from "@/lib/motion";
@@ -28,8 +29,24 @@ export function CategoryTile({
   imageParallaxRange: [number, number];
 }) {
   const ref = useRef<HTMLDivElement>(null);
+  const photoRef = useRef<HTMLDivElement>(null);
   const [hovered, setHovered] = useState(false);
   const reducedMotion = useReducedMotion();
+
+  /**
+   * Hands the cover photo to the WebGL flag morph (lib/clothMorph.ts) and lets
+   * the Link navigate underneath it. It has to happen in the click itself,
+   * because a moment later this tile is unmounted and there is nothing left to
+   * measure.
+   *
+   * Returning silently is the fallback: the <ViewTransition> below is still in
+   * the markup, so a browser without WebGL2 — or a visitor who asked for less
+   * motion — simply gets the native morph, which is what the site shipped with.
+   */
+  const handOffToCloth = () => {
+    if (reducedMotion) return;
+    clothMorphToCategory(category.slug, photoRef.current);
+  };
 
   const { scrollYProgress } = useScroll({
     target: ref,
@@ -59,16 +76,25 @@ export function CategoryTile({
           // will-change would pin a full-size photo texture in memory for
           // every tile on the page, on top of the one already held.
           style={{ y }}
-          onPointerEnter={() => setHovered(true)}
+          onPointerEnter={() => {
+            setHovered(true);
+            // Compile the shader while the pointer is still travelling, so the
+            // click itself only has to issue a draw call.
+            prewarmClothMorph();
+          }}
           onPointerLeave={() => setHovered(false)}
         >
           <Link
             href={`/work/${category.slug}`}
             data-cursor="view"
             className="group block"
+            onClick={handOffToCloth}
           >
             <ViewTransition name={`photo-${category.slug}`} share="morph" default="none">
               <motion.div
+                ref={photoRef}
+                // How the flight home finds the tile it is landing on.
+                data-cloth-tile={`photo-${category.slug}`}
                 animate={{ scale: hovered ? 1.04 : 1 }}
                 transition={{ duration: 0.6, ease: ease.inOutQuart }}
               >

@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, ViewTransition } from "react";
+import { useEffect, useState, ViewTransition } from "react";
 import { Lightbox } from "@/components/Lightbox";
 import { Photo } from "@/components/Photo";
 import { ScrollTilt } from "@/components/ScrollTilt";
+import { watchClothMorphHome } from "@/lib/clothMorph";
 import type { Photo as PhotoType } from "@/lib/content";
 import {
   SEQUENCE_LEAD_TILE,
@@ -11,6 +12,7 @@ import {
   tileSizes,
   tileWidth,
 } from "@/lib/imageSizes";
+import { useReducedMotion } from "@/lib/useReducedMotion";
 
 const ALIGN_PATTERN: Array<"flex-start" | "flex-end" | "center"> = [
   "center",
@@ -46,6 +48,15 @@ export function CategoryPhotoSequence({
   morphName?: string;
 }) {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const reducedMotion = useReducedMotion();
+
+  // The lead photo flies back to its tile when the visitor goes home. This has
+  // to be armed for the whole visit rather than hung off one link, because the
+  // browser's back button is a navigation nobody clicks.
+  useEffect(() => {
+    if (!morphName || reducedMotion) return;
+    return watchClothMorphHome(morphName);
+  }, [morphName, reducedMotion]);
 
   return (
     <div style={{ display: "flex", flexDirection: "column" }}>
@@ -90,7 +101,10 @@ export function CategoryPhotoSequence({
               <ScrollTilt>
                 {lead && morphName ? (
                   <ViewTransition name={morphName} share="morph" default="none">
-                    <div>{button}</div>
+                    {/* Both directions of the WebGL morph find this photo
+                        through the attribute — as the rect to land on coming
+                        in, and as the one to take off from going home. */}
+                    <div data-cloth-target={morphName}>{button}</div>
                   </ViewTransition>
                 ) : (
                   button
