@@ -84,6 +84,13 @@ never in git. Only the generated `public/media/**` derivatives are
 committed, at roughly 600KB per photo across all three sizes, or about
 1.5MB per video clip across both of its.
 
+That split is why `npm run ingest` will not drop a category it finds no
+originals for: on a fresh clone or a new worktree that is *every* category,
+and the derivatives it would delete are the published site. Instead it
+keeps what the manifest already has, says so, and still applies whatever
+you changed in that folder's `meta.md`. To actually remove a category,
+delete its folder.
+
 If the repo ever outgrows that, `NEXT_PUBLIC_MEDIA_BASE` is the escape
 hatch: point it at a bucket (Vercel Blob, Cloudflare R2, …), re-run ingest
 against the bucket, and every page picks it up with no component changes.
