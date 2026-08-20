@@ -45,7 +45,12 @@ export function SplitText({
         <span
           key={i}
           aria-hidden
-          style={{ display: "inline-block", overflow: "hidden" }}
+          style={{
+            display: "inline-block",
+            overflow: "hidden",
+            paddingBottom: "0.2em",
+            marginBottom: "-0.2em",
+          }}
         >
           <motion.span
             style={{ display: "inline-block" }}

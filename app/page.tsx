@@ -18,7 +18,7 @@ export default function HomePage() {
         }}
       >
         <h1 className="font-display" style={{ fontSize: "var(--step-4)", lineHeight: 0.95 }}>
-          <SplitText text="Matei Convard" by="words" />
+          <SplitText text="Fragments, an archive of memories" by="words" />
         </h1>
         <p
           className="font-sans text-grey-500 max-w-[34ch] md:max-w-none md:whitespace-nowrap"
@@ -28,7 +28,7 @@ export default function HomePage() {
             textWrap: "balance",
           }}
         >
-          Ongoing archive of memories, a little space of mine.
+          A little space kept by Matei Convard, shooting film & digital.
         </p>
       </section>
 
