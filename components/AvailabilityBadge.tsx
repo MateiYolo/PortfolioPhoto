@@ -245,6 +245,11 @@ function Row({ children }: { children: string }) {
       style={{
         display: "block",
         height: "var(--nav-row)",
+        // The row is taller than the font's own line box (see --nav-row's
+        // comment in globals.css), so line-height has to equal it too —
+        // otherwise the text sits at the top of the block instead of
+        // centred in it, since block content aligns top by default.
+        lineHeight: "var(--nav-row)",
         textTransform: "uppercase",
         whiteSpace: "nowrap",
       }}
