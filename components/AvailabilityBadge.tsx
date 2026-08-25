@@ -7,13 +7,26 @@ import { MagneticLink } from "@/components/MagneticLink";
 import { duration, ease } from "@/lib/motion";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 
-const LABEL = "Available for concerts & festivals";
+/** The idle label cycles between these, one at a time. */
+const IDLE_MESSAGES = ["Get in touch with me :)", "Available for live shows"];
 const COPIED = "Email copied to clipboard";
 
+/** How long each idle message sits before the carousel advances. */
+const ROTATE_MS = 3400;
 /** How long the confirmation stays up before the label rolls back. */
 const COPIED_MS = 2200;
 /** Longer when the copy failed: the address itself is on screen to read. */
 const FAILED_MS = 6000;
+
+/**
+ * Row height in em, animated directly rather than through the "translate
+ * by 50% of a 2-row container" trick the confirmation roll used before —
+ * that only works for exactly two rows, and the carousel needs a third.
+ * Mirrors --nav-row in globals.css; keep the two in sync (same rationale
+ * as lib/motion.ts keeping its constants in sync with the CSS custom
+ * properties there).
+ */
+const ROW_EM = 1.3;
 
 /**
  * The booking pill in the fixed header, where the wordmark used to sit.
@@ -23,12 +36,14 @@ const FAILED_MS = 6000;
  * ones who are can still paste. The label rolls up to confirm, the same
  * roll the email on the About page uses (components/ContactEmail.tsx).
  *
- * Three things move here, in the site's existing vocabulary rather than as
+ * Four things move here, in the site's existing vocabulary rather than as
  * a new set of effects:
  *
  *  - a live dot that breathes a ring outwards, the only thing on the page
  *    that moves on its own, so the pill reads as a current status rather
  *    than a decoration;
+ *  - the idle label itself cycles between IDLE_MESSAGES on a timer, a
+ *    small carousel rather than one static line;
  *  - an ink fill that wipes in from the left on hover — the same
  *    left-to-right clip-path wipe as <Reveal>, turned sideways — with a
  *    second copy of the label riding the identical clip in paper, so the
@@ -44,10 +59,25 @@ const FAILED_MS = 6000;
 export function AvailabilityBadge({ email }: { email: string }) {
   const [hovered, setHovered] = useState(false);
   const [state, setState] = useState<"idle" | "copied" | "failed">("idle");
+  const [idleIndex, setIdleIndex] = useState(0);
   const reducedMotion = useReducedMotion();
   const timer = useRef<number | undefined>(undefined);
 
   useEffect(() => () => window.clearTimeout(timer.current), []);
+
+  // Paused rather than ticking in the background while hovered/focused or
+  // while a confirmation is up: an auto-advancing line of text is easy to
+  // half-read if it changes mid-glance, and both of those already mean a
+  // visitor's attention is on the pill. Restarting the interval on every
+  // dependency change means the full ROTATE_MS is given after each pause,
+  // not whatever was left when it stopped.
+  useEffect(() => {
+    if (state !== "idle" || hovered) return;
+    const id = window.setInterval(() => {
+      setIdleIndex((i) => (i + 1) % IDLE_MESSAGES.length);
+    }, ROTATE_MS);
+    return () => window.clearInterval(id);
+  }, [state, hovered]);
 
   const handleClick = async () => {
     const ok = await copyToClipboard(email);
@@ -65,6 +95,7 @@ export function AvailabilityBadge({ email }: { email: string }) {
   const content = {
     active,
     state,
+    idleIndex,
     email,
     reducedMotion,
   };
@@ -79,9 +110,13 @@ export function AvailabilityBadge({ email }: { email: string }) {
         onFocus={() => setHovered(true)}
         onBlur={() => setHovered(false)}
         data-cursor="copy"
-        // The visible label opens the accessible name, so the name still
-        // contains it (WCAG 2.5.3) while saying what the button does.
-        aria-label={`${LABEL} — click to copy ${email}`}
+        // Fixed regardless of which idle message is currently on screen —
+        // the carousel is a sighted, decorative detail, and a screen
+        // reader re-announcing the accessible name every few seconds as it
+        // rotates would be closer to noise than to information. WCAG 2.5.3
+        // is still satisfied: the name contains the visible text that is
+        // on screen at any given moment, since both idle messages are in it.
+        aria-label={`${IDLE_MESSAGES.join(" — ")} — click to copy ${email}`}
         className="availability-badge font-sans"
         style={{
           position: "relative",
@@ -171,11 +206,18 @@ async function copyToClipboard(text: string) {
 type ContentProps = {
   active: boolean;
   state: "idle" | "copied" | "failed";
+  idleIndex: number;
   email: string;
   reducedMotion: boolean;
 };
 
-function BadgeContent({ active, state, email, reducedMotion }: ContentProps) {
+function BadgeContent({
+  active,
+  state,
+  idleIndex,
+  email,
+  reducedMotion,
+}: ContentProps) {
   return (
     <span
       style={{
@@ -188,50 +230,65 @@ function BadgeContent({ active, state, email, reducedMotion }: ContentProps) {
       }}
     >
       <LiveDot reducedMotion={reducedMotion} />
-      <RollingLabel state={state} email={email} reducedMotion={reducedMotion} />
+      <RollingLabel
+        state={state}
+        idleIndex={idleIndex}
+        email={email}
+        reducedMotion={reducedMotion}
+      />
       <IconSwap copied={state === "copied"} reducedMotion={reducedMotion} />
     </span>
   );
 }
 
 /**
- * The label and its confirmation stacked in a one-line window; copying
- * rolls the stack up by exactly one row.
+ * The two idle messages plus the confirmation stacked in a one-line
+ * window: the carousel and the copy confirmation are the same sliding
+ * stack, just landing on a different row.
  *
- * Both rows are always rendered, so the pill is as wide as the widest of
- * them and never resizes mid-roll. --nav-row is that row height, shared
- * with the About link so the two header items stay the same height.
+ * All three rows are always rendered, so the pill is as wide as the widest
+ * of them and never resizes as it slides. --nav-row (mirrored here as
+ * ROW_EM) is that row height, shared with the About link so the two
+ * header items stay the same height.
  */
 function RollingLabel({
   state,
+  idleIndex,
   email,
   reducedMotion,
 }: {
   state: ContentProps["state"];
+  idleIndex: number;
   email: string;
   reducedMotion: boolean;
 }) {
+  // The confirmation always lives in the row after the last idle message,
+  // however many of those there are.
+  const row = state === "idle" ? idleIndex : IDLE_MESSAGES.length;
+
   return (
     <span
       style={{
         display: "block",
         height: "var(--nav-row)",
         overflow: "hidden",
-        // Left-aligned: the confirmation is shorter than the label, and
-        // centring it would read as the text sliding sideways as well.
+        // Left-aligned: the rows are different lengths, and centring them
+        // would read as the text sliding sideways as well as up.
         textAlign: "left",
       }}
     >
       <motion.span
         style={{ display: "block" }}
         initial={false}
-        animate={{ y: state === "idle" ? "0%" : "-50%" }}
+        animate={{ y: `${-row * ROW_EM}em` }}
         transition={{
           duration: reducedMotion ? 0.01 : 0.45,
           ease: ease.inOutQuart,
         }}
       >
-        <Row>{LABEL}</Row>
+        {IDLE_MESSAGES.map((message) => (
+          <Row key={message}>{message}</Row>
+        ))}
         {/* No clipboard: the address itself, to read or select by hand. */}
         <Row>{state === "failed" ? email : COPIED}</Row>
       </motion.span>
