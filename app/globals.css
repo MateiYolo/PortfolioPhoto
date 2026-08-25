@@ -199,6 +199,44 @@ html.lightbox-open .cursor-ring {
 }
 
 /* ---------------------------------------------------------------------------
+   Homepage hero: the title block and the availability pill above it
+   (app/page.tsx, components/AvailabilityBadge.tsx). Everything the pill is
+   made of — its padding, its dot, its arrow — is sized in em inside the
+   component, so the font-size set here scales the whole thing in one move.
+--------------------------------------------------------------------------- */
+.home-hero {
+  /* Deliberately short of a full screen so the first cover is already in
+     the viewport on landing. In CSS rather than inline on the section,
+     because an inline value would outrank the phone override below. */
+  min-height: 72svh;
+}
+
+@media (max-width: 767px) {
+  /* One column of narrow type leaves the hero far shorter than its own
+     min-height on a phone, and the slack all lands between the pill and
+     the title. Take some of it back. */
+  .home-hero {
+    min-height: 62svh;
+  }
+}
+
+.availability-badge {
+  font-size: var(--step--1);
+  letter-spacing: 0.1em;
+  line-height: 1;
+}
+
+/* Narrow phones: the label is 33 characters of tracked-out uppercase, which
+   runs past the gutters somewhere under ~400px. Tighten rather than let a
+   pill wrap onto two lines. */
+@media (max-width: 480px) {
+  .availability-badge {
+    font-size: 0.68rem;
+    letter-spacing: 0.04em;
+  }
+}
+
+/* ---------------------------------------------------------------------------
    Homepage editorial grid, see components/CategoryGrid.tsx.
    Width/alignment are set per-tile via CSS custom properties so the
    component logic stays in TS while the responsive collapse stays in CSS.
