@@ -237,18 +237,25 @@ html.lightbox-open .cursor-ring {
   font-size: var(--step--1);
   letter-spacing: 0.1em;
   line-height: 1;
+  /* Height of one row in the label/confirmation roll (see RollingLabel in
+     AvailabilityBadge.tsx) — a custom property because that component
+     needs the same number in inline styles on two separate elements, and
+     this is the one place both can read it from. 1.3em rather than 1em:
+     descenders (in "copy", "clipboard") clip against a box exactly the
+     cap height of the font. */
+  --nav-row: 1.3em;
 }
 
 /* Narrow phones: the label is 33 characters of tracked-out uppercase and it
    now shares the header row with the About link, so it has to give ground.
-   The arrow goes first — it is a hover affordance, and there is no hover
+   The icon goes first — it is a hover affordance, and there is no hover
    here to trigger it. */
 @media (max-width: 640px) {
   .availability-badge {
     font-size: 0.62rem;
     letter-spacing: 0.02em;
   }
-  .availability-badge__arrow {
+  .availability-badge__icon {
     display: none;
   }
 }
