@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { Metadata } from "next";
 import { AboutPortrait } from "@/components/AboutPortrait";
 import { ContactEmail } from "@/components/ContactEmail";
@@ -105,6 +106,17 @@ export default function AboutPage() {
             )}
           </div>
         )}
+
+        {/* The wordmark that used to lead the header was this page's only
+            way home (see components/NavHeader.tsx). Category pages already
+            close on the same link; this one now does too. */}
+        <Link
+          href="/"
+          className="font-sans text-grey-500 text-[var(--step--1)] uppercase tracking-[0.2em]"
+          style={{ display: "inline-block", marginTop: "clamp(3rem, 6vw, 5rem)" }}
+        >
+          ← Index
+        </Link>
       </div>
     </main>
   );

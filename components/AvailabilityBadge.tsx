@@ -9,7 +9,7 @@ import { useReducedMotion } from "@/lib/useReducedMotion";
 const LABEL = "Available for concerts & festivals";
 
 /**
- * The booking status pill above the homepage title.
+ * The booking pill in the fixed header, where the wordmark used to sit.
  *
  * Three things happen here, in the site's existing vocabulary rather than
  * as a new set of effects:
@@ -60,6 +60,12 @@ export function AvailabilityBadge({ email }: { email: string }) {
           maxWidth: "100%",
           borderRadius: 9999,
           border: "1px solid var(--color-grey-300)",
+          // Opaque on purpose: this sits in the fixed header, so photos
+          // scroll underneath it. The About link opposite can lean on
+          // mix-blend-mode instead because it is bare type; a pill with a
+          // fill cannot (see components/NavHeader.tsx).
+          background: "var(--color-paper)",
+          color: "var(--color-ink)",
           overflow: "hidden",
           isolation: "isolate",
         }}
@@ -104,7 +110,9 @@ function BadgeContent({
         display: "flex",
         alignItems: "center",
         gap: "0.6em",
-        padding: "0.62em 1.15em",
+        // Shared with the About link opposite, so the two header
+        // items come out the same height (see globals.css).
+        padding: "var(--nav-pad-y) 1.15em",
         whiteSpace: "normal",
       }}
     >
@@ -175,6 +183,7 @@ function ArrowSwap({
   return (
     <span
       aria-hidden
+      className="availability-badge__arrow"
       style={{
         position: "relative",
         flex: "none",

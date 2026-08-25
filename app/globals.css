@@ -41,6 +41,10 @@
   --step-4: clamp(3rem, 1.5rem + 8vw, 9rem);
 
   --gutter: clamp(1.25rem, 0.9rem + 1.8vw, 3rem);
+
+  /* Vertical padding shared by the two header items, which is what makes
+     their boxes — and so their contents — line up (components/NavHeader.tsx). */
+  --nav-pad-y: 0.62em;
 }
 
 * {
@@ -199,10 +203,10 @@ html.lightbox-open .cursor-ring {
 }
 
 /* ---------------------------------------------------------------------------
-   Homepage hero: the title block and the availability pill above it
-   (app/page.tsx, components/AvailabilityBadge.tsx). Everything the pill is
-   made of — its padding, its dot, its arrow — is sized in em inside the
-   component, so the font-size set here scales the whole thing in one move.
+   Homepage hero (app/page.tsx) and the booking pill in the header
+   (components/AvailabilityBadge.tsx). Everything the pill is made of — its
+   padding, its dot, its arrow — is sized in em inside the component, so the
+   font-size set here scales the whole thing in one move.
 --------------------------------------------------------------------------- */
 .home-hero {
   /* Deliberately short of a full screen so the first cover is already in
@@ -220,19 +224,32 @@ html.lightbox-open .cursor-ring {
   }
 }
 
+.nav-about {
+  font-size: var(--step--1);
+  line-height: 1;
+  padding-block: var(--nav-pad-y);
+  /* The pill's border counts towards its height; match it with one that
+     paints nothing rather than nudging this box by a magic pixel. */
+  border-block: 1px solid transparent;
+}
+
 .availability-badge {
   font-size: var(--step--1);
   letter-spacing: 0.1em;
   line-height: 1;
 }
 
-/* Narrow phones: the label is 33 characters of tracked-out uppercase, which
-   runs past the gutters somewhere under ~400px. Tighten rather than let a
-   pill wrap onto two lines. */
-@media (max-width: 480px) {
+/* Narrow phones: the label is 33 characters of tracked-out uppercase and it
+   now shares the header row with the About link, so it has to give ground.
+   The arrow goes first — it is a hover affordance, and there is no hover
+   here to trigger it. */
+@media (max-width: 640px) {
   .availability-badge {
-    font-size: 0.68rem;
-    letter-spacing: 0.04em;
+    font-size: 0.62rem;
+    letter-spacing: 0.02em;
+  }
+  .availability-badge__arrow {
+    display: none;
   }
 }
 
