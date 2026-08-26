@@ -89,10 +89,18 @@ export function NavMenu() {
   // but only a close that follows a real open. Without wasOpen, this would
   // also fire on mount (open starts false) and steal focus onto the
   // toggle button the instant the page loads.
+  //
+  // The panel itself (tabIndex={-1} below), not the Home link, is what
+  // gets focused: focusing Home directly used to draw its :focus-visible
+  // ring the instant the panel opened, on a plain tap, on iOS Safari — a
+  // square nobody asked for, since the visitor tapped the toggle, not
+  // Tab-key'd their way to a link. A container taking focus for a screen
+  // reader's benefit doesn't need a ring a sighted visitor can act on; a
+  // real Tab press onto Home right after still draws one, correctly.
   useEffect(() => {
     if (open) {
       wasOpen.current = true;
-      panelRef.current?.querySelector("a")?.focus();
+      panelRef.current?.focus({ preventScroll: true });
     } else if (wasOpen.current) {
       wasOpen.current = false;
       toggleRef.current?.focus();
@@ -148,12 +156,18 @@ export function NavMenu() {
           >
             <nav
               ref={panelRef}
+              tabIndex={-1}
               aria-label="Primary"
               className="flex h-full flex-col justify-center"
               style={{
                 gap: "clamp(0.5rem, 2.5vw, 1.25rem)",
                 paddingLeft: "var(--gutter)",
                 paddingRight: "var(--gutter)",
+                // No visible ring for this one: it's a container taking
+                // focus so a screen reader announces "entered the menu",
+                // not a control a sighted visitor needs pointed out — see
+                // the effect above for why that distinction matters here.
+                outline: "none",
               }}
             >
               {LINKS.map((link, i) => (
