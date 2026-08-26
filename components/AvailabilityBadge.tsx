@@ -327,16 +327,27 @@ function BadgeContent({
  * window: the carousel and the copy confirmation are the same sliding
  * stack, just landing on a different row.
  *
- * Split into one vertical mini-carousel per character column rather than
- * one block that slides as a whole — every column still rolls between the
- * same rows by the same distance, but each column's transition is delayed
- * a little more than the one to its left, so the row-swap arrives as a
- * wave crossing the word instead of the whole sentence changing at once.
+ * Each row's own letters carry the motion — every character in a row
+ * translates by the same distance the row itself would, but each one is
+ * delayed a little more than the letter before it, so a row-swap arrives
+ * as a wave crossing the word instead of the whole sentence changing at
+ * once. Letters are only ever compared for width against their own
+ * row's neighbours, never against the unrelated letter another message
+ * happens to have at the same position — an earlier version split the
+ * label into fixed columns shared by all three rows, which padded every
+ * column out to its widest occupant across all three messages and left
+ * the text visibly gap-toothed even at rest.
  *
- * All three rows are always rendered in every column, so the pill is as
- * wide as the widest of them and never resizes as it slides. --nav-row
- * (mirrored here as ROW_EM) is that row height, shared with the About
- * link so the two header items stay the same height.
+ * Because the animated rows are absolutely positioned (so their letters
+ * can move independently), they can't size the pill themselves. A
+ * fourth, invisible copy of the three rows sits in normal flow
+ * underneath just to set the width, each row intact rather than split —
+ * the animated letters lay out to very nearly the same width on their
+ * own (the same trade-off <SplitText> already makes elsewhere on the
+ * site), so the two never visibly disagree.
+ *
+ * --nav-row (mirrored here as ROW_EM) is the row height, shared with the
+ * About link so the two header items stay the same height.
  */
 function RollingLabel({
   state,
@@ -351,15 +362,15 @@ function RollingLabel({
 }) {
   // The confirmation always lives in the row after the last idle message,
   // however many of those there are.
-  const row = state === "idle" ? idleIndex : IDLE_MESSAGES.length;
+  const activeRow = state === "idle" ? idleIndex : IDLE_MESSAGES.length;
   // No clipboard: the address itself, to read or select by hand.
   const rows = [...IDLE_MESSAGES, state === "failed" ? email : COPIED];
-  const columnCount = Math.max(...rows.map((text) => text.length));
 
   return (
     <span
       style={{
-        display: "flex",
+        position: "relative",
+        display: "block",
         height: "var(--nav-row)",
         overflow: "hidden",
         // Left-aligned: the rows are different lengths, and centring them
@@ -367,12 +378,16 @@ function RollingLabel({
         textAlign: "left",
       }}
     >
-      {Array.from({ length: columnCount }, (_, column) => (
-        <LetterColumn
-          key={column}
-          column={column}
-          row={row}
-          rows={rows}
+      <span aria-hidden style={{ visibility: "hidden", display: "block" }}>
+        {rows.map((text, i) => (
+          <Row key={i}>{text}</Row>
+        ))}
+      </span>
+      {rows.map((text, i) => (
+        <WaveRow
+          key={i}
+          text={text}
+          offset={i - activeRow}
           reducedMotion={reducedMotion}
         />
       ))}
@@ -380,44 +395,45 @@ function RollingLabel({
   );
 }
 
-/** One character's worth of the carousel: same rows, same row height, its own delay. */
-function LetterColumn({
-  column,
-  row,
-  rows,
+/** One message, its letters free to travel to the next row on their own delay. */
+function WaveRow({
+  text,
+  offset,
   reducedMotion,
 }: {
-  column: number;
-  row: number;
-  rows: string[];
+  text: string;
+  offset: number;
   reducedMotion: boolean;
 }) {
   return (
     <span
       style={{
+        position: "absolute",
+        inset: 0,
         display: "block",
-        flex: "none",
         height: "var(--nav-row)",
-        overflow: "hidden",
+        lineHeight: "var(--nav-row)",
+        textTransform: "uppercase",
+        whiteSpace: "nowrap",
       }}
     >
-      <motion.span
-        style={{ display: "block" }}
-        initial={false}
-        animate={{ y: `${-row * ROW_EM}em` }}
-        transition={{
-          duration: reducedMotion ? 0.01 : 0.45,
-          delay: reducedMotion ? 0 : column * stagger.chars,
-          ease: ease.inOutQuart,
-        }}
-      >
-        {rows.map((text, i) => (
-          // A lone space as a row's entire content is collapsible
-          // whitespace, and CSS trims that to nothing — non-breaking
-          // keeps it a real, visible character.
-          <Row key={i}>{text[column] === " " ? " " : (text[column] ?? "")}</Row>
-        ))}
-      </motion.span>
+      {Array.from(text).map((char, i) => (
+        <motion.span
+          key={i}
+          style={{ display: "inline-block" }}
+          initial={false}
+          animate={{ y: `${offset * ROW_EM}em` }}
+          transition={{
+            duration: reducedMotion ? 0.01 : 0.45,
+            delay: reducedMotion ? 0 : i * stagger.chars,
+            ease: ease.inOutQuart,
+          }}
+        >
+          {/* A lone space is collapsible whitespace and CSS trims it to
+              nothing when it's the whole content of an inline-block. */}
+          {char === " " ? " " : char}
+        </motion.span>
+      ))}
     </span>
   );
 }
