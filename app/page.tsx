@@ -7,14 +7,24 @@ export default function HomePage() {
 
   return (
     <main>
+      {/*
+        Deliberately short of a full screen (see .home-hero): the title
+        block ends around three quarters of the way down so the top of the
+        first cover is already in the viewport on landing, rather than the
+        page opening on a title in an empty field.
+      */}
       <section
+        className="home-hero"
         style={{
-          minHeight: "88svh",
           display: "flex",
           flexDirection: "column",
           justifyContent: "flex-end",
           padding: "var(--gutter)",
-          paddingBottom: "clamp(2rem, 6vw, 4rem)",
+          // Clears the fixed header — its gutter padding top and bottom,
+          // plus the booking pill between them — for the case where the
+          // title is tall enough to push past the min-height.
+          paddingTop: "calc(var(--gutter) * 2 + 2.25rem)",
+          paddingBottom: "clamp(1.25rem, 3vw, 2.5rem)",
         }}
       >
         <h1 className="font-display" style={{ fontSize: "var(--step-4)", lineHeight: 0.95 }}>

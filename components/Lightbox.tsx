@@ -75,12 +75,13 @@ export function Lightbox({
     // The overlay is solid ink, the same base colour the cursor's difference
     // blend uses, which cancels itself out to invisible (see .cursor-dot /
     // .cursor-ring in globals.css). This class swaps the cursor to a paper
-    // fill only while that backdrop is on screen.
-    document.documentElement.classList.add("lightbox-open");
+    // fill only while that backdrop is on screen — shared with the nav menu,
+    // the other full-screen ink overlay (components/NavMenu.tsx).
+    document.documentElement.classList.add("ink-overlay-open");
     return () => {
       document.body.style.overflow = prevOverflow;
       lenis?.start();
-      document.documentElement.classList.remove("lightbox-open");
+      document.documentElement.classList.remove("ink-overlay-open");
     };
   }, [open, lenis]);
 

@@ -41,6 +41,10 @@
   --step-4: clamp(3rem, 1.5rem + 8vw, 9rem);
 
   --gutter: clamp(1.25rem, 0.9rem + 1.8vw, 3rem);
+
+  /* Vertical padding shared by the two header items, which is what makes
+     their boxes — and so their contents — line up (components/NavHeader.tsx). */
+  --nav-pad-y: 0.62em;
 }
 
 * {
@@ -188,14 +192,94 @@ html.cloth-morph::view-transition-group(.morph) {
   }
 }
 
-/* The Lightbox overlay (components/Lightbox.tsx) is solid ink. The cursor's
-   dot and ring are ink too, so over that backdrop they'd paint the same
-   colour as what's behind them. Force a paper fill only while the overlay
+/* Two different full-screen overlays are solid ink: the Lightbox
+   (components/Lightbox.tsx) and the nav menu (components/NavMenu.tsx). The
+   cursor's dot and ring are ink too, so over either backdrop they'd paint
+   the same colour as what's behind them. Force a paper fill while either
    is up; everywhere else the ink cursor reads fine against the paper page
    and against photos. */
-html.lightbox-open .cursor-dot,
-html.lightbox-open .cursor-ring {
+html.ink-overlay-open .cursor-dot,
+html.ink-overlay-open .cursor-ring {
   background-color: var(--color-paper);
+}
+
+/* Same problem, same fix, for keyboard focus: the default outline
+   (:focus-visible above) is ink on ink over either overlay's own solid
+   ink backdrop. The nav menu is the first of the two with anything
+   focusable inside it, but this is keyed off the same class so the
+   Lightbox is covered too if that ever changes. */
+html.ink-overlay-open :focus-visible {
+  outline-color: var(--color-paper);
+}
+
+/* Home and About (components/NavMenu.tsx) are each wrapped in <Reveal>,
+   which sets overflow: hidden on itself for its own clip-path wipe — and
+   that also clips the default outline above, since it paints outside the
+   link's border box by that rule's 4px offset. Pulling the ring inside
+   the box instead keeps it visible without touching Reveal itself, which
+   plenty of other, non-overflow:hidden content also relies on. */
+.nav-menu-link:focus-visible {
+  outline-offset: -3px;
+}
+
+/* ---------------------------------------------------------------------------
+   Homepage hero (app/page.tsx) and the booking pill in the header
+   (components/AvailabilityBadge.tsx). Everything the pill is made of — its
+   padding, its dot, its arrow — is sized in em inside the component, so the
+   font-size set here scales the whole thing in one move.
+--------------------------------------------------------------------------- */
+.home-hero {
+  /* Deliberately short of a full screen so the first cover is already in
+     the viewport on landing. In CSS rather than inline on the section,
+     because an inline value would outrank the phone override below. */
+  min-height: 72svh;
+}
+
+@media (max-width: 767px) {
+  /* One column of narrow type leaves the hero far shorter than its own
+     min-height on a phone, and the slack all lands between the pill and
+     the title. Take some of it back. */
+  .home-hero {
+    min-height: 62svh;
+  }
+}
+
+/* Shared box for the header's non-pill items — currently just the menu
+   toggle (components/NavMenu.tsx) — so anything placed here lines up with
+   the pill opposite. */
+.nav-item {
+  font-size: var(--step--1);
+  line-height: 1;
+  padding-block: var(--nav-pad-y);
+  /* The pill's border counts towards its height; match it with one that
+     paints nothing rather than nudging this box by a magic pixel. */
+  border-block: 1px solid transparent;
+}
+
+.availability-badge {
+  font-size: var(--step--1);
+  letter-spacing: 0.1em;
+  line-height: 1;
+  /* Height of one row in the label/confirmation roll (see RollingLabel in
+     AvailabilityBadge.tsx) — a custom property because that component
+     needs the same number in inline styles on two separate elements, and
+     this is the one place both can read it from. 1.3em rather than 1em:
+     descenders (in "copy", "clipboard") clip against a box exactly the
+     cap height of the font. */
+  --nav-row: 1.3em;
+}
+
+/* Narrow phones: the label is 33 characters of tracked-out uppercase, so it
+   still needs to give some ground even now that About has moved out of
+   this row and into the menu (components/NavMenu.tsx) — but with the
+   whole row to itself bar the small hamburger toggle opposite, there is
+   room to sit closer to the desktop size than the row-sharing value this
+   used to be, not shrunk as far down. */
+@media (max-width: 640px) {
+  .availability-badge {
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+  }
 }
 
 /* ---------------------------------------------------------------------------
