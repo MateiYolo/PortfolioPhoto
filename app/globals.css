@@ -213,12 +213,14 @@ html.ink-overlay-open :focus-visible {
   outline-color: var(--color-paper);
 }
 
-/* Home and About (components/NavMenu.tsx) are each wrapped in <Reveal>,
-   which sets overflow: hidden on itself for its own clip-path wipe — and
-   that also clips the default outline above, since it paints outside the
-   link's border box by that rule's 4px offset. Pulling the ring inside
-   the box instead keeps it visible without touching Reveal itself, which
-   plenty of other, non-overflow:hidden content also relies on. */
+/* Home and About (components/NavMenu.tsx) are wrapped in <Reveal> on
+   touch, which sets overflow: hidden on itself for its own clip-path wipe
+   — and that also clips the default outline above, since it paints
+   outside the link's border box by that rule's 4px offset. Pulling the
+   ring inside the box instead keeps it visible without touching Reveal
+   itself, which plenty of other, non-overflow:hidden content also relies
+   on. Harmless where there is no Reveal to clip it, so this stays
+   unconditional rather than growing a media query to match. */
 .nav-menu-link:focus-visible {
   outline-offset: -3px;
 }

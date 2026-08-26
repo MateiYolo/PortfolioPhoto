@@ -4,10 +4,12 @@ import { useLenis } from "lenis/react";
 import { AnimatePresence, motion } from "motion/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import type { PointerEvent as ReactPointerEvent } from "react";
 import { useEffect, useRef, useState } from "react";
 import { MagneticLink } from "@/components/MagneticLink";
 import { Reveal } from "@/components/Reveal";
 import { duration, ease, stagger } from "@/lib/motion";
+import { type Edge, edgeOf } from "@/lib/pointerEdge";
 import { useCanHover } from "@/lib/useMediaQuery";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 
@@ -27,16 +29,22 @@ const LINKS = [
  * something they arrive ahead of.
  *
  * So the hover-capable build is cut to roughly a third of a second end to
- * end, and leads with `outExpo` throughout: the circle covers most of its
- * ground in the first few frames and settles into the last of it, which
- * reads as fast even where the number is not much smaller. The links get
- * the same treatment rather than <Reveal>'s default in-out curve — an
- * in-out wipe spends its opening third barely moving, and on something
- * being waited on that third is the whole impression. With the delay down
- * to a frame or two and the curve front-loaded, Home and About are
- * readable at around 100ms and settled well before the panel behind them
- * is, which is the right order: the destination arrives before the room
- * it is in.
+ * end, and leads with `outExpo`: the circle covers most of its ground in
+ * the first few frames and settles into the last of it, which reads as
+ * fast even where the number is not much smaller.
+ *
+ * And there it drops the links' own reveal entirely, rather than making
+ * it quicker again. Nothing that ran on top of the panel was ever going
+ * to be free: the links sit inside the panel, so the circle already
+ * uncovers them as it sweeps — around 105ms in at a desktop size, since
+ * it reaches the far corner they occupy at roughly four fifths of its
+ * radius. A wipe of their own can only start after that and delay the
+ * one moment the whole sequence exists for. Take it away and the panel's
+ * own edge is the reveal, which is both faster than any delay + duration
+ * pair and one motion instead of two.
+ *
+ * Touch keeps the staggered <Reveal>, where the extra beats are cover for
+ * the trip a thumb has to make rather than a tax on it.
  *
  * Touch keeps the longer, `inOutQuart` version. There the panel is the
  * whole screen and a thumb has to travel it; the extra beats are cover
@@ -47,23 +55,34 @@ const TIMING = {
     panelIn: 0.42,
     panelOut: 0.3,
     panelEaseIn: ease.outExpo,
-    linkDelay: 0.03,
-    linkStagger: 0.035,
-    linkDuration: 0.28,
-    linkEase: ease.outExpo,
     mark: 0.28,
+    /** The panel's own edge is the reveal here. */
+    linkWipe: null,
   },
   touch: {
     panelIn: 0.65,
     panelOut: 0.65,
     panelEaseIn: ease.inOutQuart,
-    linkDelay: 0.25,
-    linkStagger: stagger.lines,
-    linkDuration: duration.slow,
-    linkEase: ease.inOutQuart,
     mark: 0.45,
+    linkWipe: {
+      delay: 0.25,
+      stagger: stagger.lines,
+      duration: duration.slow,
+      ease: ease.inOutQuart,
+    },
   },
 } as const;
+
+/**
+ * The underline under a hovered link, in the pill's language: it grows
+ * from the edge the cursor came in on and collapses out of the edge it
+ * leaves by (lib/pointerEdge.ts). Arriving is the half worth watching, so
+ * it gets the longer sweep; leaving is brisk and out of the way.
+ */
+const UNDERLINE = {
+  in: { duration: 0.4, ease: ease.sweep },
+  out: { duration: 0.3, ease: ease.outExpo },
+};
 
 /**
  * The header's right-hand item: a two-line mark that morphs into a close
@@ -235,20 +254,27 @@ export function NavMenu() {
                 outline: "none",
               }}
             >
-              {LINKS.map((link, i) => (
-                <MenuLink
-                  key={link.href}
-                  href={link.href}
-                  label={link.label}
-                  cursor={link.cursor}
-                  isCurrent={pathname === link.href}
-                  delay={timing.linkDelay + i * timing.linkStagger}
-                  duration={timing.linkDuration}
-                  ease={timing.linkEase}
-                  reducedMotion={reducedMotion}
-                  onNavigate={() => setOpen(false)}
-                />
-              ))}
+              {LINKS.map((link, i) => {
+                const wipe = timing.linkWipe;
+                return (
+                  <MenuLink
+                    key={link.href}
+                    href={link.href}
+                    label={link.label}
+                    cursor={link.cursor}
+                    isCurrent={pathname === link.href}
+                    wipe={
+                      wipe && {
+                        delay: wipe.delay + i * wipe.stagger,
+                        duration: wipe.duration,
+                        ease: wipe.ease,
+                      }
+                    }
+                    reducedMotion={reducedMotion}
+                    onNavigate={() => setOpen(false)}
+                  />
+                );
+              })}
             </nav>
           </motion.div>
         )}
@@ -257,14 +283,27 @@ export function NavMenu() {
   );
 }
 
+/**
+ * One menu entry. No <MagneticLink> here any more, for two reasons that
+ * compound: a link this large translating under the pointer is the same
+ * aimless wobble the booking pill used to have (see AvailabilityBadge's
+ * own note on why that went), and on touch — where <Reveal> is still in
+ * play — that wobble was being *clipped*, because Reveal has to set
+ * overflow: hidden for its own wipe. The magnet pushed "Home" a few
+ * pixels right and the reveal box sheared the H off it. A hover effect
+ * that eats the first letter of the word it is decorating is not a
+ * trade-off worth balancing; it is just a bug with a spring on it.
+ *
+ * What answers the cursor instead is the underline, which grows from the
+ * side the pointer entered by and collapses out of the side it leaves by,
+ * and the arrow, which slides into its own fixed slot so nothing reflows.
+ */
 function MenuLink({
   href,
   label,
   cursor,
   isCurrent,
-  delay,
-  duration: revealDuration,
-  ease: revealEase,
+  wipe,
   reducedMotion,
   onNavigate,
 }: {
@@ -272,86 +311,115 @@ function MenuLink({
   label: string;
   cursor: string;
   isCurrent: boolean;
-  delay: number;
-  duration: number;
-  ease: readonly [number, number, number, number];
+  wipe: { delay: number; duration: number; ease: readonly [number, number, number, number] } | null;
   reducedMotion: boolean;
   onNavigate: () => void;
 }) {
   const [hovered, setHovered] = useState(false);
+  const [origin, setOrigin] = useState<Edge>("left");
+  // The underline only takes a new direction between passes: at rest it is
+  // either scaled to nothing or covering the word, and moving its origin
+  // at either of those is invisible. Mid-sweep it is neither, so it keeps
+  // the direction it started with rather than flipping under the cursor.
+  const settled = useRef(true);
 
-  return (
-    <Reveal delay={delay} duration={revealDuration} ease={revealEase}>
-      <MagneticLink strength={0.12}>
-        <Link
-          href={href}
-          onClick={onNavigate}
-          onPointerEnter={() => setHovered(true)}
-          onPointerLeave={() => setHovered(false)}
-          onFocus={() => setHovered(true)}
-          onBlur={() => setHovered(false)}
-          aria-current={isCurrent ? "page" : undefined}
-          data-cursor={cursor}
-          className="nav-menu-link font-display relative inline-block"
-          style={{
-            fontSize: "var(--step-3)",
-            lineHeight: 1.15,
-            color: isCurrent ? "var(--color-grey-500)" : "var(--color-paper)",
-          }}
+  const turn = (e: ReactPointerEvent<HTMLElement>) => {
+    if (settled.current) setOrigin(edgeOf(e));
+  };
+  const stroke = hovered ? UNDERLINE.in : UNDERLINE.out;
+
+  const link = (
+    <Link
+      href={href}
+      onClick={onNavigate}
+      onPointerEnter={(e) => {
+        turn(e);
+        setHovered(true);
+      }}
+      onPointerLeave={(e) => {
+        turn(e);
+        setHovered(false);
+      }}
+      onFocus={() => setHovered(true)}
+      onBlur={() => setHovered(false)}
+      aria-current={isCurrent ? "page" : undefined}
+      data-cursor={cursor}
+      className="nav-menu-link font-display relative inline-block"
+      style={{
+        fontSize: "var(--step-3)",
+        lineHeight: 1.15,
+        color: isCurrent ? "var(--color-grey-500)" : "var(--color-paper)",
+      }}
+    >
+      {label}
+      <motion.span
+        aria-hidden
+        style={{
+          display: "inline-block",
+          width: "0.6em",
+          height: "0.6em",
+          marginLeft: "0.4em",
+          verticalAlign: "middle",
+        }}
+        initial={false}
+        animate={{
+          x: hovered ? "0.15em" : "-0.15em",
+          opacity: hovered ? 1 : 0,
+        }}
+        transition={{
+          duration: reducedMotion ? 0.01 : duration.fast,
+          ease: ease.outExpo,
+        }}
+      >
+        <svg
+          viewBox="0 0 12 12"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.4"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          style={{ display: "block", width: "100%", height: "100%" }}
         >
-          {label}
-          <motion.span
-            aria-hidden
-            style={{
-              display: "inline-block",
-              width: "0.6em",
-              height: "0.6em",
-              marginLeft: "0.4em",
-              verticalAlign: "middle",
-            }}
-            initial={false}
-            animate={{
-              x: hovered ? "0.15em" : "-0.15em",
-              opacity: hovered ? 1 : 0,
-            }}
-            transition={{
-              duration: reducedMotion ? 0.01 : duration.fast,
-              ease: ease.outExpo,
-            }}
-          >
-            <svg
-              viewBox="0 0 12 12"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.4"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              style={{ display: "block", width: "100%", height: "100%" }}
-            >
-              <path d="M1.5 6h9M6.5 2l4 4-4 4" />
-            </svg>
-          </motion.span>
-          <motion.span
-            aria-hidden
-            style={{
-              position: "absolute",
-              left: 0,
-              right: 0,
-              bottom: "0.08em",
-              height: "2px",
-              background: "currentColor",
-              transformOrigin: "left",
-            }}
-            initial={false}
-            animate={{ scaleX: hovered ? 1 : 0 }}
-            transition={{
-              duration: reducedMotion ? 0.01 : duration.base,
-              ease: ease.inOutQuart,
-            }}
-          />
-        </Link>
-      </MagneticLink>
+          <path d="M1.5 6h9M6.5 2l4 4-4 4" />
+        </svg>
+      </motion.span>
+      <motion.span
+        aria-hidden
+        onAnimationStart={() => {
+          settled.current = false;
+        }}
+        onAnimationComplete={() => {
+          settled.current = true;
+        }}
+        style={{
+          position: "absolute",
+          left: 0,
+          right: 0,
+          bottom: "0.08em",
+          height: "2px",
+          background: "currentColor",
+          transformOrigin: origin,
+        }}
+        initial={false}
+        animate={{ scaleX: hovered ? 1 : 0 }}
+        transition={{
+          duration: reducedMotion ? 0.01 : stroke.duration,
+          ease: stroke.ease,
+        }}
+      />
+    </Link>
+  );
+
+  // Same box either way, wiped or not: the nav is a stretch-aligned flex
+  // column, so without a block wrapper the link itself becomes the flex
+  // item and spreads its hit area — and its underline — across the full
+  // width of the panel.
+  return wipe ? (
+    <Reveal delay={wipe.delay} duration={wipe.duration} ease={wipe.ease}>
+      {link}
     </Reveal>
+  ) : (
+    <div>{link}</div>
   );
 }
 

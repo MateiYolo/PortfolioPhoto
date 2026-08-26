@@ -1,9 +1,10 @@
 "use client";
 
 import { animate, motion, useMotionValue } from "motion/react";
-import type { PointerEvent as ReactPointerEvent, ReactNode } from "react";
+import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
 import { ease, pressSpring } from "@/lib/motion";
+import { type Edge, edgeOf } from "@/lib/pointerEdge";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 
 /** The idle label cycles between these, one at a time. */
@@ -255,20 +256,6 @@ export function AvailabilityBadge({ email }: { email: string }) {
       </span>
     </motion.button>
   );
-}
-
-type Edge = "left" | "right";
-
-/**
- * Which half of the pill the pointer was over as it crossed the boundary.
- * Read on both enter and leave, which is the whole point: the fill enters
- * from the side the cursor came in on and drains out the side it left by.
- * A pointer leaving through the top or bottom edge still resolves to the
- * half it was last over, which is where the eye is anyway.
- */
-function edgeOf(e: ReactPointerEvent<HTMLElement>): Edge {
-  const rect = e.currentTarget.getBoundingClientRect();
-  return e.clientX < rect.left + rect.width / 2 ? "left" : "right";
 }
 
 /** Clipboard API where it exists, the old selection trick where it doesn't. */
