@@ -3,7 +3,7 @@
 import { animate, motion, useMotionValue } from "motion/react";
 import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
-import { ease, pressSpring } from "@/lib/motion";
+import { ease, pressSpring, stagger } from "@/lib/motion";
 import { type Edge, edgeOf } from "@/lib/pointerEdge";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 
@@ -61,7 +61,9 @@ const DRAIN = { duration: 0.34, ease: ease.outExpo };
  *    that moves on its own, so the pill reads as a current status rather
  *    than a decoration;
  *  - the idle label itself cycles between IDLE_MESSAGES on a timer, a
- *    small carousel rather than one static line;
+ *    small carousel rather than one static line — each letter rolls up
+ *    on its own delay rather than the sentence snapping over as a block,
+ *    so the swap reads as a wave sweeping across the word;
  *  - an ink fill that wipes in from whichever edge the pointer crossed —
  *    the same clip-path wipe as <Reveal>, turned sideways — with a second
  *    copy of the label riding the identical clip in paper, so the type
@@ -325,10 +327,27 @@ function BadgeContent({
  * window: the carousel and the copy confirmation are the same sliding
  * stack, just landing on a different row.
  *
- * All three rows are always rendered, so the pill is as wide as the widest
- * of them and never resizes as it slides. --nav-row (mirrored here as
- * ROW_EM) is that row height, shared with the About link so the two
- * header items stay the same height.
+ * Each row's own letters carry the motion — every character in a row
+ * translates by the same distance the row itself would, but each one is
+ * delayed a little more than the letter before it, so a row-swap arrives
+ * as a wave crossing the word instead of the whole sentence changing at
+ * once. Letters are only ever compared for width against their own
+ * row's neighbours, never against the unrelated letter another message
+ * happens to have at the same position — an earlier version split the
+ * label into fixed columns shared by all three rows, which padded every
+ * column out to its widest occupant across all three messages and left
+ * the text visibly gap-toothed even at rest.
+ *
+ * Because the animated rows are absolutely positioned (so their letters
+ * can move independently), they can't size the pill themselves. A
+ * fourth, invisible copy of the three rows sits in normal flow
+ * underneath just to set the width, each row intact rather than split —
+ * the animated letters lay out to very nearly the same width on their
+ * own (the same trade-off <SplitText> already makes elsewhere on the
+ * site), so the two never visibly disagree.
+ *
+ * --nav-row (mirrored here as ROW_EM) is the row height, shared with the
+ * About link so the two header items stay the same height.
  */
 function RollingLabel({
   state,
@@ -343,11 +362,14 @@ function RollingLabel({
 }) {
   // The confirmation always lives in the row after the last idle message,
   // however many of those there are.
-  const row = state === "idle" ? idleIndex : IDLE_MESSAGES.length;
+  const activeRow = state === "idle" ? idleIndex : IDLE_MESSAGES.length;
+  // No clipboard: the address itself, to read or select by hand.
+  const rows = [...IDLE_MESSAGES, state === "failed" ? email : COPIED];
 
   return (
     <span
       style={{
+        position: "relative",
         display: "block",
         height: "var(--nav-row)",
         overflow: "hidden",
@@ -356,21 +378,62 @@ function RollingLabel({
         textAlign: "left",
       }}
     >
-      <motion.span
-        style={{ display: "block" }}
-        initial={false}
-        animate={{ y: `${-row * ROW_EM}em` }}
-        transition={{
-          duration: reducedMotion ? 0.01 : 0.45,
-          ease: ease.inOutQuart,
-        }}
-      >
-        {IDLE_MESSAGES.map((message) => (
-          <Row key={message}>{message}</Row>
+      <span aria-hidden style={{ visibility: "hidden", display: "block" }}>
+        {rows.map((text, i) => (
+          <Row key={i}>{text}</Row>
         ))}
-        {/* No clipboard: the address itself, to read or select by hand. */}
-        <Row>{state === "failed" ? email : COPIED}</Row>
-      </motion.span>
+      </span>
+      {rows.map((text, i) => (
+        <WaveRow
+          key={i}
+          text={text}
+          offset={i - activeRow}
+          reducedMotion={reducedMotion}
+        />
+      ))}
+    </span>
+  );
+}
+
+/** One message, its letters free to travel to the next row on their own delay. */
+function WaveRow({
+  text,
+  offset,
+  reducedMotion,
+}: {
+  text: string;
+  offset: number;
+  reducedMotion: boolean;
+}) {
+  return (
+    <span
+      style={{
+        position: "absolute",
+        inset: 0,
+        display: "block",
+        height: "var(--nav-row)",
+        lineHeight: "var(--nav-row)",
+        textTransform: "uppercase",
+        whiteSpace: "nowrap",
+      }}
+    >
+      {Array.from(text).map((char, i) => (
+        <motion.span
+          key={i}
+          style={{ display: "inline-block" }}
+          initial={false}
+          animate={{ y: `${offset * ROW_EM}em` }}
+          transition={{
+            duration: reducedMotion ? 0.01 : 0.45,
+            delay: reducedMotion ? 0 : i * stagger.chars,
+            ease: ease.inOutQuart,
+          }}
+        >
+          {/* A lone space is collapsible whitespace and CSS trims it to
+              nothing when it's the whole content of an inline-block. */}
+          {char === " " ? " " : char}
+        </motion.span>
+      ))}
     </span>
   );
 }
