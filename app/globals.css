@@ -269,17 +269,16 @@ html.ink-overlay-open :focus-visible {
   --nav-row: 1.3em;
 }
 
-/* Narrow phones: the label is 33 characters of tracked-out uppercase and it
-   now shares the header row with the About link, so it has to give ground.
-   The icon goes first — it is a hover affordance, and there is no hover
-   here to trigger it. */
+/* Narrow phones: the label is 33 characters of tracked-out uppercase, so it
+   still needs to give some ground even now that About has moved out of
+   this row and into the menu (components/NavMenu.tsx) — but with the
+   whole row to itself bar the small hamburger toggle opposite, there is
+   room to sit closer to the desktop size than the row-sharing value this
+   used to be, not shrunk as far down. */
 @media (max-width: 640px) {
   .availability-badge {
-    font-size: 0.62rem;
-    letter-spacing: 0.02em;
-  }
-  .availability-badge__icon {
-    display: none;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
   }
 }
 
