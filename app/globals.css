@@ -323,6 +323,7 @@ html.ink-overlay-open :focus-visible {
   display: flex;
   justify-content: var(--tile-align, flex-start);
   width: 100%;
+  margin-top: var(--tile-offset, 0);
 }
 
 .category-tile-frame {
@@ -332,6 +333,12 @@ html.ink-overlay-open :focus-visible {
 @media (max-width: 767px) {
   .category-row {
     justify-content: stretch !important;
+    /* The offset stagger reads as hand-arranged alongside the
+       per-row width/alignment it's designed with, but those collapse
+       to a single full-bleed column below, so the leftover margin
+       would just be an arbitrary gap between otherwise-uniform
+       thumbnails. */
+    margin-top: 0 !important;
   }
   .category-tile-frame {
     width: 100% !important;

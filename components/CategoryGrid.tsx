@@ -59,7 +59,7 @@ export function CategoryGrid({ categories }: { categories: Category[] }) {
           style={
             {
               "--tile-align": ALIGN_PATTERN[i % ALIGN_PATTERN.length],
-              marginTop: i === 0 ? 0 : OFFSET_PATTERN[i % OFFSET_PATTERN.length],
+              "--tile-offset": i === 0 ? "0rem" : OFFSET_PATTERN[i % OFFSET_PATTERN.length],
               marginBottom: "var(--gutter)",
               paddingLeft: "var(--gutter)",
               paddingRight: "var(--gutter)",
