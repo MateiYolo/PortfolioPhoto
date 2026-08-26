@@ -3,7 +3,7 @@
 import { animate, motion, useMotionValue } from "motion/react";
 import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
-import { ease, pressSpring } from "@/lib/motion";
+import { ease, pressSpring, stagger } from "@/lib/motion";
 import { type Edge, edgeOf } from "@/lib/pointerEdge";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 
@@ -61,7 +61,9 @@ const DRAIN = { duration: 0.34, ease: ease.outExpo };
  *    that moves on its own, so the pill reads as a current status rather
  *    than a decoration;
  *  - the idle label itself cycles between IDLE_MESSAGES on a timer, a
- *    small carousel rather than one static line;
+ *    small carousel rather than one static line — each letter rolls up
+ *    on its own delay rather than the sentence snapping over as a block,
+ *    so the swap reads as a wave sweeping across the word;
  *  - an ink fill that wipes in from whichever edge the pointer crossed —
  *    the same clip-path wipe as <Reveal>, turned sideways — with a second
  *    copy of the label riding the identical clip in paper, so the type
@@ -325,10 +327,16 @@ function BadgeContent({
  * window: the carousel and the copy confirmation are the same sliding
  * stack, just landing on a different row.
  *
- * All three rows are always rendered, so the pill is as wide as the widest
- * of them and never resizes as it slides. --nav-row (mirrored here as
- * ROW_EM) is that row height, shared with the About link so the two
- * header items stay the same height.
+ * Split into one vertical mini-carousel per character column rather than
+ * one block that slides as a whole — every column still rolls between the
+ * same rows by the same distance, but each column's transition is delayed
+ * a little more than the one to its left, so the row-swap arrives as a
+ * wave crossing the word instead of the whole sentence changing at once.
+ *
+ * All three rows are always rendered in every column, so the pill is as
+ * wide as the widest of them and never resizes as it slides. --nav-row
+ * (mirrored here as ROW_EM) is that row height, shared with the About
+ * link so the two header items stay the same height.
  */
 function RollingLabel({
   state,
@@ -344,16 +352,53 @@ function RollingLabel({
   // The confirmation always lives in the row after the last idle message,
   // however many of those there are.
   const row = state === "idle" ? idleIndex : IDLE_MESSAGES.length;
+  // No clipboard: the address itself, to read or select by hand.
+  const rows = [...IDLE_MESSAGES, state === "failed" ? email : COPIED];
+  const columnCount = Math.max(...rows.map((text) => text.length));
 
   return (
     <span
       style={{
-        display: "block",
+        display: "flex",
         height: "var(--nav-row)",
         overflow: "hidden",
         // Left-aligned: the rows are different lengths, and centring them
         // would read as the text sliding sideways as well as up.
         textAlign: "left",
+      }}
+    >
+      {Array.from({ length: columnCount }, (_, column) => (
+        <LetterColumn
+          key={column}
+          column={column}
+          row={row}
+          rows={rows}
+          reducedMotion={reducedMotion}
+        />
+      ))}
+    </span>
+  );
+}
+
+/** One character's worth of the carousel: same rows, same row height, its own delay. */
+function LetterColumn({
+  column,
+  row,
+  rows,
+  reducedMotion,
+}: {
+  column: number;
+  row: number;
+  rows: string[];
+  reducedMotion: boolean;
+}) {
+  return (
+    <span
+      style={{
+        display: "block",
+        flex: "none",
+        height: "var(--nav-row)",
+        overflow: "hidden",
       }}
     >
       <motion.span
@@ -362,14 +407,16 @@ function RollingLabel({
         animate={{ y: `${-row * ROW_EM}em` }}
         transition={{
           duration: reducedMotion ? 0.01 : 0.45,
+          delay: reducedMotion ? 0 : column * stagger.chars,
           ease: ease.inOutQuart,
         }}
       >
-        {IDLE_MESSAGES.map((message) => (
-          <Row key={message}>{message}</Row>
+        {rows.map((text, i) => (
+          // A lone space as a row's entire content is collapsible
+          // whitespace, and CSS trims that to nothing — non-breaking
+          // keeps it a real, visible character.
+          <Row key={i}>{text[column] === " " ? " " : (text[column] ?? "")}</Row>
         ))}
-        {/* No clipboard: the address itself, to read or select by hand. */}
-        <Row>{state === "failed" ? email : COPIED}</Row>
       </motion.span>
     </span>
   );
