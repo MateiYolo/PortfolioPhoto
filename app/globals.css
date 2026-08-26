@@ -192,14 +192,34 @@ html.cloth-morph::view-transition-group(.morph) {
   }
 }
 
-/* The Lightbox overlay (components/Lightbox.tsx) is solid ink. The cursor's
-   dot and ring are ink too, so over that backdrop they'd paint the same
-   colour as what's behind them. Force a paper fill only while the overlay
+/* Two different full-screen overlays are solid ink: the Lightbox
+   (components/Lightbox.tsx) and the nav menu (components/NavMenu.tsx). The
+   cursor's dot and ring are ink too, so over either backdrop they'd paint
+   the same colour as what's behind them. Force a paper fill while either
    is up; everywhere else the ink cursor reads fine against the paper page
    and against photos. */
-html.lightbox-open .cursor-dot,
-html.lightbox-open .cursor-ring {
+html.ink-overlay-open .cursor-dot,
+html.ink-overlay-open .cursor-ring {
   background-color: var(--color-paper);
+}
+
+/* Same problem, same fix, for keyboard focus: the default outline
+   (:focus-visible above) is ink on ink over either overlay's own solid
+   ink backdrop. The nav menu is the first of the two with anything
+   focusable inside it, but this is keyed off the same class so the
+   Lightbox is covered too if that ever changes. */
+html.ink-overlay-open :focus-visible {
+  outline-color: var(--color-paper);
+}
+
+/* Home and About (components/NavMenu.tsx) are each wrapped in <Reveal>,
+   which sets overflow: hidden on itself for its own clip-path wipe — and
+   that also clips the default outline above, since it paints outside the
+   link's border box by that rule's 4px offset. Pulling the ring inside
+   the box instead keeps it visible without touching Reveal itself, which
+   plenty of other, non-overflow:hidden content also relies on. */
+.nav-menu-link:focus-visible {
+  outline-offset: -3px;
 }
 
 /* ---------------------------------------------------------------------------
@@ -224,7 +244,10 @@ html.lightbox-open .cursor-ring {
   }
 }
 
-.nav-about {
+/* Shared box for the header's non-pill items — currently just the menu
+   toggle (components/NavMenu.tsx) — so anything placed here lines up with
+   the pill opposite. */
+.nav-item {
   font-size: var(--step--1);
   line-height: 1;
   padding-block: var(--nav-pad-y);
