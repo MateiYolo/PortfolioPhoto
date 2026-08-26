@@ -13,6 +13,20 @@ export const ease = {
   inOutQuart: [0.65, 0, 0.35, 1] as const,
   /** Snappier out-easing for things that should feel like they "arrive". */
   outExpo: [0.16, 1, 0.3, 1] as const,
+  /**
+   * For a single edge travelling across something — the booking pill's
+   * ink fill. Neither of the two above is right for a sweep. outExpo is
+   * 53% across by 50ms and 79% by 100ms: the motion is over before the
+   * eye has found it, which is why a fill on it reads as a state that
+   * simply changed rather than one that moved. Textbook in-out curves
+   * overcorrect — inOutQuint is 3% along at 100ms, and a hover that
+   * shows nothing for an eighth of a second is lag, however good the
+   * middle looks. This is the shape between them: ~10% by 100ms, so the
+   * answer starts the moment the cursor lands; a hard acceleration
+   * through the middle third, which is the part that reads as one
+   * deliberate pass; then a long settle onto the far edge.
+   */
+  sweep: [0.55, 0, 0.15, 1] as const,
 };
 
 export const duration = {

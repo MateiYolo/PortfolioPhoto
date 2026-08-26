@@ -26,12 +26,14 @@ export function Reveal({
   className,
   as: Tag = "div",
   duration: durationProp = duration.slow,
+  ease: easeProp = ease.inOutQuart,
 }: {
   children: ReactNode;
   delay?: number;
   className?: string;
   as?: "div" | "li";
   duration?: number;
+  ease?: readonly [number, number, number, number];
 }) {
   const reducedMotion = useReducedMotion();
   const MotionTag = motion[Tag];
@@ -45,7 +47,7 @@ export function Reveal({
       viewport={{ once: true, margin: "-10% 0px" }}
       transition={{
         duration: reducedMotion ? 0.01 : durationProp,
-        ease: ease.inOutQuart,
+        ease: easeProp,
         delay: reducedMotion ? 0 : delay,
       }}
     >

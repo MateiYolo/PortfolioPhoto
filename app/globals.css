@@ -20,6 +20,7 @@
   /* Motion constants, mirrored in lib/motion.ts. Change both together. */
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-in-out-quart: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-sweep: cubic-bezier(0.55, 0, 0.15, 1);
   --duration-base: 600ms;
 }
 
@@ -272,15 +273,24 @@ html.ink-overlay-open :focus-visible {
 /* The ink fill inside the pill is a clip-path wipe on its own layer, which
    cannot paint the border — that belongs to the button. Without this, a
    hovered pill is ink everywhere except a grey hairline still outlining
-   the paper state. Same duration as the wipe so the ring darkens as the
-   fill crosses rather than after it (components/AvailabilityBadge.tsx sets
-   data-active). */
+   the paper state. Two transitions rather than one, matched to the fill's
+   own two (FILL and DRAIN in components/AvailabilityBadge.tsx, which is
+   also what sets data-active): the ring has to darken *with* the ink
+   crossing it, and the ink crosses on a different curve depending on
+   which way it is going. The rule below is the arriving half; this one
+   is what a pill falls back to on the way out. */
 .availability-badge {
-  transition: border-color 0.45s var(--ease-out-expo);
+  /* Here rather than inline on the button with the rest of its box: an
+     inline `border` shorthand writes border-color inline too, and no
+     stylesheet rule — including the hovered one below — can outrank that,
+     so the ring silently stayed grey under a filled pill. */
+  border: 1px solid var(--color-grey-300);
+  transition: border-color 0.34s var(--ease-out-expo);
 }
 
 .availability-badge[data-active="true"] {
   border-color: var(--color-ink);
+  transition: border-color 0.44s var(--ease-sweep);
 }
 
 @media (prefers-reduced-motion: reduce) {

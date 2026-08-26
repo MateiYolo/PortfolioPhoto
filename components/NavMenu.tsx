@@ -27,12 +27,16 @@ const LINKS = [
  * something they arrive ahead of.
  *
  * So the hover-capable build is cut to roughly a third of a second end to
- * end, and leads with `outExpo`: the circle covers most of its ground in
- * the first few frames and settles into the last of it, which reads as
- * fast even where the number is not much smaller. The links follow almost
- * immediately (0.06s rather than 0.25s) and wipe in over 0.4s rather than
- * the shared 0.9s, so they are legible and hittable while the panel is
- * still resolving instead of after it.
+ * end, and leads with `outExpo` throughout: the circle covers most of its
+ * ground in the first few frames and settles into the last of it, which
+ * reads as fast even where the number is not much smaller. The links get
+ * the same treatment rather than <Reveal>'s default in-out curve — an
+ * in-out wipe spends its opening third barely moving, and on something
+ * being waited on that third is the whole impression. With the delay down
+ * to a frame or two and the curve front-loaded, Home and About are
+ * readable at around 100ms and settled well before the panel behind them
+ * is, which is the right order: the destination arrives before the room
+ * it is in.
  *
  * Touch keeps the longer, `inOutQuart` version. There the panel is the
  * whole screen and a thumb has to travel it; the extra beats are cover
@@ -43,9 +47,10 @@ const TIMING = {
     panelIn: 0.42,
     panelOut: 0.3,
     panelEaseIn: ease.outExpo,
-    linkDelay: 0.06,
-    linkStagger: 0.05,
-    linkDuration: 0.4,
+    linkDelay: 0.03,
+    linkStagger: 0.035,
+    linkDuration: 0.28,
+    linkEase: ease.outExpo,
     mark: 0.28,
   },
   touch: {
@@ -55,6 +60,7 @@ const TIMING = {
     linkDelay: 0.25,
     linkStagger: stagger.lines,
     linkDuration: duration.slow,
+    linkEase: ease.inOutQuart,
     mark: 0.45,
   },
 } as const;
@@ -238,6 +244,7 @@ export function NavMenu() {
                   isCurrent={pathname === link.href}
                   delay={timing.linkDelay + i * timing.linkStagger}
                   duration={timing.linkDuration}
+                  ease={timing.linkEase}
                   reducedMotion={reducedMotion}
                   onNavigate={() => setOpen(false)}
                 />
@@ -257,6 +264,7 @@ function MenuLink({
   isCurrent,
   delay,
   duration: revealDuration,
+  ease: revealEase,
   reducedMotion,
   onNavigate,
 }: {
@@ -266,13 +274,14 @@ function MenuLink({
   isCurrent: boolean;
   delay: number;
   duration: number;
+  ease: readonly [number, number, number, number];
   reducedMotion: boolean;
   onNavigate: () => void;
 }) {
   const [hovered, setHovered] = useState(false);
 
   return (
-    <Reveal delay={delay} duration={revealDuration}>
+    <Reveal delay={delay} duration={revealDuration} ease={revealEase}>
       <MagneticLink strength={0.12}>
         <Link
           href={href}

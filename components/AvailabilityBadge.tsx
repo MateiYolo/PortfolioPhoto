@@ -34,8 +34,16 @@ const PARKED: Record<Edge, string> = {
   left: "inset(0 100% 0 0%)",
   right: "inset(0 0% 0 100%)",
 };
-/** How long the fill takes to cross the pill, either way. */
-const WIPE_S = 0.45;
+/**
+ * The two crossings are not the same event, so they don't share a
+ * transition. Arriving is the one worth watching — a shade longer, on a
+ * curve that accelerates through the middle of the pill and sets the
+ * leading edge down at the far side. Leaving is housekeeping: shorter,
+ * and on the site's usual out-curve, so the ink is gone by the time the
+ * cursor is anywhere else.
+ */
+const FILL = { duration: 0.44, ease: ease.sweep };
+const DRAIN = { duration: 0.34, ease: ease.outExpo };
 
 /**
  * The booking pill in the fixed header, where the wordmark used to sit.
@@ -133,9 +141,10 @@ export function AvailabilityBadge({ email }: { email: string }) {
     // inside that window would be denied its entry edge for no reason.
     if (fill.get() === target) return;
     parked.current = false;
+    const { duration, ease: curve } = active ? FILL : DRAIN;
     const controls = animate(fill, target, {
-      duration: reducedMotion ? 0.01 : WIPE_S,
-      ease: ease.outExpo,
+      duration: reducedMotion ? 0.01 : duration,
+      ease: curve,
       onComplete: () => {
         parked.current = !active;
       },
@@ -199,7 +208,6 @@ export function AvailabilityBadge({ email }: { email: string }) {
         // corner instead, so only the free edge moves.
         transformOrigin: "left center",
         borderRadius: 9999,
-        border: "1px solid var(--color-grey-300)",
         // Opaque on purpose: this sits in the fixed header, so photos
         // scroll underneath it. The About link opposite can lean on
         // mix-blend-mode instead because it is bare type; a pill with a
