@@ -61,8 +61,14 @@ export function CategoryTile({
     target: ref,
     offset: ["start end", "end start"],
   });
+  // Whole-tile drift is desktop-only. Each row's parallaxRange runs at a
+  // different rate (see PARALLAX_PATTERN in CategoryGrid.tsx), which is
+  // deliberate on a mouse-driven scroll but reads as broken rhythm on a
+  // touch scroll: the gap between tiles visibly stretches and shrinks as
+  // you drag. The in-frame image drift below (imgY/imgScale) stays on for
+  // everyone since it never moves the tile's own box.
   const rawY = useTransform(scrollYProgress, [0, 1], parallaxRange);
-  const y = reducedMotion ? 0 : rawY;
+  const y = reducedMotion || !canHover ? 0 : rawY;
 
   const [imgFrom, imgTo] = imageParallaxRange;
   const rawImgY = useTransform(scrollYProgress, [0, 1], [`${imgFrom}%`, `${imgTo}%`]);
