@@ -1,10 +1,9 @@
 "use client";
 
-import { motion } from "motion/react";
-import type { ReactNode } from "react";
+import { animate, motion, useMotionValue } from "motion/react";
+import type { PointerEvent as ReactPointerEvent, ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
-import { MagneticLink } from "@/components/MagneticLink";
-import { duration, ease } from "@/lib/motion";
+import { ease, pressSpring } from "@/lib/motion";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 
 /** The idle label cycles between these, one at a time. */
@@ -28,6 +27,16 @@ const FAILED_MS = 6000;
  */
 const ROW_EM = 1.3;
 
+/** The ink fill, covering the pill. */
+const FILLED = "inset(0 0% 0 0%)";
+/** ...and parked just off one edge of it, taking up no width at all. */
+const PARKED: Record<Edge, string> = {
+  left: "inset(0 100% 0 0%)",
+  right: "inset(0 0% 0 100%)",
+};
+/** How long the fill takes to cross the pill, either way. */
+const WIPE_S = 0.45;
+
 /**
  * The booking pill in the fixed header, where the wordmark used to sit.
  *
@@ -36,7 +45,7 @@ const ROW_EM = 1.3;
  * ones who are can still paste. The label rolls up to confirm, the same
  * roll the email on the About page uses (components/ContactEmail.tsx).
  *
- * Four things move here, in the site's existing vocabulary rather than as
+ * Five things move here, in the site's existing vocabulary rather than as
  * a new set of effects:
  *
  *  - a live dot that breathes a ring outwards, the only thing on the page
@@ -44,11 +53,23 @@ const ROW_EM = 1.3;
  *    than a decoration;
  *  - the idle label itself cycles between IDLE_MESSAGES on a timer, a
  *    small carousel rather than one static line;
- *  - an ink fill that wipes in from the left on hover — the same
- *    left-to-right clip-path wipe as <Reveal>, turned sideways — with a
- *    second copy of the label riding the identical clip in paper, so the
- *    type inverts exactly as the fill passes under it rather than
- *    switching colour on its own clock;
+ *  - an ink fill that wipes in from whichever edge the pointer crossed —
+ *    the same clip-path wipe as <Reveal>, turned sideways — with a second
+ *    copy of the label riding the identical clip in paper, so the type
+ *    inverts exactly as the fill passes under it rather than switching
+ *    colour on its own clock. Enter from the right and it fills
+ *    right-to-left; leave through the left and it drains back out that
+ *    way. This is what the pill answers the cursor with, instead of the
+ *    magnetic translate it used to carry (<MagneticLink>, still used by
+ *    the menu toggle opposite): on a bare mark, a few pixels of pull
+ *    reads as physics, but on a pill this wide the same 0.25 strength
+ *    walked it tens of pixels around a corner it is supposed to be
+ *    pinned to, tracking every twitch of the pointer — motion with no
+ *    story, closer to a layout bug than to a hover state. The wipe uses
+ *    the same information — where the cursor is — to say something
+ *    ("it came from over there") and lands somewhere definite;
+ *  - a press that compresses the pill a hair and springs back, anchored
+ *    at its left edge so the corner it is pinned to stays put;
  *  - the copy icon swaps for a tick the moment the address lands,
  *    leaving through the top of its slot as the tick arrives from
  *    underneath, and rolls back the same way once the confirmation clears.
@@ -62,6 +83,17 @@ export function AvailabilityBadge({ email }: { email: string }) {
   const [idleIndex, setIdleIndex] = useState(0);
   const reducedMotion = useReducedMotion();
   const timer = useRef<number | undefined>(undefined);
+
+  // The fill is driven by a motion value rather than an `animate` prop
+  // because the edge it starts from has to be set *before* the fill starts
+  // growing, in the same tick the pointer arrives. React batches the two
+  // state updates a pointerenter would otherwise need into one render, so
+  // Motion would only ever see "grow to full" and interpolate from
+  // wherever the fill last came to rest — which is how a wipe meant to
+  // follow the cursor in ends up entering from the far side instead.
+  const fill = useMotionValue(PARKED.left);
+  const restEdge = useRef<Edge>("left");
+  const parked = useRef(true);
 
   useEffect(() => () => window.clearTimeout(timer.current), []);
 
@@ -92,6 +124,25 @@ export function AvailabilityBadge({ email }: { email: string }) {
   // Confirming counts as active even when the pointer is elsewhere, so a
   // keyboard copy fills the pill too.
   const active = hovered || state !== "idle";
+
+  useEffect(() => {
+    const target = active ? FILLED : PARKED[restEdge.current];
+    // Mount lands here with the fill already parked where it belongs.
+    // Animating it to itself would be invisible but would still hold
+    // `parked` false for the length of the wipe, and a pointer arriving
+    // inside that window would be denied its entry edge for no reason.
+    if (fill.get() === target) return;
+    parked.current = false;
+    const controls = animate(fill, target, {
+      duration: reducedMotion ? 0.01 : WIPE_S,
+      ease: ease.outExpo,
+      onComplete: () => {
+        parked.current = !active;
+      },
+    });
+    return () => controls.stop();
+  }, [active, reducedMotion, fill]);
+
   const content = {
     active,
     state,
@@ -101,82 +152,115 @@ export function AvailabilityBadge({ email }: { email: string }) {
   };
 
   return (
-    <MagneticLink strength={0.25} className="w-fit max-w-full">
-      <button
-        type="button"
-        onClick={handleClick}
-        onPointerEnter={() => setHovered(true)}
-        onPointerLeave={() => setHovered(false)}
-        onFocus={() => setHovered(true)}
-        onBlur={() => setHovered(false)}
-        data-cursor="copy"
-        // Fixed regardless of which idle message is currently on screen —
-        // the carousel is a sighted, decorative detail, and a screen
-        // reader re-announcing the accessible name every few seconds as it
-        // rotates would be closer to noise than to information. WCAG 2.5.3
-        // is still satisfied: the name contains the visible text that is
-        // on screen at any given moment, since both idle messages are in it.
-        aria-label={`${IDLE_MESSAGES.join(" — ")} — click to copy ${email}`}
-        className="availability-badge font-sans"
+    <motion.button
+      type="button"
+      onClick={handleClick}
+      onPointerEnter={(e) => {
+        const edge = edgeOf(e);
+        restEdge.current = edge;
+        // Move the fill to the edge the cursor came in on before it starts
+        // growing — only while it is genuinely parked, where it has no
+        // width and the move cannot be seen. Catch the pointer coming back
+        // mid-drain and the fill is on screen; there it just refills from
+        // where it got to, which is the honest answer to "you changed your
+        // mind halfway".
+        if (parked.current) fill.jump(PARKED[edge]);
+        setHovered(true);
+      }}
+      onPointerLeave={(e) => {
+        restEdge.current = edgeOf(e);
+        setHovered(false);
+      }}
+      onFocus={() => setHovered(true)}
+      onBlur={() => setHovered(false)}
+      whileTap={reducedMotion ? undefined : { scale: 0.985 }}
+      transition={pressSpring}
+      data-cursor="copy"
+      // Drives the border alongside the fill (see globals.css): grey ring
+      // around a paper pill at rest, ink on ink once filled, so the
+      // hovered state reads as one solid object rather than a dark fill
+      // wearing the light pill's outline.
+      data-active={active ? "true" : undefined}
+      // Fixed regardless of which idle message is currently on screen —
+      // the carousel is a sighted, decorative detail, and a screen
+      // reader re-announcing the accessible name every few seconds as it
+      // rotates would be closer to noise than to information. WCAG 2.5.3
+      // is still satisfied: the name contains the visible text that is
+      // on screen at any given moment, since both idle messages are in it.
+      aria-label={`${IDLE_MESSAGES.join(" — ")} — click to copy ${email}`}
+      className="availability-badge font-sans"
+      style={{
+        position: "relative",
+        display: "inline-block",
+        maxWidth: "100%",
+        // The press scales the pill, and the pill is pinned to the
+        // top-left corner: scaling from its own centre would walk it away
+        // from the two edges it is anchored to. Compress towards the
+        // corner instead, so only the free edge moves.
+        transformOrigin: "left center",
+        borderRadius: 9999,
+        border: "1px solid var(--color-grey-300)",
+        // Opaque on purpose: this sits in the fixed header, so photos
+        // scroll underneath it. The About link opposite can lean on
+        // mix-blend-mode instead because it is bare type; a pill with a
+        // fill cannot (see components/NavHeader.tsx).
+        background: "var(--color-paper)",
+        color: "var(--color-ink)",
+        overflow: "hidden",
+        isolation: "isolate",
+      }}
+    >
+      <BadgeContent {...content} />
+
+      {/* The inverted copy: same box, same content, clipped to the fill. */}
+      <motion.span
+        aria-hidden
         style={{
-          position: "relative",
-          display: "inline-block",
-          maxWidth: "100%",
+          clipPath: fill,
+          position: "absolute",
+          inset: 0,
+          display: "block",
+          background: "var(--color-ink)",
+          color: "var(--color-paper)",
+          // The pill's own radius is on the parent, which clips this
+          // layer; keeping the corners here too stops a hairline of ink
+          // showing outside the border on subpixel rounding.
           borderRadius: 9999,
-          border: "1px solid var(--color-grey-300)",
-          // Opaque on purpose: this sits in the fixed header, so photos
-          // scroll underneath it. The About link opposite can lean on
-          // mix-blend-mode instead because it is bare type; a pill with a
-          // fill cannot (see components/NavHeader.tsx).
-          background: "var(--color-paper)",
-          color: "var(--color-ink)",
-          overflow: "hidden",
-          isolation: "isolate",
         }}
       >
         <BadgeContent {...content} />
+      </motion.span>
 
-        {/* The inverted copy: same box, same content, clipped to the fill. */}
-        <motion.span
-          aria-hidden
-          initial={false}
-          animate={{ clipPath: active ? "inset(0 0% 0 0)" : "inset(0 100% 0 0)" }}
-          transition={{
-            duration: reducedMotion ? 0.01 : duration.base,
-            ease: ease.inOutQuart,
-          }}
-          style={{
-            position: "absolute",
-            inset: 0,
-            display: "block",
-            background: "var(--color-ink)",
-            color: "var(--color-paper)",
-            // The pill's own radius is on the parent, which clips this
-            // layer; keeping the corners here too stops a hairline of ink
-            // showing outside the border on subpixel rounding.
-            borderRadius: 9999,
-          }}
-        >
-          <BadgeContent {...content} />
-        </motion.span>
-
-        {/* Announced, not shown: the roll-up is the sighted confirmation. */}
-        <span
-          aria-live="polite"
-          style={{
-            position: "absolute",
-            width: 1,
-            height: 1,
-            overflow: "hidden",
-            clipPath: "inset(50%)",
-            whiteSpace: "nowrap",
-          }}
-        >
-          {state === "copied" ? COPIED : state === "failed" ? email : ""}
-        </span>
-      </button>
-    </MagneticLink>
+      {/* Announced, not shown: the roll-up is the sighted confirmation. */}
+      <span
+        aria-live="polite"
+        style={{
+          position: "absolute",
+          width: 1,
+          height: 1,
+          overflow: "hidden",
+          clipPath: "inset(50%)",
+          whiteSpace: "nowrap",
+        }}
+      >
+        {state === "copied" ? COPIED : state === "failed" ? email : ""}
+      </span>
+    </motion.button>
   );
+}
+
+type Edge = "left" | "right";
+
+/**
+ * Which half of the pill the pointer was over as it crossed the boundary.
+ * Read on both enter and leave, which is the whole point: the fill enters
+ * from the side the cursor came in on and drains out the side it left by.
+ * A pointer leaving through the top or bottom edge still resolves to the
+ * half it was last over, which is where the eye is anyway.
+ */
+function edgeOf(e: ReactPointerEvent<HTMLElement>): Edge {
+  const rect = e.currentTarget.getBoundingClientRect();
+  return e.clientX < rect.left + rect.width / 2 ? "left" : "right";
 }
 
 /** Clipboard API where it exists, the old selection trick where it doesn't. */

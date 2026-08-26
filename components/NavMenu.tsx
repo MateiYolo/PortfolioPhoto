@@ -8,12 +8,56 @@ import { useEffect, useRef, useState } from "react";
 import { MagneticLink } from "@/components/MagneticLink";
 import { Reveal } from "@/components/Reveal";
 import { duration, ease, stagger } from "@/lib/motion";
+import { useCanHover } from "@/lib/useMediaQuery";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 
 const LINKS = [
   { href: "/", label: "Home", cursor: "home" },
   { href: "/about", label: "About", cursor: "info" },
 ];
+
+/**
+ * The open/close choreography, in two speeds.
+ *
+ * A menu of two links is a waypoint, not a destination: whoever opens it
+ * has already decided where they are going, and every frame between the
+ * click and a clickable "About" is a frame spent waiting. A mouse makes
+ * that worse — the pointer is already travelling toward where the link
+ * will be, so the animation is not something the visitor watches, it is
+ * something they arrive ahead of.
+ *
+ * So the hover-capable build is cut to roughly a third of a second end to
+ * end, and leads with `outExpo`: the circle covers most of its ground in
+ * the first few frames and settles into the last of it, which reads as
+ * fast even where the number is not much smaller. The links follow almost
+ * immediately (0.06s rather than 0.25s) and wipe in over 0.4s rather than
+ * the shared 0.9s, so they are legible and hittable while the panel is
+ * still resolving instead of after it.
+ *
+ * Touch keeps the longer, `inOutQuart` version. There the panel is the
+ * whole screen and a thumb has to travel it; the extra beats are cover
+ * for that trip, not a tax on it.
+ */
+const TIMING = {
+  hover: {
+    panelIn: 0.42,
+    panelOut: 0.3,
+    panelEaseIn: ease.outExpo,
+    linkDelay: 0.06,
+    linkStagger: 0.05,
+    linkDuration: 0.4,
+    mark: 0.28,
+  },
+  touch: {
+    panelIn: 0.65,
+    panelOut: 0.65,
+    panelEaseIn: ease.inOutQuart,
+    linkDelay: 0.25,
+    linkStagger: stagger.lines,
+    linkDuration: duration.slow,
+    mark: 0.45,
+  },
+} as const;
 
 /**
  * The header's right-hand item: a two-line mark that morphs into a close
@@ -49,6 +93,7 @@ export function NavMenu() {
   const [hovered, setHovered] = useState(false);
   const pathname = usePathname();
   const reducedMotion = useReducedMotion();
+  const timing = TIMING[useCanHover() ? "hover" : "touch"];
   const lenis = useLenis();
   const panelRef = useRef<HTMLDivElement>(null);
   const toggleRef = useRef<HTMLButtonElement>(null);
@@ -132,7 +177,12 @@ export function NavMenu() {
             className="flex items-center"
             style={{ padding: "0.3em" }}
           >
-            <ToggleMark open={open} hovered={hovered} reducedMotion={reducedMotion} />
+            <ToggleMark
+              open={open}
+              hovered={hovered}
+              speed={timing.mark}
+              reducedMotion={reducedMotion}
+            />
           </button>
         </MagneticLink>
       </div>
@@ -147,10 +197,19 @@ export function NavMenu() {
             className="fixed inset-0 z-[85] bg-ink"
             initial={{ clipPath: "circle(0% at 100% 0%)" }}
             animate={{ clipPath: "circle(150% at 100% 0%)" }}
-            exit={{ clipPath: "circle(0% at 100% 0%)" }}
+            exit={{
+              clipPath: "circle(0% at 100% 0%)",
+              // Closing is its own transition rather than the one above:
+              // the panel is in the way by then, and nobody is watching a
+              // dismissal they have already committed to.
+              transition: {
+                duration: reducedMotion ? 0.01 : timing.panelOut,
+                ease: ease.inOutQuart,
+              },
+            }}
             transition={{
-              duration: reducedMotion ? 0.01 : 0.65,
-              ease: ease.inOutQuart,
+              duration: reducedMotion ? 0.01 : timing.panelIn,
+              ease: timing.panelEaseIn,
             }}
             onClick={() => setOpen(false)}
           >
@@ -177,7 +236,8 @@ export function NavMenu() {
                   label={link.label}
                   cursor={link.cursor}
                   isCurrent={pathname === link.href}
-                  delay={0.25 + i * stagger.lines}
+                  delay={timing.linkDelay + i * timing.linkStagger}
+                  duration={timing.linkDuration}
                   reducedMotion={reducedMotion}
                   onNavigate={() => setOpen(false)}
                 />
@@ -196,6 +256,7 @@ function MenuLink({
   cursor,
   isCurrent,
   delay,
+  duration: revealDuration,
   reducedMotion,
   onNavigate,
 }: {
@@ -204,13 +265,14 @@ function MenuLink({
   cursor: string;
   isCurrent: boolean;
   delay: number;
+  duration: number;
   reducedMotion: boolean;
   onNavigate: () => void;
 }) {
   const [hovered, setHovered] = useState(false);
 
   return (
-    <Reveal delay={delay}>
+    <Reveal delay={delay} duration={revealDuration}>
       <MagneticLink strength={0.12}>
         <Link
           href={href}
@@ -293,14 +355,19 @@ function MenuLink({
 function ToggleMark({
   open,
   hovered,
+  speed,
   reducedMotion,
 }: {
   open: boolean;
   hovered: boolean;
+  speed: number;
   reducedMotion: boolean;
 }) {
+  // Shared with the panel (TIMING above) so the X finishes forming with
+  // the wipe rather than trailing it — and so the hover nudge, which uses
+  // the same transition, is a flick rather than a slow drift.
   const transition = {
-    duration: reducedMotion ? 0.01 : 0.45,
+    duration: reducedMotion ? 0.01 : speed,
     ease: ease.inOutQuart,
   };
   const bar = {

@@ -30,6 +30,18 @@ export const stagger = {
 /** Spring used for cursor-follow and magnetic-hover translations. */
 export const magneticSpring = { stiffness: 150, damping: 15, mass: 0.1 };
 
+/**
+ * Spring for press feedback: an element compressing under the pointer and
+ * springing back. Stiff and well damped on purpose — a press is a
+ * confirmation, not a bounce, so it settles before the finger is up.
+ */
+export const pressSpring = {
+  type: "spring" as const,
+  stiffness: 420,
+  damping: 32,
+  mass: 0.6,
+};
+
 /** Spring used for the lagging cursor ring. */
 export const cursorRingSpring = { stiffness: 300, damping: 30, mass: 0.5 };
 

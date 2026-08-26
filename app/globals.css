@@ -269,6 +269,26 @@ html.ink-overlay-open :focus-visible {
   --nav-row: 1.3em;
 }
 
+/* The ink fill inside the pill is a clip-path wipe on its own layer, which
+   cannot paint the border — that belongs to the button. Without this, a
+   hovered pill is ink everywhere except a grey hairline still outlining
+   the paper state. Same duration as the wipe so the ring darkens as the
+   fill crosses rather than after it (components/AvailabilityBadge.tsx sets
+   data-active). */
+.availability-badge {
+  transition: border-color 0.45s var(--ease-out-expo);
+}
+
+.availability-badge[data-active="true"] {
+  border-color: var(--color-ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .availability-badge {
+    transition-duration: 0.01s;
+  }
+}
+
 /* Narrow phones: the label is 33 characters of tracked-out uppercase, so it
    still needs to give some ground even now that About has moved out of
    this row and into the menu (components/NavMenu.tsx) — but with the

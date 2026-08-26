@@ -25,11 +25,13 @@ export function Reveal({
   delay = 0,
   className,
   as: Tag = "div",
+  duration: durationProp = duration.slow,
 }: {
   children: ReactNode;
   delay?: number;
   className?: string;
   as?: "div" | "li";
+  duration?: number;
 }) {
   const reducedMotion = useReducedMotion();
   const MotionTag = motion[Tag];
@@ -42,7 +44,7 @@ export function Reveal({
       whileInView={{ clipPath: "inset(0% 0 0 0)" }}
       viewport={{ once: true, margin: "-10% 0px" }}
       transition={{
-        duration: reducedMotion ? 0.01 : duration.slow,
+        duration: reducedMotion ? 0.01 : durationProp,
         ease: ease.inOutQuart,
         delay: reducedMotion ? 0 : delay,
       }}
