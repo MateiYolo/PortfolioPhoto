@@ -4,7 +4,7 @@ import { ViewTransition } from "react";
 import type { Metadata } from "next";
 import { Arrive } from "@/components/Arrive";
 import { CategoryPhotoSequence } from "@/components/CategoryPhotoSequence";
-import { MagneticLink } from "@/components/MagneticLink";
+import { NextCategoryLink } from "@/components/NextCategoryLink";
 import { SplitText } from "@/components/SplitText";
 import { getAdjacentCategory, getCategories, getCategory } from "@/lib/content";
 
@@ -116,21 +116,7 @@ export default async function CategoryPage({
           paddingBottom: "clamp(6rem, 14vw, 10rem)",
         }}
       >
-        {next && (
-          <MagneticLink strength={0.15}>
-            <Link href={`/work/${next.slug}`} data-cursor="view" className="group block">
-              <span className="font-sans text-grey-500 text-[var(--step--1)] uppercase tracking-[0.2em]">
-                Next category
-              </span>
-              <span
-                className="font-display block"
-                style={{ fontSize: "var(--step-3)", marginTop: "0.5rem" }}
-              >
-                {next.title}
-              </span>
-            </Link>
-          </MagneticLink>
-        )}
+        {next && <NextCategoryLink slug={next.slug} title={next.title} />}
         <Link
           href="/"
           className="font-sans text-grey-500 text-[var(--step--1)] uppercase tracking-[0.2em]"

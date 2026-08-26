@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { AboutPortrait } from "@/components/AboutPortrait";
 import { ContactEmail } from "@/components/ContactEmail";
-import { MagneticLink } from "@/components/MagneticLink";
+import { ContactLink } from "@/components/ContactLink";
 import { Reveal } from "@/components/Reveal";
 import { SplitText } from "@/components/SplitText";
 import { getAbout } from "@/lib/content";
@@ -89,17 +89,7 @@ export default function AboutPage() {
               >
                 {about.contactLinks.map((link) => (
                   <li key={link.href}>
-                    <MagneticLink strength={0.3}>
-                      <a
-                        href={link.href}
-                        target={link.href.startsWith("http") ? "_blank" : undefined}
-                        rel={link.href.startsWith("http") ? "noreferrer" : undefined}
-                        className="font-sans text-[var(--step--1)] uppercase tracking-[0.15em] text-grey-500"
-                        data-cursor="visit"
-                      >
-                        {link.label}
-                      </a>
-                    </MagneticLink>
+                    <ContactLink href={link.href} label={link.label} />
                   </li>
                 ))}
               </ul>

@@ -4,13 +4,13 @@ import { useLenis } from "lenis/react";
 import { AnimatePresence, motion } from "motion/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { PointerEvent as ReactPointerEvent } from "react";
 import { useEffect, useRef, useState } from "react";
+import { HoverUnderline } from "@/components/HoverUnderline";
 import { MagneticLink } from "@/components/MagneticLink";
 import { Reveal } from "@/components/Reveal";
 import { duration, ease, stagger } from "@/lib/motion";
-import { type Edge, edgeOf } from "@/lib/pointerEdge";
 import { useCanHover } from "@/lib/useMediaQuery";
+import { useEdgeHover } from "@/lib/useEdgeHover";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 
 const LINKS = [
@@ -72,17 +72,6 @@ const TIMING = {
     },
   },
 } as const;
-
-/**
- * The underline under a hovered link, in the pill's language: it grows
- * from the edge the cursor came in on and collapses out of the edge it
- * leaves by (lib/pointerEdge.ts). Arriving is the half worth watching, so
- * it gets the longer sweep; leaving is brisk and out of the way.
- */
-const UNDERLINE = {
-  in: { duration: 0.4, ease: ease.sweep },
-  out: { duration: 0.3, ease: ease.outExpo },
-};
 
 /**
  * The header's right-hand item: a two-line mark that morphs into a close
@@ -315,33 +304,17 @@ function MenuLink({
   reducedMotion: boolean;
   onNavigate: () => void;
 }) {
-  const [hovered, setHovered] = useState(false);
-  const [origin, setOrigin] = useState<Edge>("left");
-  // The underline only takes a new direction between passes: at rest it is
-  // either scaled to nothing or covering the word, and moving its origin
-  // at either of those is invisible. Mid-sweep it is neither, so it keeps
-  // the direction it started with rather than flipping under the cursor.
-  const settled = useRef(true);
-
-  const turn = (e: ReactPointerEvent<HTMLElement>) => {
-    if (settled.current) setOrigin(edgeOf(e));
-  };
-  const stroke = hovered ? UNDERLINE.in : UNDERLINE.out;
+  const edge = useEdgeHover();
+  const hovered = edge.hovered;
 
   const link = (
     <Link
       href={href}
       onClick={onNavigate}
-      onPointerEnter={(e) => {
-        turn(e);
-        setHovered(true);
-      }}
-      onPointerLeave={(e) => {
-        turn(e);
-        setHovered(false);
-      }}
-      onFocus={() => setHovered(true)}
-      onBlur={() => setHovered(false)}
+      onPointerEnter={edge.onPointerEnter}
+      onPointerLeave={edge.onPointerLeave}
+      onFocus={edge.onFocus}
+      onBlur={edge.onBlur}
       aria-current={isCurrent ? "page" : undefined}
       data-cursor={cursor}
       className="nav-menu-link font-display relative inline-block"
@@ -383,29 +356,12 @@ function MenuLink({
           <path d="M1.5 6h9M6.5 2l4 4-4 4" />
         </svg>
       </motion.span>
-      <motion.span
-        aria-hidden
-        onAnimationStart={() => {
-          settled.current = false;
-        }}
-        onAnimationComplete={() => {
-          settled.current = true;
-        }}
-        style={{
-          position: "absolute",
-          left: 0,
-          right: 0,
-          bottom: "0.08em",
-          height: "2px",
-          background: "currentColor",
-          transformOrigin: origin,
-        }}
-        initial={false}
-        animate={{ scaleX: hovered ? 1 : 0 }}
-        transition={{
-          duration: reducedMotion ? 0.01 : stroke.duration,
-          ease: stroke.ease,
-        }}
+      <HoverUnderline
+        hovered={hovered}
+        origin={edge.origin}
+        reducedMotion={reducedMotion}
+        onSweepStart={edge.onSweepStart}
+        onSweepEnd={edge.onSweepEnd}
       />
     </Link>
   );
