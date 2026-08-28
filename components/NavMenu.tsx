@@ -9,14 +9,10 @@ import { HoverUnderline } from "@/components/HoverUnderline";
 import { MagneticLink } from "@/components/MagneticLink";
 import { Reveal } from "@/components/Reveal";
 import { duration, ease, stagger } from "@/lib/motion";
-import { useCanHover } from "@/lib/useMediaQuery";
+import { NAV_LINKS } from "@/lib/nav";
+import { useCanHover, useMediaQuery } from "@/lib/useMediaQuery";
 import { useEdgeHover } from "@/lib/useEdgeHover";
 import { useReducedMotion } from "@/lib/useReducedMotion";
-
-const LINKS = [
-  { href: "/", label: "Home", cursor: "home" },
-  { href: "/about", label: "About", cursor: "info" },
-];
 
 /**
  * The open/close choreography, in two speeds.
@@ -74,11 +70,13 @@ const TIMING = {
 } as const;
 
 /**
- * The header's right-hand item: a two-line mark that morphs into a close
- * mark and opens a full-screen menu (Home, About). The wordmark used to be
- * this site's only way home (see NavHeader's own doc comment on why it
- * came out); this is what replaces it, rather than a second fixed link
- * competing with the booking pill for the same top-left corner.
+ * The phone header's right-hand item: a two-line mark that morphs into a
+ * close mark and opens a full-screen menu (Home, About). It is hidden from
+ * the breakpoint up (.nav-bar-toggle in globals.css), where those two
+ * links are laid flat in the opposite corner instead and there is nothing
+ * left for a toggle to reveal — see NavHeader's own doc comment. Down here
+ * it stays: two links next to the booking pill on a phone is a cramped,
+ * wrapping row, and a thumb would rather have the whole screen.
  *
  * The toggle keeps the exact spot and blend trick the old About link used
  * — mix-blend-mode: difference against whatever is behind it — which is
@@ -121,6 +119,18 @@ export function NavMenu() {
   useEffect(() => {
     setOpen(false);
   }, [pathname]);
+
+  // Widening past the breakpoint takes the toggle off screen (see the
+  // class on it below), which would otherwise leave an open panel up with
+  // nothing left to close it but the Escape key or a click on the
+  // backdrop. Closing it here is not a second source of truth for the
+  // breakpoint — CSS still decides what is visible — just a release of
+  // state the visitor can no longer reach. A hook answering false on the
+  // server is right for that: nothing is open on first paint anyway.
+  const isDesktop = useMediaQuery("(min-width: 768px)");
+  useEffect(() => {
+    if (isDesktop) setOpen(false);
+  }, [isDesktop]);
 
   useEffect(() => {
     if (!open) return;
@@ -169,9 +179,8 @@ export function NavMenu() {
   return (
     <>
       <div
-        className="nav-item fixed right-0 top-0 z-[90]"
+        className="nav-bar-toggle nav-item"
         style={{
-          margin: "var(--gutter)",
           mixBlendMode: "difference",
           color: "var(--color-paper)",
         }}
@@ -243,7 +252,7 @@ export function NavMenu() {
                 outline: "none",
               }}
             >
-              {LINKS.map((link, i) => {
+              {NAV_LINKS.map((link, i) => {
                 const wipe = timing.linkWipe;
                 return (
                   <MenuLink

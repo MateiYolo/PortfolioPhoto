@@ -47,7 +47,9 @@ const FILL = { duration: 0.44, ease: ease.sweep };
 const DRAIN = { duration: 0.34, ease: ease.outExpo };
 
 /**
- * The booking pill in the fixed header, where the wordmark used to sit.
+ * The booking pill in the fixed header — top left on a phone, top right
+ * from the breakpoint up, where the flat Home/About row takes the left
+ * corner (see components/NavHeader.tsx).
  *
  * Clicking copies the address rather than opening a mail client — most
  * visitors are not one click from a configured desktop client, and the
@@ -80,7 +82,8 @@ const DRAIN = { duration: 0.34, ease: ease.outExpo };
  *    the same information — where the cursor is — to say something
  *    ("it came from over there") and lands somewhere definite;
  *  - a press that compresses the pill a hair and springs back, anchored
- *    at its left edge so the corner it is pinned to stays put;
+ *    at whichever corner it is currently pinned to so that corner stays
+ *    put (transform-origin, in globals.css, which is what knows the side);
  *  - the copy icon swaps for a tick the moment the address lands,
  *    leaving through the top of its slot as the tick arrives from
  *    underneath, and rolls back the same way once the confirmation clears.
@@ -205,16 +208,16 @@ export function AvailabilityBadge({ email }: { email: string }) {
         position: "relative",
         display: "inline-block",
         maxWidth: "100%",
-        // The press scales the pill, and the pill is pinned to the
-        // top-left corner: scaling from its own centre would walk it away
-        // from the two edges it is anchored to. Compress towards the
-        // corner instead, so only the free edge moves.
-        transformOrigin: "left center",
+        // transform-origin is in globals.css rather than here: the press
+        // compresses the pill towards the corner it is pinned to, and
+        // which corner that is changes with the header's breakpoint (see
+        // components/NavHeader.tsx). An inline value could not be
+        // overridden by the media query that answers that.
         borderRadius: 9999,
         // Opaque on purpose: this sits in the fixed header, so photos
-        // scroll underneath it. The About link opposite can lean on
-        // mix-blend-mode instead because it is bare type; a pill with a
-        // fill cannot (see components/NavHeader.tsx).
+        // scroll underneath it. The links and the toggle opposite can lean
+        // on mix-blend-mode instead because they are bare type; a pill
+        // with a fill cannot (see components/NavHeader.tsx).
         background: "var(--color-paper)",
         color: "var(--color-ink)",
         overflow: "hidden",
@@ -305,8 +308,8 @@ function BadgeContent({
         display: "flex",
         alignItems: "center",
         gap: "0.6em",
-        // Shared with the About link opposite, so the two header
-        // items come out the same height (see globals.css).
+        // Shared with the links (or, on a phone, the toggle) opposite, so
+        // the two header items come out the same height (see globals.css).
         padding: "var(--nav-pad-y) 1.15em",
       }}
     >
@@ -347,7 +350,8 @@ function BadgeContent({
  * site), so the two never visibly disagree.
  *
  * --nav-row (mirrored here as ROW_EM) is the row height, shared with the
- * About link so the two header items stay the same height.
+ * flat Home/About row opposite so the two header items stay the same
+ * height.
  */
 function RollingLabel({
   state,
