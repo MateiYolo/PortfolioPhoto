@@ -48,11 +48,11 @@ export function NavLinks() {
 }
 
 /**
- * One entry. The current page keeps its link — it is a normal way back to
- * the top of a page you are already on — but drops to grey, the same way
- * the menu panel marks it. Under the header's difference blend that
- * resolves to a mid-grey against paper and against a photo alike, so the
- * distinction survives whatever scrolls underneath it.
+ * One entry. The current page is not marked visually: with two of them
+ * side by side, greying one is read as a disabled control before it is
+ * read as "you are here" — and where you are is already the loudest thing
+ * on the screen, in the title under it. It keeps aria-current all the
+ * same, which is the audience that genuinely cannot see where it landed.
  */
 function NavLink({
   href,
@@ -74,7 +74,6 @@ function NavLink({
       aria-current={isCurrent ? "page" : undefined}
       data-cursor={cursor}
       className="relative inline-block font-sans uppercase tracking-[0.1em]"
-      style={{ color: isCurrent ? "var(--color-grey-500)" : "inherit" }}
       onPointerEnter={edge.onPointerEnter}
       onPointerLeave={edge.onPointerLeave}
       onFocus={edge.onFocus}

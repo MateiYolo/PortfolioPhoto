@@ -67,20 +67,6 @@ export default async function CategoryPage({
           paddingBottom: "clamp(2.5rem, 6vw, 4rem)",
         }}
       >
-        <Arrive>
-          <Link
-            href="/"
-            data-cursor="home"
-            className="font-sans text-grey-500 text-[var(--step--1)] uppercase tracking-[0.2em]"
-            style={{
-              display: "inline-block",
-              marginBottom: "clamp(1.5rem, 4vw, 2.5rem)",
-            }}
-          >
-            ← Index
-          </Link>
-        </Arrive>
-
         <ViewTransition name={`title-${category.slug}`} share="title-morph" default="none">
           <h1
             className="font-display"
