@@ -43,9 +43,18 @@
 
   --gutter: clamp(1.25rem, 0.9rem + 1.8vw, 3rem);
 
-  /* Vertical padding shared by the two header items, which is what makes
-     their boxes — and so their contents — line up (components/NavHeader.tsx). */
+  /* Vertical padding shared by the header items, which is what makes their
+     boxes line up (components/NavHeader.tsx). */
   --nav-pad-y: 0.62em;
+
+  /* ...and the height of one line inside them: the rows of the pill's
+     label/confirmation roll (RollingLabel in AvailabilityBadge.tsx, which
+     mirrors this as ROW_EM) and the flat Home/About row opposite, so equal
+     padding around equal content puts the two on the same line. In em, and
+     both items are set at --step--1, so it resolves to the same number in
+     each. 1.3em rather than 1em: descenders (in "copy", "clipboard") clip
+     against a box exactly the cap height of the font. */
+  --nav-row: 1.3em;
 }
 
 * {
@@ -247,9 +256,74 @@ html.ink-overlay-open :focus-visible {
   }
 }
 
-/* Shared box for the header's non-pill items — currently just the menu
-   toggle (components/NavMenu.tsx) — so anything placed here lines up with
-   the pill opposite. */
+/* --------------------------------------------------------------------------
+   Header layout (components/NavHeader.tsx): three fixed corner boxes, of
+   which two are on screen at any one width. Below the breakpoint it is the
+   phone shape — booking pill left, menu toggle right; from 768px up it is
+   the desktop shape — Home and About laid flat on the left, pill moved to
+   the right, no toggle at all.
+
+   All three are in the markup at both widths and these rules pick, rather
+   than the components asking a media query hook: a hook answers false on
+   the server, so the phone shape would render first and swap on hydration
+   at every desktop load. 768px is the same breakpoint Tailwind's md: uses,
+   which the rest of the site's responsive layout is already written in.
+-------------------------------------------------------------------------- */
+.nav-bar-links,
+.nav-bar-badge,
+.nav-bar-toggle {
+  position: fixed;
+  top: 0;
+  margin: var(--gutter);
+}
+
+.nav-bar-links {
+  left: 0;
+  z-index: 50;
+  display: none;
+}
+
+.nav-bar-badge {
+  left: 0;
+  z-index: 50;
+}
+
+/* Above the panel it opens, so the mark stays clickable — and visible, as
+   its own difference blend — once the ink is covering the page. */
+.nav-bar-toggle {
+  right: 0;
+  z-index: 90;
+}
+
+/* Home and About themselves (components/NavLinks.tsx). --nav-row rather
+   than the .nav-item line-height they would otherwise inherit: equal
+   padding only lines the two header items up if what sits inside them is
+   the same height too, and the pill's rows are 1.3em. */
+.nav-links-row {
+  display: flex;
+  gap: 2em;
+  line-height: var(--nav-row);
+}
+
+@media (min-width: 768px) {
+  .nav-bar-links {
+    display: block;
+  }
+
+  .nav-bar-badge {
+    left: auto;
+    right: 0;
+  }
+
+  .nav-bar-toggle {
+    display: none;
+  }
+}
+
+/* Shared box for the header's non-pill items — the flat Home/About row
+   (components/NavLinks.tsx) and the menu toggle (components/NavMenu.tsx),
+   which are never both on screen — so either one lines up with the pill
+   opposite. */
 .nav-item {
   font-size: var(--step--1);
   line-height: 1;
@@ -263,13 +337,13 @@ html.ink-overlay-open :focus-visible {
   font-size: var(--step--1);
   letter-spacing: 0.1em;
   line-height: 1;
-  /* Height of one row in the label/confirmation roll (see RollingLabel in
-     AvailabilityBadge.tsx) — a custom property because that component
-     needs the same number in inline styles on two separate elements, and
-     this is the one place both can read it from. 1.3em rather than 1em:
-     descenders (in "copy", "clipboard") clip against a box exactly the
-     cap height of the font. */
-  --nav-row: 1.3em;
+  /* The press (whileTap in AvailabilityBadge.tsx) compresses the pill a
+     hair, and scaling from its own centre would walk it away from the two
+     edges it is pinned to. It compresses towards its anchored corner
+     instead, so only the free edge moves — and which corner that is
+     depends on the layout above, which is why this lives here rather than
+     inline in the component (where no rule here could override it). */
+  transform-origin: left center;
 }
 
 /* The ink fill inside the pill is a clip-path wipe on its own layer, which
@@ -288,6 +362,13 @@ html.ink-overlay-open :focus-visible {
      so the ring silently stayed grey under a filled pill. */
   border: 1px solid var(--color-grey-300);
   transition: border-color 0.34s var(--ease-out-expo);
+}
+
+@media (min-width: 768px) {
+  /* Pinned to the right corner up here (see the header layout above). */
+  .availability-badge {
+    transform-origin: right center;
+  }
 }
 
 .availability-badge[data-active="true"] {
