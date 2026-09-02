@@ -81,6 +81,8 @@ export function CategoryPhotoSequence({
               priority={lead}
               instant={lead && Boolean(morphName)}
               style={{ borderRadius: 2 }}
+              // See CategoryTile for why a wigglegram opts out.
+              wave={!photo.video}
             >
               {/* Inside a category there is nothing to reveal, so a clip
                   runs from the moment it is on screen and keeps running. */}

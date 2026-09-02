@@ -58,14 +58,14 @@ let cancel: (() => void) | null = null;
 /**
  * The visible slice of the photo, as a UV window.
  *
- * The homepage drifts the <img> inside its own frame (imgY/imgScale in
- * CategoryTile), so the thumbnail shows a moving sub-rectangle of the photo,
- * not the whole thing. Comparing the transformed <img> box against the
- * overflow-clipped frame recovers exactly which sub-rectangle that is —
- * without it the photo would jump to a different crop the moment WebGL took
- * over. This relies on the <img> box showing the whole photo, which holds
- * because Photo.tsx gives the frame the photo's own aspect ratio; the shader's
- * cover-fit is the backstop if that ever stops being true.
+ * Nothing transforms the <img> inside its frame today — the homepage grid used
+ * to drift it, and now answers the scroll with the swell instead — so this
+ * comes out as the full frame every time. It stays because it is cheap and
+ * because the alternative is a silent wrong crop: comparing the <img> box
+ * against the overflow-clipped frame recovers whatever sub-rectangle is
+ * actually on screen, so the day something does move the image inside its
+ * frame again, the photo carries on showing the same pixels the moment WebGL
+ * takes over instead of jumping to a different crop.
  */
 function measure(frame: HTMLElement, img: HTMLImageElement | null): {
   rect: Rect;
