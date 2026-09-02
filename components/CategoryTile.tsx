@@ -43,11 +43,17 @@ const INK_FADE = "color 0.4s var(--ease-out-expo)";
  * above, the caption itself and an arrow on the row below, the four of them
  * squared off against the photo's own edges. Type sitting loose under a
  * photograph reads as a filename; the same words held between a rule and the
- * frame they belong to read as a caption, which is what they are. It is also
- * the only place the grid says anything beyond the picture — the number says
- * where you are in the archive, the year says when, and that is the whole of
- * it. Still no photo counts and no equipment: the grid is a list of places to
- * go, and the set's own page is where it explains itself.
+ * frame they belong to read as a caption, which is what they are.
+ *
+ * All four cells are the one grey, in the one family, separated only by size
+ * — nothing here should be read before the photograph above it. Which is also
+ * why the whole block moves as a single thing under the pointer: one grey
+ * darkening to ink, and the rule filling in behind it.
+ *
+ * It is the only place the grid says anything beyond the picture — the number
+ * says where you are in the archive, the year says when, and that is the whole
+ * of it. Still no photo counts and no equipment: the grid is a list of places
+ * to go, and the set's own page is where it explains itself.
  */
 export function CategoryTile({
   category,
@@ -205,7 +211,10 @@ export function CategoryTile({
               )}
 
               <ViewTransition name={`title-${category.slug}`} share="title-morph" default="none">
-                <span className="tile-caption-title font-display">
+                <span
+                  className="tile-caption-title font-sans"
+                  style={{ color: metaColor, transition: INK_FADE }}
+                >
                   {category.caption}
                 </span>
               </ViewTransition>

@@ -482,9 +482,10 @@ html.ink-overlay-open :focus-visible {
      01                                  2026
      A piece of paradise in Greece           ↗
 
-   Two rows in one grid so the four corners line up on the photo's edges: the
-   number and the year are the quiet row, the caption carries the weight, and
-   the arrow sits opposite it against the tile's right edge.
+   Two rows in one grid so the four corners line up on the photo's edges. All
+   four cells are the same grey in the same family, and only size separates
+   them: the whole block is meant to be read after the photograph, not before
+   it.
 --------------------------------------------------------------------------- */
 .tile-caption {
   position: relative;
@@ -548,12 +549,18 @@ html.ink-overlay-open :focus-visible {
   text-align: right;
 }
 
+/* Same family and same grey as the row above it, one step up in size and
+   left in sentence case: that size difference is the whole hierarchy the
+   block needs. Set in display type it was the loudest thing under the
+   photograph, which is the one place on this page that should not be
+   competing with the picture. */
 .tile-caption-title {
   display: block;
   grid-column: 1;
   grid-row: 2;
-  font-size: var(--step-1);
-  line-height: 1.15;
+  font-family: var(--font-sans);
+  font-size: var(--step-0);
+  line-height: 1.4;
   text-wrap: balance;
 }
 
