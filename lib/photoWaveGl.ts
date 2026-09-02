@@ -24,6 +24,16 @@
  * per vertex, from a single quad, with no geometry to subdivide and no vertex
  * count to trade against fidelity. It is also the cheaper half of the GPU.
  *
+ * The swell moves the photo's *outline*, not just the picture inside it, and
+ * that is the whole reason it reads at all: a five per cent magnification in
+ * the middle of a detailed photograph is invisible, while the same five per
+ * cent on a straight edge against white is not. So the quad is drawn larger
+ * than the frame (WAVE_PAD below) and the silhouette is measured in material
+ * space — where on the undisturbed sheet the pixel now here came from — which
+ * is the same trick lib/clothMorphGl.ts uses and for the same reason: the
+ * border comes out as a consequence of the displacement rather than a second
+ * effect that has to be kept in agreement with it.
+ *
  * Colour management is by omission, for the same reason as lib/clothMorphGl.ts
  * and it matters more here: the texture is uploaded as plain RGBA8 with no
  * colour-space conversion and drawn to the default (sRGB) framebuffer, so at
@@ -67,15 +77,38 @@ const REST = 0.004;
  */
 const FOCUS = 0.5;
 
+/**
+ * How far the drawn quad extends past the photo's frame, per axis, as a
+ * fraction of that axis. A crest has to have somewhere to go: beyond this the
+ * swell would be clipped into a straight line, which is the one thing the
+ * effect must never show. Keep it comfortably above the peak displacement
+ * (MAX_SWELL in the shader, applied to half the frame) — the excess costs
+ * fragments that resolve to alpha 0, which is far cheaper than a flat edge.
+ *
+ * Expressed against the frame's shorter side, and rounded to whole CSS pixels
+ * when it is applied, which matters more than it looks: the canvas has to sit
+ * a whole number of pixels from the <img> it stands in for, or its pixel grid
+ * lands half a pixel off the one the browser composites onto and the whole
+ * photograph is resampled that little bit softer than the DOM photo beside
+ * it. draw() owns both the CSS offset and the matching uPad for that reason —
+ * they can never drift apart if one place computes both.
+ */
+const WAVE_PAD = 0.08;
+
 const VERT = /* glsl */ `#version 300 es
 in vec2 aPos;
+
+uniform vec2 uPad;  // quad overhang per axis, in units of the frame
 
 out vec2 vUv;
 
 void main() {
-  // v runs top-down so it matches the texture's own row order (UNPACK_FLIP_Y
-  // is off below), which is also the direction uCenter is measured in.
-  vUv = vec2(aPos.x, 1.0 - aPos.y);
+  // The quad covers the frame *and* its padding, so vUv deliberately
+  // overshoots 0..1 and the fragment shader can put the photo's edge outside
+  // the frame's own box. v runs top-down to match the texture's row order
+  // (UNPACK_FLIP_Y is off below), which is also how uCenter is measured.
+  vec2 t = vec2(aPos.x, 1.0 - aPos.y);
+  vUv = mix(-uPad, 1.0 + uPad, t);
   gl_Position = vec4(aPos * 2.0 - 1.0, 0.0, 1.0);
 }
 `;
@@ -94,18 +127,23 @@ uniform float uAmp;    // scroll speed, -1 (up) .. 0 .. 1 (down)
 const float HALF_PI = 1.57079632679;
 
 /**
- * Peak magnification at the crest. This is the only number that decides how
- * strong the effect reads; everything else below shapes it. Small on purpose:
- * a photograph that visibly zooms is a photograph being interfered with.
+ * Peak magnification at the crest. This is the one number that decides how
+ * strong the effect reads; everything else below only shapes it. Its real
+ * cost is measured at the *edge*: a point on the border sits about half a
+ * frame from the centre, so it travels out by roughly this fraction of half
+ * the frame. On this site that has to stay under the 0.9rem gap to a tile's
+ * caption, which is the ceiling this number is set against.
  */
-const float MAX_SWELL = 0.055;
+const float MAX_SWELL = 0.05;
 
 /**
  * How far the swell reaches from its centre, in units of the frame's shorter
- * side. Generous, so a whole frame breathes as one surface instead of growing
- * a localised blister.
+ * side. Comfortably past the corners of a portrait frame (about 0.9 away) on
+ * purpose: the dome has to still be climbing when it arrives at the border,
+ * because a dome that has already died out there leaves the outline straight
+ * and the whole effect goes back to being invisible.
  */
-const float REACH = 0.95;
+const float REACH = 1.6;
 
 /**
  * Shapes the dome. The falloff is a linear ramp bent through a sine, so the
@@ -115,13 +153,8 @@ const float REACH = 0.95;
  */
 const float BUMP_POWER = 1.2;
 
-/**
- * How far in from the frame's border the swell is faded out, in uv. This is
- * what keeps the silhouette a clean rectangle: the photo may bulge, but its
- * four edges never move, so it stays aligned with the rest of the grid and
- * nothing is ever sampled from outside the texture.
- */
-const float EDGE_FADE = 0.12;
+/** components/Photo.tsx rounds every frame by this much; the edge must agree. */
+const float RADIUS_PX = 2.0;
 
 /** How hard the curving surface shades. Light comes from above. */
 const float SHADE = 0.085;
@@ -142,18 +175,16 @@ void main() {
 
   float fall = clamp(1.0 - r / REACH, 0.0, 1.0);
   float dome = pow(sin(fall * HALF_PI), BUMP_POWER);
+  float swell = dome * uAmp * MAX_SWELL;
 
-  // Zero at the border, on both axes.
-  vec2 guard = smoothstep(vec2(0.0), vec2(EDGE_FADE), min(vUv, 1.0 - vUv));
-  float edge = guard.x * guard.y;
-  dome *= edge;
-
-  float swell = dome * uAmp;
-
-  // The displacement. Sampling nearer the centre is what a surface leaning
-  // toward the viewer does to the picture on it. At uAmp 0 this is exactly
-  // vUv, which is what makes the resting canvas the same image as the <img>.
-  vec2 uv = (centre + d * (1.0 - swell * MAX_SWELL)) / aspect + 0.5;
+  // Material space: where on the undisturbed sheet the fabric now sitting at
+  // this pixel came from. Sampling the photo *and* measuring its rect here —
+  // rather than warping the picture and separately perturbing an outline — is
+  // what makes the border a consequence of the swell instead of a second
+  // effect that has to be tuned to match it. At uAmp 0 it is exactly vUv,
+  // which is what makes the resting canvas the same image as the <img>.
+  vec2 posMat = centre + d * (1.0 - swell);
+  vec2 uv = posMat / aspect + 0.5;
 
   vec2 dir = r > 1e-5 ? d / r : vec2(0.0);
   vec2 split = dir * swell * CHROMA / aspect;
@@ -169,10 +200,24 @@ void main() {
   // crest. cos() of the same falloff is that slope: zero at the top of the
   // dome, largest where it turns away. Shading the crest instead is the usual
   // tell that a bulge is painted on.
-  float slope = cos(fall * HALF_PI) * smoothstep(0.0, 0.06, fall) * edge;
-  col *= 1.0 - slope * dir.y * swell * SHADE;
+  float slope = cos(fall * HALF_PI) * smoothstep(0.0, 0.06, fall);
+  col *= 1.0 - slope * dir.y * swell * (SHADE / MAX_SWELL);
 
-  outColor = vec4(clamp(col, 0.0, 1.0), 1.0);
+  // Signed distance to the photo's rect, measured in material space, positive
+  // inside. The sheet's four edges are still straight *in the fabric*; it is
+  // the fabric that is being stretched, so the silhouette comes out as the
+  // same swell for free, and snaps back to a clean rectangle wherever uAmp is
+  // zero. Standard rounded-box distance.
+  float rad = RADIUS_PX / min(uSize.x, uSize.y);
+  vec2 e = abs(posMat) - 0.5 * aspect + rad;
+  float sd = -(length(max(e, 0.0)) + min(max(e.x, e.y), 0.0) - rad);
+
+  // One antialiased pixel and no more: what sits next to a photograph on this
+  // site is bare paper, and a soft border would read as a glow.
+  float alpha = smoothstep(0.0, fwidth(sd), sd);
+
+  // Premultiplied — see the blend func in createSlot().
+  outColor = vec4(clamp(col, 0.0, 1.0) * alpha, alpha);
 }
 `;
 
@@ -192,6 +237,8 @@ interface Entry {
   velocity: () => number;
   /** Last amplitude drawn, so the settling frame is drawn exactly once. */
   drawn: number;
+  /** Overhang currently applied to the canvas, in whole CSS px. */
+  pad: number;
 }
 
 export interface WaveHandle {
@@ -206,6 +253,8 @@ const entries = new Set<Entry>();
 const free: Slot[] = [];
 let made = 0;
 let frameId = 0;
+/** Amplitude held by the debug hatch below, or null when the scroll drives. */
+let pinned: number | null = null;
 
 function compile(gl: WebGL2RenderingContext, type: number, src: string): WebGLShader {
   const shader = gl.createShader(type);
@@ -230,13 +279,16 @@ function createSlot(): Slot {
   // No visibility of its own: the cloth morph hides the whole frame during a
   // flight (lib/clothMorphFlight.ts), and a canvas that declared itself
   // visible would keep painting a photo that is supposed to have taken off.
-  canvas.style.cssText =
-    "position:absolute;inset:0;display:block;width:100%;height:100%;pointer-events:none";
+  // inset is set by draw(), which is the one place that knows the overhang.
+  canvas.style.cssText = "position:absolute;inset:0;display:block;pointer-events:none";
 
   const gl = canvas.getContext("webgl2", {
-    // The photo is opaque and covers the frame, so there is nothing to blend
-    // against and no alpha to carry.
-    alpha: false,
+    // The quad is bigger than the photo now, so most of what it covers has to
+    // resolve to nothing at all: the silhouette is carried in alpha.
+    alpha: true,
+    premultipliedAlpha: true,
+    // The shader's own alpha ramp antialiases the silhouette; MSAA would only
+    // touch the quad's own corners, which are never visible.
     antialias: false,
     depth: false,
     stencil: false,
@@ -267,8 +319,11 @@ function createSlot(): Slot {
   gl.enableVertexAttribArray(0);
   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
 
+  gl.enable(gl.BLEND);
+  gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+
   const u: Record<string, WebGLUniformLocation | null> = {};
-  for (const name of ["uTexture", "uSize", "uCenter", "uAmp"]) {
+  for (const name of ["uTexture", "uSize", "uCenter", "uAmp", "uPad"]) {
     u[name] = gl.getUniformLocation(program, name);
   }
   gl.uniform1i(u.uTexture, 0);
@@ -341,13 +396,28 @@ function draw(entry: Entry, rect: DOMRect, amp: number) {
   const { slot } = entry;
   const { gl, u, canvas } = slot;
   const dpr = Math.min(window.devicePixelRatio || 1, MAX_DPR);
-  const w = Math.max(1, Math.round(rect.width * dpr));
-  const h = Math.max(1, Math.round(rect.height * dpr));
+
+  // A whole number of CSS pixels of overhang on every side, so the canvas's
+  // pixel grid stays in step with the <img>'s. Written only when it actually
+  // changes — a resize — rather than every frame.
+  const pad = Math.round(WAVE_PAD * Math.min(rect.width, rect.height));
+  if (pad !== entry.pad) {
+    entry.pad = pad;
+    canvas.style.inset = `${-pad}px`;
+  }
+
+  const w = Math.max(1, Math.round((rect.width + 2 * pad) * dpr));
+  const h = Math.max(1, Math.round((rect.height + 2 * pad) * dpr));
   if (canvas.width !== w || canvas.height !== h) {
     canvas.width = w;
     canvas.height = h;
-    gl.viewport(0, 0, w, h);
   }
+  gl.viewport(0, 0, w, h);
+  // Everything outside the silhouette has to be cleared, not left over from
+  // the frame before: the photo moves within this box.
+  gl.clearColor(0, 0, 0, 0);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+  gl.uniform2f(u.uPad, pad / rect.width, pad / rect.height);
   gl.uniform2f(u.uSize, rect.width, rect.height);
   gl.uniform1f(u.uCenter, (window.innerHeight * FOCUS - rect.top) / rect.height);
   gl.uniform1f(u.uAmp, amp);
@@ -371,19 +441,16 @@ function tick() {
   let moving = false;
   const pending: Array<{ entry: Entry; rect: DOMRect; amp: number }> = [];
 
-  // Debug hatch, in the shape of __clothMorphSpeed: pin the amplitude to see
-  // the swell held still at a chosen strength, for a screenshot or for
-  // tuning the constants above against a real photograph. -1..1.
-  const forced = (window as { __photoWaveAmp?: number }).__photoWaveAmp;
-  const pinned = typeof forced === "number";
+  // Captured once so the narrowing holds across the loop below.
+  const held = pinned;
 
   for (const entry of entries) {
     if (entry.slot.lost) continue;
     const rect = entry.frame.getBoundingClientRect();
     if (rect.width < 1 || rect.height < 1) continue;
-    const raw = pinned ? forced : entry.velocity();
-    const amp = !pinned && Math.abs(raw) < REST ? 0 : raw;
-    if (amp !== 0 || pinned) moving = true;
+    const raw = held !== null ? held : entry.velocity();
+    const amp = held === null && Math.abs(raw) < REST ? 0 : raw;
+    if (amp !== 0 || held !== null) moving = true;
     // A flat photo that is already drawn flat needs no frame; a flat photo
     // that isn't needs exactly one.
     if (amp !== 0 || entry.drawn !== 0) pending.push({ entry, rect, amp });
@@ -400,6 +467,27 @@ function tick() {
 /** Starts the frame loop if it isn't already running. */
 export function wakeWaves() {
   if (!frameId && entries.size > 0) frameId = requestAnimationFrame(tick);
+}
+
+/**
+ * Debug hatch, in the spirit of __clothMorphSpeed: hold every photo's swell
+ * at a chosen amplitude so it can be looked at standing still — for a
+ * screenshot, or for tuning the shader constants above against a real
+ * photograph rather than against a moving page.
+ *
+ *   __photoWave(0.9)   crest, as far as a fast scroll down ever takes it
+ *   __photoWave(-0.9)  the same going up, where the sheet draws in
+ *   __photoWave()      hand it back to the scroll
+ *
+ * It has to wake the loop itself, and keep it awake: the whole design is
+ * that a still page stops rendering, so merely setting a value would be
+ * read by nothing.
+ */
+if (typeof window !== "undefined") {
+  (window as { __photoWave?: (amp?: number) => void }).__photoWave = (amp) => {
+    pinned = typeof amp === "number" ? amp : null;
+    wakeWaves();
+  };
 }
 
 /** Whether the browser can run this at all, asked before anything is built. */
@@ -433,7 +521,7 @@ export function attachWave({
     return null;
   }
 
-  const entry: Entry = { frame, slot, velocity, drawn: 0 };
+  const entry: Entry = { frame, slot, velocity, drawn: 0, pad: -1 };
   const rect = frame.getBoundingClientRect();
   if (rect.width < 1 || rect.height < 1) {
     free.push(slot);
@@ -468,6 +556,7 @@ export function attachWave({
       if (!slot.lost) {
         slot.canvas.width = 1;
         slot.canvas.height = 1;
+        slot.canvas.style.inset = "0";
         free.push(slot);
       }
     },

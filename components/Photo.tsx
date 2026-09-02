@@ -201,6 +201,32 @@ export function Photo({
 
   const eager = priority || warm;
 
+  /**
+   * Grayscale belongs on the frame, not on the <img>: the LQIP is painted as
+   * the frame's own background, so filtering only the image leaves a
+   * full-colour placeholder showing underneath it until the photo has faded
+   * in — on a cold load, a visible second of colour on a monochrome grid.
+   *
+   * The swell's canvas is a sibling of the frame rather than a child (it has
+   * to escape the frame's clip), so it does not inherit that filter and has
+   * to be given the same one. Hoisting the filter to the wrapper above both
+   * would be tidier and is wrong: `filter` is not an inherited property, so
+   * lib/clothMorph.ts — which reads the frame's own computed filter to know
+   * how grey a tile is at the moment it is clicked — would read `none` and
+   * start the flight in full colour. Declared twice, identically, in one
+   * render, so the two always ramp together.
+   */
+  const filter =
+    grayscale === undefined
+      ? undefined
+      : grayscale
+        ? "grayscale(1)"
+        : "grayscale(0)";
+  const filterTransition =
+    grayscale === undefined
+      ? undefined
+      : `filter ${FADE_MS}ms cubic-bezier(0.65,0,0.35,1)`;
+
   const waving = usePhotoWave({
     frameRef,
     imgRef,
@@ -209,7 +235,7 @@ export function Photo({
     ready,
   });
 
-  return (
+  const frame = (
     <div
       ref={frameRef}
       className={className}
@@ -223,21 +249,9 @@ export function Photo({
         backgroundImage: settled ? undefined : `url(${photo.lqip})`,
         backgroundSize: "cover",
         backgroundPosition: "center",
-        // Grayscale belongs on the frame, not on the <img>. The LQIP is
-        // painted as this element's own background, so filtering only the
-        // image leaves a full-colour placeholder showing underneath it
-        // until the photo has finished fading in — which on a cold load
-        // is a visible second of colour on a monochrome grid.
-        filter:
-          grayscale === undefined
-            ? undefined
-            : grayscale
-              ? "grayscale(1)"
-              : "grayscale(0)",
-        transition:
-          grayscale === undefined
-            ? undefined
-            : `filter ${FADE_MS}ms cubic-bezier(0.65,0,0.35,1)`,
+        // See the note above this component's return.
+        filter,
+        transition: filterTransition,
         ...style,
       }}
     >
@@ -273,18 +287,41 @@ export function Photo({
           visibility: waving ? "hidden" : undefined,
         }}
       />
-      {/* Left empty for lib/photoWaveGl.ts to append its canvas into. React
-          owns this element but never fills it, so nothing it renders can be
-          reordered around a child it did not create. Before `children`, so a
-          wigglegram still lays over the photo rather than under it. */}
-      {wave && (
-        <div
-          ref={mountRef}
-          aria-hidden="true"
-          style={{ position: "absolute", inset: 0, pointerEvents: "none" }}
-        />
-      )}
       {children}
+    </div>
+  );
+
+  if (!wave) return frame;
+
+  /**
+   * The swell moves the photo's outline past the frame's own box, so its
+   * canvas cannot live inside the frame — that element clips to its rect, and
+   * a crest cut off against a straight line is the one thing the effect must
+   * not show. Hence this wrapper: it takes no space of its own (the frame is
+   * its only in-flow child and still owns the layout), it does not clip, and
+   * it is the containing block the canvas's overhang is measured against.
+   *
+   * The mount inside it is left empty for lib/photoWaveGl.ts to append into.
+   * React owns the element but never fills it, so nothing React renders can
+   * be reordered around a child it did not create. It sits exactly on the
+   * frame's box; the canvas inside it is what reaches past that, by an
+   * overhang lib/photoWaveGl.ts sets in whole pixels alongside the matching
+   * uniform, so the two can never disagree.
+   */
+  return (
+    <div style={{ position: "relative" }}>
+      {frame}
+      <div
+        ref={mountRef}
+        aria-hidden="true"
+        style={{
+          position: "absolute",
+          inset: 0,
+          pointerEvents: "none",
+          filter,
+          transition: filterTransition,
+        }}
+      />
     </div>
   );
 }
