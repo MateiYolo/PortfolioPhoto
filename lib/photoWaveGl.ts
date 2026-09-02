@@ -84,6 +84,32 @@ const REST = 0.004;
 const RESPONSE = 0.6;
 
 /**
+ * Where the response curve is faded back to nothing, in raw spring units.
+ *
+ * RESPONSE has infinite slope at zero — pow(0.004, 0.6) is 0.036, not 0.004 —
+ * so REST, which exists only to let the loop stop, was dropping the sheet
+ * from a real displacement straight to flat in a single frame: about 0.8px
+ * across the whole photograph, which reads exactly like a glitch as a scroll
+ * comes to a halt. Ramping the curve out linearly across this last stretch
+ * makes the arrival continuous. It is deliberately narrow: at 0.05 and above
+ * the amplitude is the pure curve, untouched, so this costs nothing anywhere
+ * the effect is actually seen.
+ */
+const SETTLE = 0.05;
+
+/**
+ * Scroll amplitude above which the pointer dome stands down.
+ *
+ * A mouse left anywhere over the grid sweeps across tile after tile while the
+ * page moves, and each one it crosses would press and release a dome that
+ * nobody asked for. The pointer dome is a deliberate answer to a still page,
+ * so it waits for one; HOVER_LERP then brings it in over its own third of a
+ * second once the scrolling stops, which reads as the photograph noticing the
+ * cursor rather than as something firing.
+ */
+const HOVER_QUIET = 0.12;
+
+/**
  * How fast the hover swell ramps in and out, per frame. About a third of a
  * second to arrive, which is near the 600ms scale it replaces but a little
  * quicker: a deformation that lags the pointer reads as lag, where a scale
@@ -178,10 +204,10 @@ const float REACH = 1.6;
  * pointer and most at a ring around it. That ring peaks near half the reach,
  * where r * dome(r) is worth about 0.38 of the reach — so the furthest the
  * sheet ever travels here is roughly HOVER_SWELL * HOVER_REACH * 0.38 of the
- * frame's shorter side, about 18px on a tile of this size. That figure, not
+ * frame's shorter side, about 11px on a tile of this size. That figure, not
  * this constant, is what has to clear the caption below.
  */
-const float HOVER_SWELL = 0.11;
+const float HOVER_SWELL = 0.07;
 /**
  * Tighter than the scroll's reach, and that is the point: the scroll moves
  * the whole sheet, where the pointer presses on one part of it. A hover dome
@@ -542,16 +568,19 @@ function tick() {
       moving = true;
     } else {
       const raw = entry.velocity();
+      const speed = Math.abs(raw);
       amp =
-        Math.abs(raw) < REST
+        speed < REST
           ? 0
-          : Math.sign(raw) * Math.pow(Math.abs(raw), RESPONSE);
+          : Math.sign(raw) *
+            Math.pow(speed, RESPONSE) *
+            Math.min(1, speed / SETTLE);
       if (amp !== 0) moving = true;
     }
 
     // The pointer dome runs on its own clock and keeps the loop awake for
     // exactly as long as it is still arriving or leaving.
-    const target = entry.hovered ? 1 : 0;
+    const target = entry.hovered && Math.abs(amp) < HOVER_QUIET ? 1 : 0;
     if (entry.hover !== target) {
       entry.hover += (target - entry.hover) * HOVER_LERP;
       if (Math.abs(target - entry.hover) < 0.002) entry.hover = target;
@@ -560,16 +589,19 @@ function tick() {
 
     // Draw only what would come out different. A photo already painted flat
     // needs no frame; one that isn't needs exactly one. The rect's top counts
-    // only while the pointer dome is up, because that dome is placed off the
-    // frame's live position where the scroll dome it sits beside contributes
-    // nothing at rest anyway.
+    // whenever the sheet is deformed at all — both domes are placed off the
+    // frame's live position, so a photo that moved under a standing
+    // displacement needs repainting even if its amplitude did not change.
+    // While it is flat, both domes are multiplied by zero and where they sit
+    // cannot matter.
+    const deformed = amp !== 0 || entry.hover > 0;
     const was = entry.drawn;
     if (
       amp !== was.amp ||
       entry.hover !== was.hover ||
       entry.px !== was.x ||
       entry.py !== was.y ||
-      (entry.hover > 0 && rect.top !== was.top)
+      (deformed && rect.top !== was.top)
     ) {
       pending.push({ entry, rect, amp });
     }
