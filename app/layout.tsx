@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter_Tight, Space_Grotesk } from "next/font/google";
 import type { ReactNode } from "react";
 import { Cursor } from "@/components/Cursor";
+import { Intro } from "@/components/Intro";
 import { NavHeader } from "@/components/NavHeader";
 import { RouteScrollReset } from "@/components/RouteScrollReset";
 import { ScrollVelocityProvider } from "@/components/ScrollVelocity";
@@ -39,7 +40,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             <RouteScrollReset />
             <Cursor />
             <NavHeader />
-            {children}
+            {/* Holds the page until it is smooth, then lifts off it: see
+                components/Intro.tsx. Wraps the routes rather than sitting
+                beside them because everything inside it reads whether the
+                panel has gone before playing its own entrance. */}
+            <Intro>{children}</Intro>
           </ScrollVelocityProvider>
         </SmoothScroll>
       </body>

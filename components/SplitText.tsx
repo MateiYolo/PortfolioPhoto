@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "motion/react";
+import { useIntroReady } from "@/lib/intro";
 import { ease, stagger } from "@/lib/motion";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 
@@ -11,6 +12,12 @@ import { useReducedMotion } from "@/lib/useReducedMotion";
  *
  * Splitting by character reads best short (a name, a title); long strings
  * should use `by="words"` so screen-reading rhythm and wrapping stay sane.
+ *
+ * On a cold load this holds its units below the mask until the intro panel
+ * lets go (components/Intro.tsx), so the heading rises as the panel clears
+ * it rather than finishing its rise behind it. Everywhere else — a client
+ * navigation, any page with no panel over it — the context answers true and
+ * this plays on mount exactly as it always has.
  */
 export function SplitText({
   text,
@@ -24,6 +31,7 @@ export function SplitText({
   className?: string;
 }) {
   const reducedMotion = useReducedMotion();
+  const introReady = useIntroReady();
   const units = by === "chars" ? Array.from(text) : text.split(" ");
   const gap = by === "words" ? "0.28em" : "0";
 
@@ -55,7 +63,7 @@ export function SplitText({
           <motion.span
             style={{ display: "inline-block" }}
             initial={{ y: "110%", rotate: 6 }}
-            animate={{ y: "0%", rotate: 0 }}
+            animate={introReady ? { y: "0%", rotate: 0 } : { y: "110%", rotate: 6 }}
             transition={{
               duration: 0.7,
               ease: ease.outExpo,

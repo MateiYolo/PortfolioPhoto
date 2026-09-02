@@ -27,6 +27,11 @@ const PARALLAX_PATTERN: Array<[number, number]> = [
  * gets a width (by cover orientation) and an alignment/offset (by a fixed
  * cycling pattern) so the composition reads as hand-arranged rather than a
  * uniform gallery grid: the "editorial asymmetric" layout from the brief.
+ *
+ * Position in that stack is also the number each tile prints in its caption
+ * (components/CategoryTile.tsx), which is why it is passed rather than read:
+ * the order is this component's, decided by `order:` in each meta.md, and a
+ * tile has no way to know where it landed.
  */
 export function CategoryGrid({ categories }: { categories: Category[] }) {
   // A tile also warms this on pointer enter, which covers a mouse. Touch has
@@ -61,6 +66,7 @@ export function CategoryGrid({ categories }: { categories: Category[] }) {
           >
             <CategoryTile
               category={category}
+              index={i + 1}
               parallaxRange={PARALLAX_PATTERN[i % PARALLAX_PATTERN.length]}
             />
           </div>

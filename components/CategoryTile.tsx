@@ -2,15 +2,31 @@
 
 import Link from "next/link";
 import { motion, useScroll, useTransform } from "motion/react";
-import { useRef, useState, ViewTransition } from "react";
+import { useRef, ViewTransition } from "react";
 import { LoopVideo } from "@/components/LoopVideo";
 import { Photo } from "@/components/Photo";
 import { ScrollTilt } from "@/components/ScrollTilt";
 import { clothMorphToCategory, prewarmClothMorph } from "@/lib/clothMorph";
 import type { Category } from "@/lib/content";
+import { yearOf } from "@/lib/date";
 import { GRID_TILE, tileSizes } from "@/lib/imageSizes";
+import { ease } from "@/lib/motion";
+import { useEdgeHover } from "@/lib/useEdgeHover";
 import { useCanHover } from "@/lib/useMediaQuery";
 import { useReducedMotion } from "@/lib/useReducedMotion";
+
+/**
+ * The rule under the photo, using the pill's two curves for the same reason
+ * (see FILL/DRAIN in components/AvailabilityBadge.tsx): arriving is the half
+ * worth watching, leaving is housekeeping.
+ */
+const RULE = {
+  in: { duration: 0.44, ease: ease.sweep },
+  out: { duration: 0.3, ease: ease.outExpo },
+};
+
+/** Grey type darkening to ink as a tile takes the pointer. */
+const INK_FADE = "color 0.4s var(--ease-out-expo)";
 
 /**
  * One cover on the homepage grid. Hover brings colour into the (otherwise
@@ -22,21 +38,41 @@ import { useReducedMotion } from "@/lib/useReducedMotion";
  * screen, and stays grey while it does: the grid reads the same either way,
  * and the alternative is a tile that never moves at all on a phone.
  *
- * Only the caption is set under the photo. No counts, no metadata: the grid
- * is a list of places to go, not a table of contents.
+ * Underneath it, the caption is set as an index entry rather than a label:
+ * a rule across the tile's width, the number and the year on the quiet row
+ * above, the caption itself and an arrow on the row below, the four of them
+ * squared off against the photo's own edges. Type sitting loose under a
+ * photograph reads as a filename; the same words held between a rule and the
+ * frame they belong to read as a caption, which is what they are. It is also
+ * the only place the grid says anything beyond the picture — the number says
+ * where you are in the archive, the year says when, and that is the whole of
+ * it. Still no photo counts and no equipment: the grid is a list of places to
+ * go, and the set's own page is where it explains itself.
  */
 export function CategoryTile({
   category,
+  index,
   parallaxRange,
 }: {
   category: Category;
+  /** Position in the grid, printed as the index number. 1-based. */
+  index: number;
   parallaxRange: [number, number];
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const photoRef = useRef<HTMLDivElement>(null);
-  const [hovered, setHovered] = useState(false);
   const reducedMotion = useReducedMotion();
   const canHover = useCanHover();
+
+  /**
+   * One hover state for the whole tile, carrying the edge the pointer
+   * crossed by so the rule can fill from the side the cursor came in on —
+   * the same information, and the same answer, as the booking pill and the
+   * menu links (lib/pointerEdge.ts). Focus counts as hover here, which is
+   * what gives a keyboard the colour, the rule and the wigglegram too.
+   */
+  const edge = useEdgeHover();
+  const hovered = edge.hovered;
 
   /**
    * Hands the cover photo to the WebGL flag morph (lib/clothMorph.ts) and lets
@@ -67,6 +103,10 @@ export function CategoryTile({
   const rawY = useTransform(scrollYProgress, [0, 1], parallaxRange);
   const y = reducedMotion || !canHover ? 0 : rawY;
 
+  const year = yearOf(category.date);
+  const metaColor = hovered ? "var(--color-ink)" : "var(--color-grey-500)";
+  const stroke = hovered ? RULE.in : RULE.out;
+
   return (
     <div ref={ref}>
       <ScrollTilt intensity={0.7}>
@@ -77,19 +117,21 @@ export function CategoryTile({
           // will-change would pin a full-size photo texture in memory for
           // every tile on the page, on top of the one already held.
           style={{ y }}
-          onPointerEnter={() => {
-            setHovered(true);
+          onPointerEnter={(e) => {
+            edge.onPointerEnter(e);
             // Compile the shader while the pointer is still travelling, so the
             // click itself only has to issue a draw call.
             prewarmClothMorph();
           }}
-          onPointerLeave={() => setHovered(false)}
+          onPointerLeave={edge.onPointerLeave}
         >
           <Link
             href={`/work/${category.slug}`}
             data-cursor="view"
             className="group block"
             onClick={handOffToCloth}
+            onFocus={edge.onFocus}
+            onBlur={edge.onBlur}
           >
             <ViewTransition name={`photo-${category.slug}`} share="morph" default="none">
               {/* No scale on hover any more: the pointer presses a dome into
@@ -125,18 +167,67 @@ export function CategoryTile({
                 </Photo>
               </div>
             </ViewTransition>
-            <ViewTransition name={`title-${category.slug}`} share="title-morph" default="none">
-              <span
-                className="font-display block text-[var(--step-1)]"
-                // Was 0.9rem. The photo's outline now travels up to ~20px
-                // past its box at full scroll speed (see MAX_SWELL in
-                // lib/photoWaveGl.ts), and a crest touching the caption is
-                // the one way this effect can look like a mistake.
-                style={{ marginTop: "1.5rem" }}
-              >
-                {category.caption}
+
+            <div className="tile-caption">
+              <span className="tile-caption-rule" aria-hidden>
+                <motion.span
+                  className="tile-caption-rule-ink"
+                  style={{ transformOrigin: edge.origin }}
+                  initial={false}
+                  animate={{ scaleX: hovered ? 1 : 0 }}
+                  transition={{
+                    duration: reducedMotion ? 0.01 : stroke.duration,
+                    ease: stroke.ease,
+                  }}
+                  // The edge only changes while the rule is at rest, so a
+                  // pointer crossing back mid-sweep never flips it visibly
+                  // (see lib/useEdgeHover.ts).
+                  onAnimationStart={edge.onSweepStart}
+                  onAnimationComplete={edge.onSweepEnd}
+                />
               </span>
-            </ViewTransition>
+
+              <span
+                className="tile-caption-index font-sans"
+                style={{ color: metaColor, transition: INK_FADE }}
+              >
+                {String(index).padStart(2, "0")}
+              </span>
+              {/* Rendered only when there is one to print: a meta.md with no
+                  date should leave the corner empty rather than a stray dash. */}
+              {year && (
+                <span
+                  className="tile-caption-year font-sans"
+                  style={{ color: metaColor, transition: INK_FADE }}
+                >
+                  {year}
+                </span>
+              )}
+
+              <ViewTransition name={`title-${category.slug}`} share="title-morph" default="none">
+                <span className="tile-caption-title font-display">
+                  {category.caption}
+                </span>
+              </ViewTransition>
+
+              {/* The one piece of the row that is pure affordance, so it is
+                  the one piece that moves: it leans the way the click goes.
+                  Hidden from the reader — the link's own text already says
+                  where this leads. */}
+              <motion.span
+                className="tile-caption-arrow"
+                aria-hidden
+                style={{ color: metaColor, transition: INK_FADE }}
+                initial={false}
+                animate={{ x: hovered ? 4 : 0, y: hovered ? -4 : 0 }}
+                transition={{
+                  duration: reducedMotion ? 0.01 : 0.44,
+                  ease: ease.outExpo,
+                }}
+              >
+                ↗
+              </motion.span>
+            </div>
           </Link>
         </motion.div>
       </ScrollTilt>
