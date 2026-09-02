@@ -131,7 +131,10 @@ const FOCUS = 0.5;
  * swell would be clipped into a straight line, which is the one thing the
  * effect must never show. Keep it comfortably above the peak displacement
  * (MAX_SWELL in the shader, applied to half the frame) — the excess costs
- * fragments that resolve to alpha 0, which is far cheaper than a flat edge.
+ * fragments that resolve to alpha 0, which is far cheaper than a flat edge —
+ * though not free, so this is set from the measured peak rather than guessed:
+ * the outline travels about 0.04 of the shorter side at full amplitude, and
+ * this leaves half as much again on top.
  *
  * Expressed against the frame's shorter side, and rounded to whole CSS pixels
  * when it is applied, which matters more than it looks: the canvas has to sit
@@ -141,7 +144,7 @@ const FOCUS = 0.5;
  * it. draw() owns both the CSS offset and the matching uPad for that reason —
  * they can never drift apart if one place computes both.
  */
-const WAVE_PAD = 0.08;
+const WAVE_PAD = 0.055;
 
 const VERT = /* glsl */ `#version 300 es
 in vec2 aPos;
@@ -173,6 +176,7 @@ uniform float uCenter;  // where the scroll swell sits, in vUv.y units
 uniform float uAmp;     // scroll speed, -1 (up) .. 0 .. 1 (down), shaped
 uniform float uHover;   // 0 .. 1, how far the pointer swell has ramped in
 uniform vec2 uHoverAt;  // pointer position, in vUv
+uniform float uChroma;  // 1 while the sheet moves enough to split channels
 
 const float HALF_PI = 1.57079632679;
 
@@ -273,26 +277,6 @@ void main() {
   // exactly vUv, which is what makes the resting canvas the same image as the
   // <img> it stands in for.
   vec2 posMat = pos - disp;
-  vec2 uv = posMat / aspect + 0.5;
-
-  // Splitting the channels along the displacement reads as light bending
-  // through a moving surface. Zero wherever the sheet is flat, so a resting
-  // photo is sampled once per channel from the same place.
-  vec2 split = disp * CHROMA / aspect;
-
-  vec3 col = vec3(
-    texture(uTexture, uv + split).r,
-    texture(uTexture, uv).g,
-    texture(uTexture, uv - split).b
-  );
-
-  // Light follows the surface normal, and the normal follows the slope, not
-  // the height — so the bright band sits on a dome's flank, not on its crest.
-  // Shading the crest instead is the usual tell that a bulge is painted on.
-  vec2 dir1 = r1 > 1e-5 ? d1 / r1 : vec2(0.0);
-  vec2 dir2 = r2 > 1e-5 ? d2 / r2 : vec2(0.0);
-  float lit = slope1 * dir1.y * dome1 + slope2 * dir2.y * dome2;
-  col *= 1.0 - lit * SHADE;
 
   // Signed distance to the photo's rect, measured in material space, positive
   // inside. The sheet's four edges are still straight *in the fabric*; it is
@@ -306,6 +290,38 @@ void main() {
   // One antialiased pixel and no more: what sits next to a photograph on this
   // site is bare paper, and a soft border would read as a glow.
   float alpha = smoothstep(0.0, fwidth(sd), sd);
+
+  // The quad is padded so a crest has room, which leaves roughly a fifth of
+  // these fragments outside the photograph. Dropping them here, before the
+  // texture is touched, is the difference between paying for that margin and
+  // not. It has to come after fwidth above, which needs its whole 2x2 quad.
+  if (alpha <= 0.0) discard;
+
+  vec2 uv = posMat / aspect + 0.5;
+
+  // Splitting the channels along the displacement reads as light bending
+  // through a moving surface, and is worth three fetches only while there is
+  // a displacement to split along. uChroma is a uniform, so the branch is the
+  // same for every fragment in the draw rather than a divergence.
+  vec3 col;
+  if (uChroma > 0.5) {
+    vec2 split = disp * CHROMA / aspect;
+    col = vec3(
+      texture(uTexture, uv + split).r,
+      texture(uTexture, uv).g,
+      texture(uTexture, uv - split).b
+    );
+  } else {
+    col = texture(uTexture, uv).rgb;
+  }
+
+  // Light follows the surface normal, and the normal follows the slope, not
+  // the height — so the bright band sits on a dome's flank, not on its crest.
+  // Shading the crest instead is the usual tell that a bulge is painted on.
+  vec2 dir1 = r1 > 1e-5 ? d1 / r1 : vec2(0.0);
+  vec2 dir2 = r2 > 1e-5 ? d2 / r2 : vec2(0.0);
+  float lit = slope1 * dir1.y * dome1 + slope2 * dir2.y * dome2;
+  col *= 1.0 - lit * SHADE;
 
   // Premultiplied — see the blend func in createSlot().
   outColor = vec4(clamp(col, 0.0, 1.0) * alpha, alpha);
@@ -428,7 +444,9 @@ function createSlot(): Slot {
   gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
 
   const u: Record<string, WebGLUniformLocation | null> = {};
-  const names = ["uTexture", "uSize", "uCenter", "uAmp", "uPad", "uHover", "uHoverAt"];
+  const names = [
+    "uTexture", "uSize", "uCenter", "uAmp", "uPad", "uHover", "uHoverAt", "uChroma",
+  ];
   for (const name of names) {
     u[name] = gl.getUniformLocation(program, name);
   }
@@ -479,14 +497,11 @@ function upload(slot: Slot, img: HTMLImageElement): boolean {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-    const aniso = gl.getExtension("EXT_texture_filter_anisotropic");
-    if (aniso) {
-      gl.texParameterf(
-        gl.TEXTURE_2D,
-        aniso.TEXTURE_MAX_ANISOTROPY_EXT,
-        Math.min(8, gl.getParameter(aniso.MAX_TEXTURE_MAX_ANISOTROPY_EXT))
-      );
-    }
+    // No anisotropic filtering, deliberately. It pays for itself where a
+    // surface is seen at a steep angle and one axis is minified far harder
+    // than the other; this quad is always square to the viewer and sampled
+    // near 1:1, so every extra tap it asks for would return the same texel.
+    // The cloth morph wants it because a flight genuinely skews the photo.
   }
   gl.activeTexture(gl.TEXTURE0);
   gl.bindTexture(gl.TEXTURE_2D, slot.texture);
@@ -541,6 +556,9 @@ function draw(entry: Entry, rect: DOMRect, amp: number) {
   gl.uniform1f(u.uCenter, (window.innerHeight * FOCUS - rect.top) / rect.height);
   gl.uniform1f(u.uAmp, amp);
   gl.uniform1f(u.uHover, entry.hover);
+  // Below this the split rounds to less than a pixel, and the two extra
+  // fetches it costs would return the same texel as the one in the middle.
+  gl.uniform1f(u.uChroma, Math.abs(amp) > 0.05 || entry.hover > 0.05 ? 1 : 0);
   gl.uniform2f(
     u.uHoverAt,
     (entry.px - rect.left) / rect.width,
