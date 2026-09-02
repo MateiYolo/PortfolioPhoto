@@ -378,8 +378,14 @@ function createSlot(): Slot {
   // No visibility of its own: the cloth morph hides the whole frame during a
   // flight (lib/clothMorphFlight.ts), and a canvas that declared itself
   // visible would keep painting a photo that is supposed to have taken off.
-  // inset is set by draw(), which is the one place that knows the overhang.
-  canvas.style.cssText = "position:absolute;inset:0;display:block;pointer-events:none";
+  // Position and size are both set by draw(), the one place that knows the
+  // overhang. The size has to be stated: a canvas is a replaced element, so
+  // `width: auto` resolves to its *intrinsic* size — the backing store, which
+  // is devicePixelRatio times larger than the box it belongs in — rather than
+  // stretching to the insets the way an ordinary box would. Leaving it auto
+  // draws every photo at 2x on a retina screen.
+  canvas.style.cssText =
+    "position:absolute;left:0;top:0;display:block;pointer-events:none";
 
   const gl = canvas.getContext("webgl2", {
     // The quad is bigger than the photo now, so most of what it covers has to
@@ -510,7 +516,13 @@ function draw(entry: Entry, rect: DOMRect, amp: number) {
   const pad = Math.round(WAVE_PAD * Math.min(rect.width, rect.height));
   if (pad !== entry.pad) {
     entry.pad = pad;
-    canvas.style.inset = `${-pad}px`;
+    // Sized off the mount, which is exactly the frame's box, so this keeps
+    // tracking a frame that resizes without needing to be rewritten.
+    const span = `calc(100% + ${2 * pad}px)`;
+    canvas.style.left = `${-pad}px`;
+    canvas.style.top = `${-pad}px`;
+    canvas.style.width = span;
+    canvas.style.height = span;
   }
 
   const w = Math.max(1, Math.round((rect.width + 2 * pad) * dpr));
@@ -749,7 +761,10 @@ export function attachWave({
       if (!slot.lost) {
         slot.canvas.width = 1;
         slot.canvas.height = 1;
-        slot.canvas.style.inset = "0";
+        slot.canvas.style.left = "0";
+        slot.canvas.style.top = "0";
+        slot.canvas.style.width = "100%";
+        slot.canvas.style.height = "100%";
         free.push(slot);
       }
     },
