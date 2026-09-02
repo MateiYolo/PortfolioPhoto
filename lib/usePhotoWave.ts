@@ -35,6 +35,7 @@ export function usePhotoWave({
   imgRef,
   mountRef,
   enabled,
+  hover,
   ready,
 }: {
   /** Photo's aspect box — the rect the swell is measured against. */
@@ -48,6 +49,12 @@ export function usePhotoWave({
    */
   mountRef: RefObject<HTMLDivElement | null>;
   enabled: boolean;
+  /**
+   * Let the pointer press its own dome into the photo while it is over it.
+   * The caller decides, because only it knows whether hovering is reachable
+   * on this device and whether this photo is one that should answer it.
+   */
+  hover: boolean;
   /** Whether the <img> has decoded. Nothing can be uploaded before it has. */
   ready: boolean;
 }): boolean {
@@ -69,6 +76,7 @@ export function usePhotoWave({
       frame,
       img,
       velocity: () => velocity.get(),
+      hover,
       onLost: () => setWaving(false),
     });
     if (!handle) return;
@@ -93,7 +101,7 @@ export function usePhotoWave({
       handle.detach();
       setWaving(false);
     };
-  }, [run, frameRef, imgRef, mountRef, velocity]);
+  }, [run, hover, frameRef, imgRef, mountRef, velocity]);
 
   return waving;
 }

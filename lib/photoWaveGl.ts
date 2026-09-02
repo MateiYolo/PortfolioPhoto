@@ -70,6 +70,28 @@ const MAX_DPR = 2;
 const REST = 0.004;
 
 /**
+ * Shapes how scroll speed becomes amplitude, and it is the single number
+ * that decides whether this effect is felt at all.
+ *
+ * The spring hands over a fraction of FULL_TILT_SPEED, which is 2600px/s —
+ * a hard fling. Ordinary reading scrolls sit around 0.2-0.5 of that, so a
+ * linear mapping spends almost the whole range on speeds nobody scrolls at
+ * and gives the common case a fifth of the effect. Below 1 this is an
+ * ease-out: 0.3 becomes 0.49, 0.5 becomes 0.66, while 1 stays 1. The peak
+ * is unchanged and the everyday case roughly doubles, which is the part
+ * that reads.
+ */
+const RESPONSE = 0.6;
+
+/**
+ * How fast the hover swell ramps in and out, per frame. About a third of a
+ * second to arrive, which is near the 600ms scale it replaces but a little
+ * quicker: a deformation that lags the pointer reads as lag, where a scale
+ * reads as weight.
+ */
+const HOVER_LERP = 0.12;
+
+/**
  * Where on the screen the swell sits, as a fraction of viewport height. Every
  * photo reads its centre off the same screen line, so a grid scrolling past
  * looks like one sheet being moved rather than a column of independently
@@ -120,25 +142,27 @@ in vec2 vUv;
 out vec4 outColor;
 
 uniform sampler2D uTexture;
-uniform vec2 uSize;    // frame size, CSS px
-uniform float uCenter; // where the swell sits, in vUv.y units
-uniform float uAmp;    // scroll speed, -1 (up) .. 0 .. 1 (down)
+uniform vec2 uSize;     // frame size, CSS px
+uniform float uCenter;  // where the scroll swell sits, in vUv.y units
+uniform float uAmp;     // scroll speed, -1 (up) .. 0 .. 1 (down), shaped
+uniform float uHover;   // 0 .. 1, how far the pointer swell has ramped in
+uniform vec2 uHoverAt;  // pointer position, in vUv
 
 const float HALF_PI = 1.57079632679;
 
 /**
- * Peak magnification at the crest. This is the one number that decides how
- * strong the effect reads; everything else below only shapes it. Its real
- * cost is measured at the *edge*: a point on the border sits about half a
- * frame from the centre, so it travels out by roughly this fraction of half
- * the frame. On this site that has to stay under the 0.9rem gap to a tile's
- * caption, which is the ceiling this number is set against.
+ * Peak magnification the scroll can reach. This is the one number that
+ * decides how strong the effect reads; everything else below only shapes it.
+ * Its real cost is measured at the *edge*: a point on the border sits about
+ * half a frame from the centre, so it travels out by roughly this fraction of
+ * half the frame. On this site that has to clear the gap to a tile's caption,
+ * which is the ceiling this number is set against — see CategoryTile.
  */
-const float MAX_SWELL = 0.05;
+const float MAX_SWELL = 0.075;
 
 /**
- * How far the swell reaches from its centre, in units of the frame's shorter
- * side. Comfortably past the corners of a portrait frame (about 0.9 away) on
+ * How far the scroll swell reaches, in units of the frame's shorter side.
+ * Comfortably past the corners of a portrait frame (about 0.9 away) on
  * purpose: the dome has to still be climbing when it arrives at the border,
  * because a dome that has already died out there leaves the outline straight
  * and the whole effect goes back to being invisible.
@@ -146,7 +170,27 @@ const float MAX_SWELL = 0.05;
 const float REACH = 1.6;
 
 /**
- * Shapes the dome. The falloff is a linear ramp bent through a sine, so the
+ * Peak magnification under the pointer, and how far around it it carries.
+ *
+ * Larger than MAX_SWELL, and it has to be, for a reason that is easy to get
+ * wrong: a magnification displaces a point by its *distance from the centre*
+ * times the dome, so the surface does not move at all directly under the
+ * pointer and most at a ring around it. That ring peaks near half the reach,
+ * where r * dome(r) is worth about 0.38 of the reach — so the furthest the
+ * sheet ever travels here is roughly HOVER_SWELL * HOVER_REACH * 0.38 of the
+ * frame's shorter side, about 18px on a tile of this size. That figure, not
+ * this constant, is what has to clear the caption below.
+ */
+const float HOVER_SWELL = 0.11;
+/**
+ * Tighter than the scroll's reach, and that is the point: the scroll moves
+ * the whole sheet, where the pointer presses on one part of it. A hover dome
+ * as wide as the scroll one would just be the scale this replaced.
+ */
+const float HOVER_REACH = 0.8;
+
+/**
+ * Shapes both domes. The falloff is a linear ramp bent through a sine, so the
  * surface is flat at the crest and flat again where it dies out — a swell
  * with no seam at either end. The exponent pulls a little volume back toward
  * the centre; at 1.0 the dome reads slightly slack.
@@ -156,11 +200,22 @@ const float BUMP_POWER = 1.2;
 /** components/Photo.tsx rounds every frame by this much; the edge must agree. */
 const float RADIUS_PX = 2.0;
 
-/** How hard the curving surface shades. Light comes from above. */
-const float SHADE = 0.085;
+/** How hard a curving surface shades. Light comes from above. */
+const float SHADE = 0.11;
 
 /** Per-channel sample split at the flanks, in shorter-side units. */
-const float CHROMA = 0.004;
+const float CHROMA = 0.006;
+
+/**
+ * A dome of unit height at the centre, dying to nothing at that reach, plus the
+ * slope of its surface — which is what the light has to follow, and is zero
+ * at the crest where the surface faces the viewer squarely.
+ */
+float dome(float r, float reach, out float slope) {
+  float fall = clamp(1.0 - r / reach, 0.0, 1.0);
+  slope = cos(fall * HALF_PI) * smoothstep(0.0, 0.06, fall);
+  return pow(sin(fall * HALF_PI), BUMP_POWER);
+}
 
 void main() {
   // Work in units of the frame's shorter side so a given displacement is the
@@ -168,26 +223,36 @@ void main() {
   // swell into an ellipse.
   vec2 aspect = uSize / min(uSize.x, uSize.y);
   vec2 pos = (vUv - 0.5) * aspect;
-  vec2 centre = vec2(0.0, (uCenter - 0.5) * aspect.y);
 
-  vec2 d = pos - centre;
-  float r = length(d);
+  // Two domes over one sheet, about different centres, so the surface is
+  // expressed as a displacement field and summed rather than as one mapping.
+  // The scroll's centre rides a fixed line on the screen; the pointer's is
+  // wherever the pointer is.
+  vec2 d1 = pos - vec2(0.0, (uCenter - 0.5) * aspect.y);
+  vec2 d2 = pos - (uHoverAt - 0.5) * aspect;
+  float r1 = length(d1);
+  float r2 = length(d2);
 
-  float fall = clamp(1.0 - r / REACH, 0.0, 1.0);
-  float dome = pow(sin(fall * HALF_PI), BUMP_POWER);
-  float swell = dome * uAmp * MAX_SWELL;
+  float slope1, slope2;
+  float dome1 = dome(r1, REACH, slope1) * uAmp;
+  float dome2 = dome(r2, HOVER_REACH, slope2) * uHover;
+
+  vec2 disp = d1 * (dome1 * MAX_SWELL) + d2 * (dome2 * HOVER_SWELL);
 
   // Material space: where on the undisturbed sheet the fabric now sitting at
   // this pixel came from. Sampling the photo *and* measuring its rect here —
   // rather than warping the picture and separately perturbing an outline — is
   // what makes the border a consequence of the swell instead of a second
-  // effect that has to be tuned to match it. At uAmp 0 it is exactly vUv,
-  // which is what makes the resting canvas the same image as the <img>.
-  vec2 posMat = centre + d * (1.0 - swell);
+  // effect that has to be tuned to match it. With both domes at rest this is
+  // exactly vUv, which is what makes the resting canvas the same image as the
+  // <img> it stands in for.
+  vec2 posMat = pos - disp;
   vec2 uv = posMat / aspect + 0.5;
 
-  vec2 dir = r > 1e-5 ? d / r : vec2(0.0);
-  vec2 split = dir * swell * CHROMA / aspect;
+  // Splitting the channels along the displacement reads as light bending
+  // through a moving surface. Zero wherever the sheet is flat, so a resting
+  // photo is sampled once per channel from the same place.
+  vec2 split = disp * CHROMA / aspect;
 
   vec3 col = vec3(
     texture(uTexture, uv + split).r,
@@ -195,19 +260,19 @@ void main() {
     texture(uTexture, uv - split).b
   );
 
-  // Light follows the surface normal, and the normal follows the *slope*, not
-  // the height — so the bright band sits on the dome's flank, not on its
-  // crest. cos() of the same falloff is that slope: zero at the top of the
-  // dome, largest where it turns away. Shading the crest instead is the usual
-  // tell that a bulge is painted on.
-  float slope = cos(fall * HALF_PI) * smoothstep(0.0, 0.06, fall);
-  col *= 1.0 - slope * dir.y * swell * (SHADE / MAX_SWELL);
+  // Light follows the surface normal, and the normal follows the slope, not
+  // the height — so the bright band sits on a dome's flank, not on its crest.
+  // Shading the crest instead is the usual tell that a bulge is painted on.
+  vec2 dir1 = r1 > 1e-5 ? d1 / r1 : vec2(0.0);
+  vec2 dir2 = r2 > 1e-5 ? d2 / r2 : vec2(0.0);
+  float lit = slope1 * dir1.y * dome1 + slope2 * dir2.y * dome2;
+  col *= 1.0 - lit * SHADE;
 
   // Signed distance to the photo's rect, measured in material space, positive
   // inside. The sheet's four edges are still straight *in the fabric*; it is
   // the fabric that is being stretched, so the silhouette comes out as the
-  // same swell for free, and snaps back to a clean rectangle wherever uAmp is
-  // zero. Standard rounded-box distance.
+  // same swell for free, and snaps back to a clean rectangle the moment both
+  // domes go flat. Standard rounded-box distance.
   float rad = RADIUS_PX / min(uSize.x, uSize.y);
   vec2 e = abs(posMat) - 0.5 * aspect + rad;
   float sd = -(length(max(e, 0.0)) + min(max(e.x, e.y), 0.0) - rad);
@@ -235,10 +300,18 @@ interface Entry {
   frame: HTMLElement;
   slot: Slot;
   velocity: () => number;
-  /** Last amplitude drawn, so the settling frame is drawn exactly once. */
-  drawn: number;
+  /** What was last painted, so a frame is only drawn when it would differ. */
+  drawn: { amp: number; hover: number; x: number; y: number; top: number };
   /** Overhang currently applied to the canvas, in whole CSS px. */
   pad: number;
+  /** Whether the pointer is on this photo, and how far the dome has ramped. */
+  hovered: boolean;
+  hover: number;
+  /** Last pointer position, in client px; kept on leave so the dome recedes
+   *  where it was rather than snapping to the middle on its way out. */
+  px: number;
+  py: number;
+  stopHover: (() => void) | null;
 }
 
 export interface WaveHandle {
@@ -323,7 +396,8 @@ function createSlot(): Slot {
   gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
 
   const u: Record<string, WebGLUniformLocation | null> = {};
-  for (const name of ["uTexture", "uSize", "uCenter", "uAmp", "uPad"]) {
+  const names = ["uTexture", "uSize", "uCenter", "uAmp", "uPad", "uHover", "uHoverAt"];
+  for (const name of names) {
     u[name] = gl.getUniformLocation(program, name);
   }
   gl.uniform1i(u.uTexture, 0);
@@ -393,6 +467,13 @@ function upload(slot: Slot, img: HTMLImageElement): boolean {
 }
 
 function draw(entry: Entry, rect: DOMRect, amp: number) {
+  entry.drawn = {
+    amp,
+    hover: entry.hover,
+    x: entry.px,
+    y: entry.py,
+    top: rect.top,
+  };
   const { slot } = entry;
   const { gl, u, canvas } = slot;
   const dpr = Math.min(window.devicePixelRatio || 1, MAX_DPR);
@@ -421,6 +502,12 @@ function draw(entry: Entry, rect: DOMRect, amp: number) {
   gl.uniform2f(u.uSize, rect.width, rect.height);
   gl.uniform1f(u.uCenter, (window.innerHeight * FOCUS - rect.top) / rect.height);
   gl.uniform1f(u.uAmp, amp);
+  gl.uniform1f(u.uHover, entry.hover);
+  gl.uniform2f(
+    u.uHoverAt,
+    (entry.px - rect.left) / rect.width,
+    (entry.py - rect.top) / rect.height
+  );
   gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 }
 
@@ -448,18 +535,47 @@ function tick() {
     if (entry.slot.lost) continue;
     const rect = entry.frame.getBoundingClientRect();
     if (rect.width < 1 || rect.height < 1) continue;
-    const raw = held !== null ? held : entry.velocity();
-    const amp = held === null && Math.abs(raw) < REST ? 0 : raw;
-    if (amp !== 0 || held !== null) moving = true;
-    // A flat photo that is already drawn flat needs no frame; a flat photo
-    // that isn't needs exactly one.
-    if (amp !== 0 || entry.drawn !== 0) pending.push({ entry, rect, amp });
+
+    let amp: number;
+    if (held !== null) {
+      amp = held;
+      moving = true;
+    } else {
+      const raw = entry.velocity();
+      amp =
+        Math.abs(raw) < REST
+          ? 0
+          : Math.sign(raw) * Math.pow(Math.abs(raw), RESPONSE);
+      if (amp !== 0) moving = true;
+    }
+
+    // The pointer dome runs on its own clock and keeps the loop awake for
+    // exactly as long as it is still arriving or leaving.
+    const target = entry.hovered ? 1 : 0;
+    if (entry.hover !== target) {
+      entry.hover += (target - entry.hover) * HOVER_LERP;
+      if (Math.abs(target - entry.hover) < 0.002) entry.hover = target;
+      moving = true;
+    }
+
+    // Draw only what would come out different. A photo already painted flat
+    // needs no frame; one that isn't needs exactly one. The rect's top counts
+    // only while the pointer dome is up, because that dome is placed off the
+    // frame's live position where the scroll dome it sits beside contributes
+    // nothing at rest anyway.
+    const was = entry.drawn;
+    if (
+      amp !== was.amp ||
+      entry.hover !== was.hover ||
+      entry.px !== was.x ||
+      entry.py !== was.y ||
+      (entry.hover > 0 && rect.top !== was.top)
+    ) {
+      pending.push({ entry, rect, amp });
+    }
   }
 
-  for (const { entry, rect, amp } of pending) {
-    draw(entry, rect, amp);
-    entry.drawn = amp;
-  }
+  for (const { entry, rect, amp } of pending) draw(entry, rect, amp);
 
   if (moving) frameId = requestAnimationFrame(tick);
 }
@@ -505,11 +621,19 @@ export function attachWave({
   frame,
   img,
   velocity,
+  hover = false,
   onLost,
 }: {
   frame: HTMLElement;
   img: HTMLImageElement;
   velocity: () => number;
+  /**
+   * Let the pointer press a dome into this photo while it is over it. Only
+   * where hovering is a thing the device does — on touch, pointerenter
+   * arrives with the tap and would leave a dome standing under a finger that
+   * has gone.
+   */
+  hover?: boolean;
   /** Called if the context dies under this photo, on the browser's thread. */
   onLost: () => void;
 }): WaveHandle | null {
@@ -521,13 +645,48 @@ export function attachWave({
     return null;
   }
 
-  const entry: Entry = { frame, slot, velocity, drawn: 0, pad: -1 };
   const rect = frame.getBoundingClientRect();
   if (rect.width < 1 || rect.height < 1) {
     free.push(slot);
     return null;
   }
+  const entry: Entry = {
+    frame,
+    slot,
+    velocity,
+    drawn: { amp: 0, hover: 0, x: 0, y: 0, top: 0 },
+    pad: -1,
+    hovered: false,
+    hover: 0,
+    px: rect.left + rect.width / 2,
+    py: rect.top + rect.height / 2,
+    stopHover: null,
+  };
   draw(entry, rect, 0);
+
+  if (hover) {
+    const move = (event: PointerEvent) => {
+      entry.px = event.clientX;
+      entry.py = event.clientY;
+      wakeWaves();
+    };
+    const enter = (event: PointerEvent) => {
+      entry.hovered = true;
+      move(event);
+    };
+    const leave = () => {
+      entry.hovered = false;
+      wakeWaves();
+    };
+    frame.addEventListener("pointerenter", enter);
+    frame.addEventListener("pointermove", move);
+    frame.addEventListener("pointerleave", leave);
+    entry.stopHover = () => {
+      frame.removeEventListener("pointerenter", enter);
+      frame.removeEventListener("pointermove", move);
+      frame.removeEventListener("pointerleave", leave);
+    };
+  }
   slot.onLost = onLost;
   entries.add(entry);
   wakeWaves();
@@ -537,12 +696,14 @@ export function attachWave({
     refresh(next: HTMLImageElement) {
       if (slot.lost) return;
       if (upload(slot, next)) {
-        entry.drawn = 1; // force the next tick to repaint from the new texture
+        // Force the next tick to repaint from the new texture.
+        entry.drawn.amp = NaN;
         wakeWaves();
       }
     },
     detach() {
       entries.delete(entry);
+      entry.stopHover?.();
       slot.onLost = null;
       slot.canvas.remove();
       // The texture is the only allocation big enough to care about; the

@@ -62,6 +62,7 @@ export function Photo({
   style,
   grayscale,
   wave,
+  waveHover = false,
   instant,
   children,
 }: {
@@ -86,6 +87,13 @@ export function Photo({
    * WebGL2 to an exhausted pool falls back to the plain <img> below.
    */
   wave?: boolean;
+  /**
+   * Let the pointer push a dome into the photo while it is over it, on top of
+   * whatever the scroll is doing. Only the homepage grid asks for it, and
+   * only on a device that hovers: on touch the press would arrive with the
+   * tap and be left standing under a finger that has gone.
+   */
+  waveHover?: boolean;
   /**
    * Skip this component's own decode-then-fade reveal and paint the <img>
    * at full opacity from the first render. Only for a photo that is itself
@@ -232,6 +240,7 @@ export function Photo({
     imgRef,
     mountRef,
     enabled: Boolean(wave),
+    hover: waveHover,
     ready,
   });
 

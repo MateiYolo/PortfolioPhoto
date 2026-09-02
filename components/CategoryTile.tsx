@@ -9,7 +9,6 @@ import { ScrollTilt } from "@/components/ScrollTilt";
 import { clothMorphToCategory, prewarmClothMorph } from "@/lib/clothMorph";
 import type { Category } from "@/lib/content";
 import { GRID_TILE, tileSizes } from "@/lib/imageSizes";
-import { ease } from "@/lib/motion";
 import { useCanHover } from "@/lib/useMediaQuery";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 
@@ -93,12 +92,16 @@ export function CategoryTile({
             onClick={handOffToCloth}
           >
             <ViewTransition name={`photo-${category.slug}`} share="morph" default="none">
-              <motion.div
+              {/* No scale on hover any more: the pointer presses a dome into
+                  the photograph instead (lib/photoWaveGl.ts), which answers
+                  where the pointer actually is rather than treating the whole
+                  tile as one object. Where that cannot run — no WebGL2, less
+                  motion asked for, a wigglegram cover — the grey-to-colour
+                  ramp below is the hover affordance, as it always was. */}
+              <div
                 ref={photoRef}
                 // How the flight home finds the tile it is landing on.
                 data-cloth-tile={`photo-${category.slug}`}
-                animate={{ scale: hovered ? 1.04 : 1 }}
-                transition={{ duration: 0.6, ease: ease.inOutQuart }}
               >
                 <Photo
                   photo={category.cover}
@@ -111,6 +114,7 @@ export function CategoryTile({
                   // underneath it would come apart. The motion is the point of
                   // those tiles anyway.
                   wave={!category.cover.video}
+                  waveHover={canHover}
                 >
                   {category.cover.video && (
                     <LoopVideo
@@ -119,12 +123,16 @@ export function CategoryTile({
                     />
                   )}
                 </Photo>
-              </motion.div>
+              </div>
             </ViewTransition>
             <ViewTransition name={`title-${category.slug}`} share="title-morph" default="none">
               <span
                 className="font-display block text-[var(--step-1)]"
-                style={{ marginTop: "0.9rem" }}
+                // Was 0.9rem. The photo's outline now travels up to ~20px
+                // past its box at full scroll speed (see MAX_SWELL in
+                // lib/photoWaveGl.ts), and a crest touching the caption is
+                // the one way this effect can look like a mistake.
+                style={{ marginTop: "1.5rem" }}
               >
                 {category.caption}
               </span>
