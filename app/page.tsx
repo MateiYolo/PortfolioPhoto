@@ -1,3 +1,4 @@
+import { Arrive } from "@/components/Arrive";
 import { CategoryGrid } from "@/components/CategoryGrid";
 import { SplitText } from "@/components/SplitText";
 import { getCategories } from "@/lib/content";
@@ -30,16 +31,22 @@ export default function HomePage() {
         <h1 className="font-display" style={{ fontSize: "var(--step-4)", lineHeight: 0.95 }}>
           <SplitText text="Fragments, an archive of memories" by="words" />
         </h1>
-        <p
-          className="font-sans text-grey-500 max-w-[34ch] md:max-w-none md:whitespace-nowrap"
-          style={{
-            marginTop: "1.25rem",
-            fontSize: "var(--step-1)",
-            textWrap: "balance",
-          }}
-        >
-          A little space kept by Matei Convard, shooting film & digital.
-        </p>
+        {/* Follows the title in rather than being there already: on a cold
+            load the intro panel lifts off both at once (components/Intro.tsx),
+            and a standing line under a rising one is the half of that which
+            would look unfinished. */}
+        <Arrive delay={0.12}>
+          <p
+            className="font-sans text-grey-500 max-w-[34ch] md:max-w-none md:whitespace-nowrap"
+            style={{
+              marginTop: "1.25rem",
+              fontSize: "var(--step-1)",
+              textWrap: "balance",
+            }}
+          >
+            A little space kept by Matei Convard, shooting film & digital.
+          </p>
+        </Arrive>
       </section>
 
       {categories.length > 0 ? (

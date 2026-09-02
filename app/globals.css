@@ -425,3 +425,149 @@ html.ink-overlay-open :focus-visible {
     width: 100% !important;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   The panel over a cold load (components/Intro.tsx). Layout only: what it
+   waits for, and when it goes, is all in the component.
+
+   Above the header (z 50/90) and the menu panel it opens, below the custom
+   cursor (z 100) — the dot should stay drawn on top of this the same way it
+   is drawn on top of everything else.
+--------------------------------------------------------------------------- */
+.intro-panel {
+  position: fixed;
+  inset: 0;
+  z-index: 95;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: var(--gutter);
+  background: var(--color-paper);
+}
+
+.intro-panel-rule {
+  display: block;
+  height: 1px;
+  overflow: hidden;
+  background: var(--color-grey-100);
+}
+
+/* Grows from the left as assets settle; `progress` is a motion value the
+   component writes straight into scaleX, so this line is the loading bar. */
+.intro-panel-rule-ink {
+  display: block;
+  height: 100%;
+  background: var(--color-ink);
+  transform-origin: left center;
+}
+
+.intro-panel-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 0.85rem;
+  font-family: var(--font-sans);
+  font-size: var(--step--1);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--color-grey-500);
+}
+
+/* ---------------------------------------------------------------------------
+   The caption under a homepage cover (components/CategoryTile.tsx): an index
+   entry rather than a label, set across the tile's own width.
+
+     ────────────────────────────────────────
+     01                                  2026
+     A piece of paradise in Greece           ↗
+
+   Two rows in one grid so the four corners line up on the photo's edges. All
+   four cells are the same grey in the same family, and only size separates
+   them: the whole block is meant to be read after the photograph, not before
+   it.
+--------------------------------------------------------------------------- */
+.tile-caption {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  column-gap: 1.5rem;
+  row-gap: 0.35rem;
+  align-items: baseline;
+  /* Clear of the crest: the photo's outline travels up to ~20px past its box
+     at full scroll speed (MAX_SWELL in lib/photoWaveGl.ts), and a rule is a
+     straight line for it to visibly collide with. */
+  margin-top: 1.75rem;
+  padding-top: 0.85rem;
+  /* Deliberately more room under the caption than above it. The row's own
+     bottom margin is the gutter, which on a phone is smaller than the gap
+     this block already keeps from its photo — so without this the caption
+     sits closer to the *next* cover than to the one it describes, and the
+     column reads as a list of headings above photographs. */
+  padding-bottom: clamp(0.75rem, 2vw, 1.5rem);
+}
+
+.tile-caption-rule {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  overflow: hidden;
+  background: var(--color-grey-100);
+}
+
+/* Fills in ink from the edge the pointer crossed, on the same sweep the
+   booking pill answers a cursor with (components/AvailabilityBadge.tsx). */
+.tile-caption-rule-ink {
+  display: block;
+  height: 100%;
+  background: var(--color-ink);
+}
+
+/* Every cell is placed rather than flowed: a category with no `date:` in its
+   meta.md renders no year, and auto-placement would answer that by pulling
+   the caption up into the empty corner. */
+.tile-caption-index,
+.tile-caption-year {
+  font-family: var(--font-sans);
+  font-size: var(--step--1);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  /* The numbers are the one thing on this site set in a column: same width
+     per digit keeps 01 and 07 the same distance from the photo's edge. */
+  font-variant-numeric: tabular-nums;
+  grid-row: 1;
+}
+
+.tile-caption-index {
+  grid-column: 1;
+}
+
+.tile-caption-year {
+  grid-column: 2;
+  text-align: right;
+}
+
+/* Same family and same grey as the row above it, one step up in size and
+   left in sentence case: that size difference is the whole hierarchy the
+   block needs. Set in display type it was the loudest thing under the
+   photograph, which is the one place on this page that should not be
+   competing with the picture. */
+.tile-caption-title {
+  display: block;
+  grid-column: 1;
+  grid-row: 2;
+  font-family: var(--font-sans);
+  font-size: var(--step-0);
+  line-height: 1.4;
+  text-wrap: balance;
+}
+
+.tile-caption-arrow {
+  display: block;
+  grid-column: 2;
+  grid-row: 2;
+  font-size: var(--step-0);
+  line-height: 1;
+}

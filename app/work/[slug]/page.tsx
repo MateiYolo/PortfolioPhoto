@@ -7,6 +7,7 @@ import { CategoryPhotoSequence } from "@/components/CategoryPhotoSequence";
 import { NextCategoryLink } from "@/components/NextCategoryLink";
 import { SplitText } from "@/components/SplitText";
 import { getAdjacentCategory, getCategories, getCategory } from "@/lib/content";
+import { formatDate } from "@/lib/date";
 
 export function generateStaticParams() {
   return getCategories().map((c) => ({ slug: c.slug }));
@@ -24,17 +25,6 @@ export async function generateMetadata({
     title: `${category.title} / Matei Convard`,
     description: category.blurb,
   };
-}
-
-function formatDate(iso: string) {
-  if (!iso) return "";
-  // A set shot over a year has no month worth printing, so `date: 2026` in
-  // a meta.md is honoured as written. Left to the parser it would become
-  // the 1st of January and print as a month nobody claimed.
-  if (/^\d{4}$/.test(iso.trim())) return iso.trim();
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return iso;
-  return d.toLocaleDateString("en-US", { year: "numeric", month: "long" });
 }
 
 export default async function CategoryPage({
