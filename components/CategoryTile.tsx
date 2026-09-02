@@ -29,12 +29,9 @@ import { useReducedMotion } from "@/lib/useReducedMotion";
 export function CategoryTile({
   category,
   parallaxRange,
-  imageParallaxRange,
 }: {
   category: Category;
   parallaxRange: [number, number];
-  /** See IMAGE_PARALLAX_PATTERN in CategoryGrid.tsx. */
-  imageParallaxRange: [number, number];
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const photoRef = useRef<HTMLDivElement>(null);
@@ -65,21 +62,11 @@ export function CategoryTile({
   // different rate (see PARALLAX_PATTERN in CategoryGrid.tsx), which is
   // deliberate on a mouse-driven scroll but reads as broken rhythm on a
   // touch scroll: the gap between tiles visibly stretches and shrinks as
-  // you drag. The in-frame image drift below (imgY/imgScale) stays on for
-  // everyone since it never moves the tile's own box.
+  // you drag. The photo's own answer to the scroll is the swell inside the
+  // frame (lib/photoWaveGl.ts), which every device gets because it never
+  // moves the tile's box.
   const rawY = useTransform(scrollYProgress, [0, 1], parallaxRange);
   const y = reducedMotion || !canHover ? 0 : rawY;
-
-  const [imgFrom, imgTo] = imageParallaxRange;
-  const rawImgY = useTransform(scrollYProgress, [0, 1], [`${imgFrom}%`, `${imgTo}%`]);
-  const imgY = reducedMotion ? undefined : rawImgY;
-  // Must cover the translate range so the drift never uncovers the frame's
-  // edges: a translate of X% needs (scale - 1) / 2 >= X / 100 of headroom
-  // on each side. The 0.04 pads that margin so a fractional-pixel scroll
-  // position never exposes a sliver of the frame's background.
-  const imgScale = reducedMotion
-    ? undefined
-    : 1 + (Math.max(Math.abs(imgFrom), Math.abs(imgTo)) / 100) * 2 + 0.04;
 
   return (
     <div ref={ref}>
@@ -118,15 +105,17 @@ export function CategoryTile({
                   sizes={tileSizes(GRID_TILE[category.cover.orientation])}
                   grayscale={!hovered}
                   style={{ borderRadius: 2 }}
-                  imgY={imgY}
-                  imgScale={imgScale}
+                  // A wigglegram cover is already moving, and the clip that
+                  // provides that movement is a DOM element laid over the
+                  // photo: it cannot follow the swell, so a cover that swelled
+                  // underneath it would come apart. The motion is the point of
+                  // those tiles anyway.
+                  wave={!category.cover.video}
                 >
                   {category.cover.video && (
                     <LoopVideo
                       clip={category.cover.video}
                       active={canHover ? hovered : true}
-                      imgY={imgY}
-                      imgScale={imgScale}
                     />
                   )}
                 </Photo>

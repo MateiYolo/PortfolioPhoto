@@ -9,8 +9,18 @@ import { useScrollVelocityFactor } from "@/components/ScrollVelocity";
 const ENTRY_TILT = 9;
 /** Pixels it trails behind its final position. */
 const ENTRY_LAG = 22;
-/** Extra degrees at full scroll speed, applied to every photo on screen. */
-const DRAG_TILT = 4.5;
+/**
+ * Extra degrees at full scroll speed, applied to every photo on screen.
+ *
+ * Deliberately small since the swell arrived (lib/photoWaveGl.ts): both are
+ * driven by the same velocity spring, and at the tilt's old 4.5 the two
+ * answered the same gesture at once, which read less as weight than as a
+ * page that couldn't keep still. The entry pose below is what this component
+ * is really for — that one is composition, not reaction — so the lean is now
+ * only enough to keep a fast scroll from feeling rigid, and the swell carries
+ * the response to speed.
+ */
+const DRAG_TILT = 1.8;
 /** How much of the entry pose is left showing when the page is barely moving. */
 const REST_SHARE = 0.35;
 /** How far outside the viewport a photo starts and stops being driven. */

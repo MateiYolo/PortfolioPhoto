@@ -2,10 +2,10 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
-import { motion, type MotionValue } from "motion/react";
 import { preload } from "react-dom";
 import { buildSrcSet, largestSrc } from "@/lib/imageSizes";
 import type { Photo as PhotoType } from "@/lib/content";
+import { usePhotoWave } from "@/lib/usePhotoWave";
 
 /**
  * How far outside the viewport a photo starts fetching and decoding. This
@@ -61,8 +61,7 @@ export function Photo({
   className,
   style,
   grayscale,
-  imgY,
-  imgScale,
+  wave,
   instant,
   children,
 }: {
@@ -78,18 +77,15 @@ export function Photo({
    */
   grayscale?: boolean;
   /**
-   * Scroll-linked vertical drift for the image *within* its own frame
-   * (percent of the frame's height, e.g. "-9%"), independent of any
-   * motion applied to the frame itself. Leave undefined for a static
-   * image — only the homepage grid passes this.
+   * Let this photo swell with the scroll (see lib/photoWaveGl.ts). Opt-in
+   * rather than default because it costs one of four WebGL contexts: the
+   * grids ask for it, the lightbox — where the photo is the subject and
+   * nothing should be moving — does not.
+   *
+   * Passing it is a request, not a guarantee. Everything from a missing
+   * WebGL2 to an exhausted pool falls back to the plain <img> below.
    */
-  imgY?: MotionValue<string>;
-  /**
-   * Zoom applied together with `imgY` so the drift never uncovers the
-   * frame's edges. Callers that pass `imgY` must pass a scale large enough
-   * to cover its range; ignored otherwise.
-   */
-  imgScale?: number;
+  wave?: boolean;
   /**
    * Skip this component's own decode-then-fade reveal and paint the <img>
    * at full opacity from the first render. Only for a photo that is itself
@@ -110,6 +106,7 @@ export function Photo({
 }) {
   const frameRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
+  const mountRef = useRef<HTMLDivElement>(null);
 
   // `warm` flips the <img> from lazy to eager once the photo comes within
   // warmMargin(); `ready` flips only once the pixels are actually decoded.
@@ -204,6 +201,14 @@ export function Photo({
 
   const eager = priority || warm;
 
+  const waving = usePhotoWave({
+    frameRef,
+    imgRef,
+    mountRef,
+    enabled: Boolean(wave),
+    ready,
+  });
+
   return (
     <div
       ref={frameRef}
@@ -236,7 +241,7 @@ export function Photo({
         ...style,
       }}
     >
-      <motion.img
+      <img
         ref={imgRef}
         src={fallbackSrc}
         srcSet={srcSet}
@@ -260,9 +265,25 @@ export function Photo({
           transition: instant
             ? undefined
             : `opacity ${FADE_MS}ms cubic-bezier(0.65,0,0.35,1)`,
-          ...(imgY ? { y: imgY, scale: imgScale } : undefined),
+          // Hidden while the swell has the frame, never unmounted. The canvas
+          // over it is showing the same picture, and this element is still
+          // the one carrying the alt text, the srcset the texture is uploaded
+          // from, and the box lib/clothMorphFlight.ts measures its crop
+          // against. `visibility` rather than `display` so all three survive.
+          visibility: waving ? "hidden" : undefined,
         }}
       />
+      {/* Left empty for lib/photoWaveGl.ts to append its canvas into. React
+          owns this element but never fills it, so nothing it renders can be
+          reordered around a child it did not create. Before `children`, so a
+          wigglegram still lays over the photo rather than under it. */}
+      {wave && (
+        <div
+          ref={mountRef}
+          aria-hidden="true"
+          style={{ position: "absolute", inset: 0, pointerEvents: "none" }}
+        />
+      )}
       {children}
     </div>
   );

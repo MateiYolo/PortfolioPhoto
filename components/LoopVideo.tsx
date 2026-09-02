@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, useInView, type MotionValue } from "motion/react";
+import { useInView } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import type { VideoClip } from "@/lib/content";
 import { pickVideoSrc } from "@/lib/imageSizes";
@@ -39,8 +39,6 @@ const PLAY_MARGIN = "150px";
 export function LoopVideo({
   clip,
   active,
-  imgY,
-  imgScale,
 }: {
   clip: VideoClip;
   /**
@@ -48,13 +46,6 @@ export function LoopVideo({
    * passes true. Being on screen is checked here regardless.
    */
   active: boolean;
-  /**
-   * The drift and zoom the still is under, when it is under any (the
-   * homepage grid parallaxes its photo inside the frame). The clip has to
-   * match it or the crossfade lands on a differently framed picture.
-   */
-  imgY?: MotionValue<string>;
-  imgScale?: number;
 }) {
   const ref = useRef<HTMLVideoElement>(null);
   const onScreen = useInView(ref, { margin: PLAY_MARGIN });
@@ -107,7 +98,7 @@ export function LoopVideo({
   }, [play, src]);
 
   return (
-    <motion.video
+    <video
       ref={ref}
       src={src ?? undefined}
       // Muted is what makes autoplay legal; the sources have no audio track
@@ -135,7 +126,6 @@ export function LoopVideo({
         // would cross into a video that is still a single held frame.
         opacity: play && rolling ? 1 : 0,
         transition: `opacity ${FADE_MS}ms cubic-bezier(0.65,0,0.35,1)`,
-        ...(imgY ? { y: imgY, scale: imgScale } : undefined),
       }}
     />
   );
